@@ -1,19 +1,19 @@
+//---------------------------------------------------------------INIZIALIZZAZIONE SERVER---------------------------------------------------------------
 const express = require('express');
 const app = express();
+require('dotenv').config();
+const dbHost = process.env.DB_HOST;
+const dbPort = process.env.DB_PORT;
+const dbName = process.env.DB_NAME;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+
+
+
+
 
 app.get('/', (req, res) => {
-  res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Gestionale Bar</title>
-</head>
-<body>
-    <h1>Gestionale Bar</h1>
-    <p>Server attivo</p>
-</body>
-</html>
-  `);
+ 
 });
 
 app.listen(3000, () => {
