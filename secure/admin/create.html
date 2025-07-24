@@ -1,432 +1,223 @@
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Aggiungi Prodotto</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <title>Crea Nuovo Utente</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
   <style>
-    .photo-section {
-      margin: 1.5rem 0;
-      padding: 1.5rem;
-      border: 2px dashed var(--pico-border-color);
-      border-radius: 8px;
-      background: var(--pico-card-background-color);
+    .header-section {
       text-align: center;
-      transition: all 0.3s ease;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--pico-border-color);
     }
-
-    .photo-section.dragover {
-      border-color: var(--pico-primary);
-      background: var(--pico-primary-background);
-    }
-
-    .photo-buttons {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .photo-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      border: 2px solid var(--pico-primary);
-      border-radius: 8px;
-      background: var(--pico-primary-background);
-      color: var(--pico-primary);
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      font-size: 1rem;
-      min-width: 140px;
-      justify-content: center;
-    }
-
-    .photo-btn:hover {
-      background: var(--pico-primary);
-      color: var(--pico-primary-inverse);
-      transform: translateY(-2px);
-    }
-
-    .photo-btn.primary {
-      background: var(--pico-primary);
-      color: var(--pico-primary-inverse);
-    }
-
-    .photo-btn.primary:hover {
-      background: var(--pico-primary-hover);
-    }
-
-    .photo-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .photo-btn svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    #fileInput {
-      display: none;
-    }
-
-    .preview-container {
-      position: relative;
-      margin-top: 1rem;
-      display: none;
-    }
-
-    .preview-container.show {
-      display: block;
-    }
-
-    #preview {
-      max-width: 100%;
-      max-height: 300px;
-      border-radius: 8px;
-      object-fit: contain;
-      border: 1px solid var(--pico-border-color);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .remove-photo {
-      position: absolute;
-      top: -10px;
-      right: -10px;
-      background: #dc3545;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: bold;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .remove-photo:hover {
-      background: #c82333;
-    }
-
-    #video {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-top: 1rem;
-      border: 1px solid var(--pico-border-color);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      display: none;
-    }
-
-    #canvas {
-      display: none;
-    }
-
-    .camera-controls {
-      display: none;
-      gap: 1rem;
-      justify-content: center;
-      margin-top: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .camera-controls.show {
-      display: flex;
-    }
-
-    .file-info {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      border-radius: 6px;
+    
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
       background: var(--pico-card-background-color);
+      border-radius: var(--pico-border-radius);
       border: 1px solid var(--pico-border-color);
+    }
+    
+    .success-message {
+      background-color: var(--pico-primary-background);
+      color: var(--pico-primary-color);
+      padding: 1rem;
+      border-radius: var(--pico-border-radius);
+      margin-bottom: 1rem;
       display: none;
     }
-
-    .file-info.show {
-      display: block;
+    
+    .error-message {
+      background-color: #fee;
+      color: #c33;
+      padding: 1rem;
+      border-radius: var(--pico-border-radius);
+      margin-bottom: 1rem;
+      display: none;
     }
-
-    .file-info-content {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-      color: var(--pico-color);
-    }
-
-    .file-info svg {
-      width: 16px;
-      height: 16px;
-      color: var(--pico-primary);
-    }
-
-    .drag-text {
-      color: var(--pico-muted-color);
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-    }
-
-    @media (max-width: 576px) {
-      .photo-buttons {
-        flex-direction: column;
-        align-items: center;
-      }
-      
-      .photo-btn {
-        width: 100%;
-        max-width: 200px;
-      }
+    
+    .form-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
     }
   </style>
 </head>
+
 <body>
   <main class="container">
-    <h1>Aggiungi Nuovo Prodotto</h1>
+    
+    <!-- Header -->
+    <div class="header-section">
+      <h1>👤 Crea Nuovo Utente</h1>
+      <p>Aggiungi un nuovo utente al sistema</p>
+    </div>
 
-    <form id="productForm" action="/addProduct" method="POST" enctype="multipart/form-data">
-      <label for="nome">Nome prodotto</label>
-      <input type="text" id="nome" name="nome" required />
-
-      <label for="descrizione">Descrizione</label>
-      <textarea id="descrizione" name="descrizione" rows="4" required></textarea>
-
-      <label for="prezzo">Prezzo (€)</label>
-      <input type="number" id="prezzo" name="prezzo" step="0.01" min="0" required />
-
-      <label>Foto prodotto</label>
-      <div class="photo-section" id="photoSection">
-        <div class="photo-buttons">
-          <button type="button" class="photo-btn" id="fileBtn">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-            Scegli File
-          </button>
+    <!-- Form Container -->
+    <div class="form-container">
+      
+      <!-- Messages -->
+      <div id="success-message" class="success-message">
+        Utente creato con successo!
+      </div>
+      
+      <div id="error-message" class="error-message">
+        <span id="error-text">Errore nella creazione dell'utente</span>
+      </div>
+      
+      <!-- Create User Form -->
+      <form id="create-user-form">
+        <div class="grid">
+          <div>
+            <label for="username">Username <span style="color: red;">*</span></label>
+            <input type="text" id="username" name="username" placeholder="Inserisci username" required>
+            <small>L'username deve essere unico nel sistema</small>
+          </div>
           
-          <button type="button" class="photo-btn" id="cameraBtn">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-            Scatta Foto
-          </button>
-        </div>
-        
-        <p class="drag-text">Oppure trascina qui un'immagine</p>
-        
-        <input type="file" id="fileInput" name="foto" accept="image/*" />
-        
-        <div class="file-info" id="fileInfo">
-          <div class="file-info-content">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            <span id="fileName"></span>
+          <div>
+            <label for="tipo">Tipo Utente <span style="color: red;">*</span></label>
+            <select id="tipo" name="tipo" required>
+              <option value="">Seleziona tipo...</option>
+              <option value="admin">Admin</option>
+              <option value="cucina">Cucina</option>
+              <option value="cameriere">Cameriere</option>
+              <option value="cassa">Cassa</option>
+              <option value="bancone">Bancone</option>
+            </select>
           </div>
         </div>
-      </div>
-
-      <div class="preview-container" id="previewContainer">
-        <img id="preview" alt="Anteprima immagine" />
-        <button type="button" class="remove-photo" id="removePhoto">×</button>
-      </div>
-
-      <video id="video" autoplay></video>
-      <canvas id="canvas"></canvas>
-
-      <div class="camera-controls" id="cameraControls">
-        <button type="button" class="photo-btn primary" id="captureBtn">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-          </svg>
-          Cattura
-        </button>
         
-        <button type="button" class="photo-btn" id="cancelCameraBtn">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-          Annulla
-        </button>
-      </div>
+        <div>
+          <label for="password">Password <span style="color: red;">*</span></label>
+          <input type="password" id="password" name="password" placeholder="Inserisci password" required>
+          <small>Minimo 6 caratteri</small>
+        </div>
+        
+        <div>
+          <label for="confirm-password">Conferma Password <span style="color: red;">*</span></label>
+          <input type="password" id="confirm-password" placeholder="Conferma password" required>
+          <small>Deve corrispondere alla password inserita sopra</small>
+        </div>
+        </form>
+        <div class="form-actions">
+          <button type="submit" id="submit-btn">
+            Crea Utente
+          </button>
+          <form action="/admin" method="GET" style="margin: 0;">
+            <input type="submit" value="Torna alla home" class="secondary" />
+          </form>
+        </div>
+      
+      
+    </div>
 
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-        <button type="submit" style="flex: 1; min-width: 200px;">Aggiungi Prodotto</button>
-        <a href="/admin" class="photo-btn" style="flex: 1; min-width: 200px; text-decoration: none; display: flex; align-items: center; justify-content: center;">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-          </svg>
-          Torna alla Home
-        </a>
-      </div>
-    </form>
   </main>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const fileBtn = document.getElementById('fileBtn');
-    const cameraBtn = document.getElementById('cameraBtn');
-    const preview = document.getElementById('preview');
-    const previewContainer = document.getElementById('previewContainer');
-    const removePhoto = document.getElementById('removePhoto');
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const captureBtn = document.getElementById('captureBtn');
-    const cancelCameraBtn = document.getElementById('cancelCameraBtn');
-    const cameraControls = document.getElementById('cameraControls');
-    const fileInfo = document.getElementById('fileInfo');
-    const fileName = document.getElementById('fileName');
-    const photoSection = document.getElementById('photoSection');
-
-    let stream;
-    let cameraActive = false;
-
-    // File selection
-    fileBtn.addEventListener('click', () => {
-      fileInput.click();
-    });
-
-    fileInput.addEventListener('change', handleFileSelect);
-
-    function handleFileSelect() {
-      if (fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        displayFile(file);
-        stopCamera();
-      }
-    }
-
-    function displayFile(file) {
-      fileName.textContent = file.name;
-      fileInfo.classList.add('show');
-      
-      const url = URL.createObjectURL(file);
-      preview.src = url;
-      previewContainer.classList.add('show');
-    }
-
-    // Remove photo
-    removePhoto.addEventListener('click', () => {
-      fileInput.value = '';
-      preview.src = '';
-      previewContainer.classList.remove('show');
-      fileInfo.classList.remove('show');
-      fileName.textContent = '';
-    });
-
-    // Camera functionality
-    cameraBtn.addEventListener('click', async () => {
-      if (cameraActive) return;
-      
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment' // Preferisce la camera posteriore su mobile
-          } 
-        });
-        
-        video.srcObject = stream;
-        video.style.display = 'block';
-        cameraControls.classList.add('show');
-        cameraActive = true;
-        
-        // Hide preview and file info during camera mode
-        previewContainer.classList.remove('show');
-        fileInfo.classList.remove('show');
-        
-        // Reset file input
-        fileInput.value = '';
-        
-      } catch (err) {
-        alert('Impossibile accedere alla fotocamera. Verifica i permessi del browser.');
-        console.error('Camera error:', err);
-      }
-    });
-
-    captureBtn.addEventListener('click', () => {
-      if (!cameraActive) return;
-      
-      const context = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      canvas.toBlob(blob => {
-        const file = new File([blob], `foto-${Date.now()}.png`, { type: 'image/png' });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-
-        displayFile(file);
-        stopCamera();
-      }, 'image/png', 0.9);
-    });
-
-    cancelCameraBtn.addEventListener('click', () => {
-      stopCamera();
-    });
-
-    function stopCamera() {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
-      }
-      video.style.display = 'none';
-      cameraControls.classList.remove('show');
-      cameraActive = false;
-    }
-
-    // Drag and drop functionality
-    photoSection.addEventListener('dragover', (e) => {
+    document.getElementById('create-user-form').addEventListener('submit', function(e) {
       e.preventDefault();
-      photoSection.classList.add('dragover');
-    });
-
-    photoSection.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      photoSection.classList.remove('dragover');
-    });
-
-    photoSection.addEventListener('drop', (e) => {
-      e.preventDefault();
-      photoSection.classList.remove('dragover');
       
-      const files = e.dataTransfer.files;
-      if (files.length > 0 && files[0].type.startsWith('image/')) {
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(files[0]);
-        fileInput.files = dataTransfer.files;
-        
-        displayFile(files[0]);
-        stopCamera();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const tipo = document.getElementById('tipo').value;
+      
+      // Validazioni client-side
+      if (!username || !password || !tipo) {
+        showError('Tutti i campi obbligatori devono essere compilati');
+        return;
       }
-    });
-
-    // Form validation
-    document.getElementById('productForm').addEventListener('submit', (e) => {
-      if (!fileInput.files || fileInput.files.length === 0) {
-        e.preventDefault();
-        alert('Per favore seleziona o scatta una foto del prodotto.');
-        return false;
+      
+      if (password.length < 6) {
+        showError('La password deve essere di almeno 6 caratteri');
+        return;
       }
+      
+      if (password !== confirmPassword) {
+        showError('Le password non corrispondono');
+        return;
+      }
+      
+      // Disabilita il form durante l'invio
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creazione in corso...';
+      
+      // Invia i dati
+      fetch('/admin/users/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          tipo: tipo
+        })
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          showSuccess('Utente creato con successo!');
+          document.getElementById('create-user-form').reset();
+          
+          // Reindirizza dopo 2 secondi con form
+          setTimeout(() => {
+            const form = document.createElement('form');
+            form.method = 'GET';
+            form.action = '/admin/users';
+            document.body.appendChild(form);
+            form.submit();
+          }, 2000);
+        } else {
+          showError(result.message || 'Errore nella creazione dell\'utente');
+        }
+      })
+      .catch(error => {
+        console.error('Errore:', error);
+        showError('Errore di connessione al server');
+      })
+      .finally(() => {
+        // Riabilita il form
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Crea Utente';
+      });
     });
-
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-      stopCamera();
+    
+    function showSuccess(message) {
+      hideMessages();
+      const successDiv = document.getElementById('success-message');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+    }
+    
+    function showError(message) {
+      hideMessages();
+      const errorDiv = document.getElementById('error-message');
+      document.getElementById('error-text').textContent = message;
+      errorDiv.style.display = 'block';
+    }
+    
+    function hideMessages() {
+      document.getElementById('success-message').style.display = 'none';
+      document.getElementById('error-message').style.display = 'none';
+    }
+    
+    // Validazione in tempo reale per conferma password
+    document.getElementById('confirm-password').addEventListener('input', function() {
+      const password = document.getElementById('password').value;
+      const confirmPassword = this.value;
+      
+      if (confirmPassword && password !== confirmPassword) {
+        this.setCustomValidity('Le password non corrispondono');
+      } else {
+        this.setCustomValidity('');
+      }
     });
   </script>
+
 </body>
 </html>
