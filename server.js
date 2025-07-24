@@ -117,7 +117,7 @@ app.post('/admin/users/update', (req, res) => {
   let params = [username, tipo];
   
   if (password && password.trim() !== '') {
-    query += ', password = ?';
+    query += ', passsword = ?';
     params.push(password);
   }
   
