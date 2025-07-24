@@ -3,7 +3,8 @@ const express = require('express');
 const app = express();
 require('dotenv').config();
 const path = require('path');
-
+const multer = require('multer');
+const fs = require('fs');
 
 const dbHost = process.env.DB_HOST;
 const dbPort = process.env.DB_PORT;
@@ -43,8 +44,7 @@ app.get('/', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  console.log("Username:", username);
-  console.log("Password:", password);
+
   const query = 'SELECT * FROM user WHERE username = ? AND passsword = ?';
   conn.query(query, [username, password], (err, results) => {
     if (err) {
@@ -81,7 +81,7 @@ app.post('/login', (req, res) => {
         }
       })
     } else {
-      console.log("login fallito");
+    
     }
   });
  
@@ -190,7 +190,7 @@ app.post('/admin/users/create', (req, res) => {
       return;
     }
     
-    // Crea l'utente (nota: passsword con 3 s)
+  
     const insertQuery = 'INSERT INTO user (username, passsword, tipo) VALUES (?, ?, ?)';
     conn.query(insertQuery, [username, password, tipo], (err, result) => {
       if (err) {
@@ -207,6 +207,139 @@ app.post('/admin/users/create', (req, res) => {
     });
   });
 });
+
+app.get('/api/admin/stats', async (req, res) => {
+  const stats = {};
+
+  conn.query('SELECT COUNT(*) AS totale FROM user', (err, resultUtenti) => {
+    if (err) {
+      console.error('Errore nel conteggio utenti:', err);
+      return res.status(500).json({ success: false, message: 'Errore nel conteggio utenti' });
+    }
+
+    stats.utenti = resultUtenti[0].totale;
+
+    conn.query('SELECT COUNT(*) AS totale FROM prodotti', (err2, resultProdotti) => {
+      if (err2) {
+        console.error('Errore nel conteggio prodotti:', err2);
+        return res.status(500).json({ success: false, message: 'Errore nel conteggio prodotti' });
+      }
+
+      stats.prodotti = resultProdotti[0].totale;
+      res.json(stats);
+    });
+  });
+});
+
+
+app.get("/admin/products/create", (req, res)=>{
+    res.sendFile(path.join(__dirname, 'secure/admin/addProduct.html'));
+})
+
+// Configurazione multer per l'upload delle immagini
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = './uploads';
+    // Crea la cartella uploads se non esiste
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // Genera un nome univoco per il file
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname);
+    cb(null, 'product-' + uniqueSuffix + extension);
+  }
+});
+
+// Filtro per accettare solo immagini
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Solo file immagine sono permessi!'), false);
+  }
+};
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // Limite 5MB
+  }
+});
+
+// Endpoint per aggiungere un prodotto
+app.post('/addProduct', upload.single('foto'), (req, res) => {
+  try {
+    const { nome, descrizione, prezzo } = req.body;
+    
+    // Validazione dei dati
+    if (!nome || !descrizione || !prezzo) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Nome, descrizione e prezzo sono obbligatori' 
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'La foto del prodotto è obbligatoria' 
+      });
+    }
+
+    // Path relativo della foto da salvare nel database
+    const fotoPath = 'uploads/' + req.file.filename;
+    
+    // Query per inserire il prodotto nel database
+    const query = 'INSERT INTO prodotti (nome, descrizione, prezzo, fotoPath) VALUES (?, ?, ?, ?)';
+    const values = [nome, descrizione, parseFloat(prezzo), fotoPath];
+
+    conn.query(query, values, (err, result) => {
+      if (err) {
+        console.error('Errore nell\'inserimento del prodotto:', err);
+        
+        // Rimuovi il file caricato se c'è un errore nel database
+        if (req.file) {
+          fs.unlink(req.file.path, (unlinkErr) => {
+            if (unlinkErr) console.error('Errore nella rimozione del file:', unlinkErr);
+          });
+        }
+        
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Errore nell\'inserimento del prodotto nel database' 
+        });
+      }
+
+      console.log('Prodotto inserito con ID:', result.insertId);
+      
+      // Risposta di successo - reindirizza alla pagina admin
+      res.redirect('/admin?success=1&message=Prodotto aggiunto con successo');
+    });
+
+  } catch (error) {
+    console.error('Errore generale:', error);
+    
+    // Rimuovi il file caricato se c'è un errore
+    if (req.file) {
+      fs.unlink(req.file.path, (unlinkErr) => {
+        if (unlinkErr) console.error('Errore nella rimozione del file:', unlinkErr);
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: 'Errore interno del server' 
+    });
+  }
+});
+
+// Middleware per servire file statici dalla cartella uploads
+app.use('/uploads', express.static('uploads'));
 
 
 //-----------------------------------------------------------------LISTEN----------------------------------------------------------------

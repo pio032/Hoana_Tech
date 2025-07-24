@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
@@ -10,7 +11,7 @@
       gap: 1rem;
       margin-top: 2rem;
     }
-    
+
     .admin-card {
       border: 1px solid var(--pico-border-color);
       border-radius: var(--pico-border-radius);
@@ -18,49 +19,49 @@
       background: var(--pico-card-background-color);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    
+
     .admin-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
-    
+
     .card-icon {
       font-size: 2rem;
       margin-bottom: 1rem;
       display: block;
     }
-    
+
     .card-title {
       margin-bottom: 0.5rem;
       color: var(--pico-primary-color);
     }
-    
+
     .card-description {
       margin-bottom: 1rem;
       opacity: 0.8;
     }
-    
+
     .header-section {
       text-align: center;
       margin-bottom: 2rem;
       padding: 2rem 0;
       border-bottom: 1px solid var(--pico-border-color);
     }
-    
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
       margin-bottom: 2rem;
     }
-    
+
     .stat-card {
       text-align: center;
       padding: 1rem;
       background: var(--pico-primary-background);
       border-radius: var(--pico-border-radius);
     }
-    
+
     .stat-number {
       font-size: 2rem;
       font-weight: bold;
@@ -78,20 +79,22 @@
     </div>
 
     <!-- Stats Cards -->
+    <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-number">247</div>
+        <div class="stat-number" id="utenti-stat">--</div>
         <div>Utenti Totali</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number">89</div>
+        <div class="stat-number" id="prodotti-stat">--</div>
         <div>Prodotti</div>
       </div>
     </div>
 
+
     <!-- Admin Functions Grid -->
     <div class="dashboard-grid">
-      
+
       <!-- Gestione Utenti -->
       <article class="admin-card">
         <span class="card-icon">👥</span>
@@ -111,7 +114,8 @@
       <article class="admin-card">
         <span class="card-icon">📦</span>
         <h3 class="card-title">Gestione Prodotti</h3>
-        <p class="card-description">Aggiungi, modifica e rimuovi prodotti dal catalogo. Gestisci inventario e prezzi.</p>
+        <p class="card-description">Aggiungi, modifica e rimuovi prodotti dal catalogo. Gestisci inventario e prezzi.
+        </p>
         <div class="grid">
           <form action="/admin/products" method="GET" style="margin: 0;">
             <input type="submit" value="Vedi Prodotti" />
@@ -132,5 +136,26 @@
     </div>
 
   </main>
+  <script>
+  async function caricaStatistiche() {
+    try {
+      const risposta = await fetch('/api/admin/stats');
+      if (!risposta.ok) throw new Error("Errore nel recupero dati");
+
+      const dati = await risposta.json();
+
+      // Aggiorna i valori nelle stat cards
+      document.getElementById('utenti-stat').textContent = dati.utenti ?? '0';
+      document.getElementById('prodotti-stat').textContent = dati.prodotti ?? '0';
+
+    } catch (errore) {
+      console.error("Errore nel caricamento delle statistiche:", errore);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', caricaStatistiche);
+</script>
+
 </body>
+
 </html>
