@@ -450,33 +450,39 @@
       currentProductId = null;
     }
 
-    // Funzione per eliminare un prodotto
-  // Funzione per eliminare un prodotto
-async function deleteProduct(productId) {
-  console.log('Tentativo di eliminazione prodotto ID:', productId); // Debug
+   async function deleteProduct(productId) {
+  console.log('Tentativo di eliminazione prodotto ID:', productId);
+  
   try {
-    const response = await fetch(`/api/products/${productId}`, {
-      method: 'DELETE',
+    const response = await fetch(`http://localhost:3000/api/products/delete/${productId}`, {
+      method: 'GET',  // Cambiato da DELETE a GET
       headers: {
         'Content-Type': 'application/json',
-      }
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      },
+      credentials: 'include'
     });
 
-    console.log('Risposta ricevuta:', response); // Debug
+    console.log('Stato risposta:', response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Errore HTTP: ${response.status}`);
+    }
 
     const data = await response.json();
-    console.log('Dati risposta:', data); // Debug
-
+    console.log('Risposta:', data);
+    
     if (!data.success) {
-      throw new Error(data.message || 'Errore nell\'eliminazione del prodotto');
+      throw new Error(data.message || 'Errore nell\'eliminazione');
     }
 
     await loadProducts();
     alert('Prodotto eliminato con successo!');
-
+    
   } catch (error) {
-    console.error('Errore completo:', error); // Debug
-    showError(error.message || 'Errore nell\'eliminazione del prodotto');
+    console.error('Errore eliminazione:', error);
+    showError(error.message || 'Errore durante l\'eliminazione');
   }
 }
 
