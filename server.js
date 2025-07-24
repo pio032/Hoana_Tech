@@ -81,6 +81,8 @@ app.post('/login', (req, res) => {
                   case "cassa":
                       res.sendFile(path.join(__dirname, 'secure/cassa.html'));
                       break;
+                  case "cameriere":
+                      res.sendFile(path.join(__dirname, 'secure/cam/cam.html'));
                       
           }
         }
@@ -169,7 +171,7 @@ app.get('/admin/users/create', (req, res) => {
 // Endpoint per creare l'utente
 app.post('/admin/users/create', (req, res) => {
   const { username, password, tipo } = req.body;
-  
+
   // Validazioni server-side
   if (!username || !password || !tipo) {
     res.json({ success: false, message: 'Tutti i campi sono obbligatori' });
@@ -351,7 +353,6 @@ app.get("/admin/prod", (req, res)=>{
   res.sendFile(path.join(__dirname, 'secure/admin/product.html'))
 })
 
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // Ottieni tutti i prodotti
 app.get('/api/products', (req, res) => {

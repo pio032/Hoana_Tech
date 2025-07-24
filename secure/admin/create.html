@@ -101,11 +101,12 @@
           <input type="password" id="confirm-password" placeholder="Conferma password" required>
           <small>Deve corrispondere alla password inserita sopra</small>
         </div>
-        </form>
-        <div class="form-actions">
-          <button type="submit" id="submit-btn">
+         <button type="submit" id="submit-btn">
             Crea Utente
           </button>
+        </form>
+        <div class="form-actions">
+         
           <form action="/admin" method="GET" style="margin: 0;">
             <input type="submit" value="Torna alla home" class="secondary" />
           </form>
@@ -142,7 +143,36 @@
       }
       
       // Disabilita il form durante l'invio
+      
       const submitBtn = document.getElementById('submit-btn');
+submitBtn.addEventListener('click', () => {
+  
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const tipo = document.getElementById('tipo').value;
+       console.log("ci sono ", username, password, tipo)
+  fetch('/admin/users/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username, password, tipo })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.message);
+      console.log('Nuovo userId:', data.userId);
+      // eventualmente reset form o redirect
+    } else {
+      alert('Errore: ' + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('Errore nella fetch:', error);
+    alert('Errore di rete o server');
+  });
+});
       submitBtn.disabled = true;
       submitBtn.textContent = 'Creazione in corso...';
       

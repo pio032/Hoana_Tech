@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cameriere</title>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+  <style>
+    .main-btn {
+      font-size: 1.8rem;
+      padding: 2rem;
+    }
+    .secondary-btn {
+      font-size: 1.2rem;
+      padding: 1rem;
+    }
+    .button-group {
+      display: grid;
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    main {
+      max-width: 500px;
+      margin: auto;
+      padding-top: 4rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<main>
+  <h1>Cameriere</h1>
+
+  <div class="button-group">
+    <button class="main-btn" id="fai-comanda">📝 Fai Comanda</button>
+    <button class="secondary-btn" id="vedi-comande">📄 Vedi Comande</button>
+    <button class="secondary-btn" id="comande-pronte">✅ Comande Pronte</button>
+  </div>
+</main>
+
+<script>
+  document.getElementById("fai-comanda").addEventListener("click", () => {
+    // Redirect o apri form
+    alert("Vai a fare una nuova comanda!");
+  });
+
+  document.getElementById("vedi-comande").addEventListener("click", () => {
+    alert("Mostra tutte le comande inviate.");
+  });
+
+  document.getElementById("comande-pronte").addEventListener("click", () => {
+    alert("Mostra le comande pronte da servire.");
+  });
+</script>
+
+</body>
+</html>
