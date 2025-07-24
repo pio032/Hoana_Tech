@@ -451,32 +451,34 @@
     }
 
     // Funzione per eliminare un prodotto
-    async function deleteProduct(productId) {
-      try {
-        const response = await fetch(`/api/products/${productId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-          throw new Error(data.message || 'Errore nell\'eliminazione del prodotto');
-        }
-
-        // Ricarica i prodotti
-        await loadProducts();
-        
-        // Mostra messaggio di successo (opzionale)
-        alert('Prodotto eliminato con successo!');
-
-      } catch (error) {
-        console.error('Errore nell\'eliminazione del prodotto:', error);
-        showError('Errore nell\'eliminazione del prodotto');
+  // Funzione per eliminare un prodotto
+async function deleteProduct(productId) {
+  console.log('Tentativo di eliminazione prodotto ID:', productId); // Debug
+  try {
+    const response = await fetch(`/api/products/${productId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
       }
+    });
+
+    console.log('Risposta ricevuta:', response); // Debug
+
+    const data = await response.json();
+    console.log('Dati risposta:', data); // Debug
+
+    if (!data.success) {
+      throw new Error(data.message || 'Errore nell\'eliminazione del prodotto');
     }
+
+    await loadProducts();
+    alert('Prodotto eliminato con successo!');
+
+  } catch (error) {
+    console.error('Errore completo:', error); // Debug
+    showError(error.message || 'Errore nell\'eliminazione del prodotto');
+  }
+}
 
     // Funzione per modificare un prodotto
     function editProduct(productId) {
