@@ -73,7 +73,7 @@
   <main class="container">
     <!-- Header Section -->
     <div class="header-section">
-      <h1>Admin Area</h1>
+      <h1>🔧 Area Amministratore</h1>
       <p>Benvenuto nel pannello di controllo amministrativo</p>
     </div>
 
@@ -98,8 +98,12 @@
         <h3 class="card-title">Gestione Utenti</h3>
         <p class="card-description">Visualizza, modifica ed elimina gli account utente. Gestisci ruoli e permessi.</p>
         <div class="grid">
-          <button onclick="location.href='/admin/users'">Visualizza Utenti</button>
-          <button onclick="location.href='/admin/users/create'" class="secondary">Crea Utente</button>
+          <form action="/admin/select" method="GET" style="margin: 0;">
+            <input type="submit" value="Visualizza Utenti" />
+          </form>
+          <form action="/admin/users/create" method="GET" style="margin: 0;">
+            <input type="submit" value="Crea Utente" class="secondary" />
+          </form>
         </div>
       </article>
 
@@ -109,8 +113,12 @@
         <h3 class="card-title">Gestione Prodotti</h3>
         <p class="card-description">Aggiungi, modifica e rimuovi prodotti dal catalogo. Gestisci inventario e prezzi.</p>
         <div class="grid">
-          <button onclick="location.href='/admin/products'">Vedi Prodotti</button>
-          <button onclick="location.href='/admin/products/create'" class="secondary">Nuovo Prodotto</button>
+          <form action="/admin/products" method="GET" style="margin: 0;">
+            <input type="submit" value="Vedi Prodotti" />
+          </form>
+          <form action="/admin/products/create" method="GET" style="margin: 0;">
+            <input type="submit" value="Nuovo Prodotto" class="secondary" />
+          </form>
         </div>
       </article>
 
@@ -118,7 +126,9 @@
 
     <!-- Quick Actions -->
     <div style="margin-top: 2rem; text-align: center;">
-      <button onclick="location.href='/logout'" class="secondary">Logout</button>
+      <form action="/logout" method="POST" style="margin: 0;">
+        <input type="submit" value="Logout" class="secondary" />
+      </form>
     </div>
 
   </main>

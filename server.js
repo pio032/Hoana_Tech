@@ -65,7 +65,7 @@ app.post('/login', (req, res) => {
         if(results.length>0){
           switch(results[0].tipo){
                   case "admin":
-                      res.sendFile(path.join(__dirname, 'secure/admin.html'));
+                      res.sendFile(path.join(__dirname, 'secure/admin/admin.html'));
                       break;
                   case "cucina":
                       res.sendFile(path.join(__dirname, 'secure/cucina.html'));
@@ -85,6 +85,74 @@ app.post('/login', (req, res) => {
     }
   });
  
+});
+//------------------------------------------------------------------ROUTE----------------------------------------------------------------
+app.get("/admin", (req, res)=>{
+  res.sendFile(path.join(__dirname, 'secure/admin/admin.html'));
+})
+
+//------------------------------------------------------------------ADMIN------------------------------------------------------------------
+
+app.get("/admin/user", (req, res)=>{
+ const query = 'SELECT * FROM user';
+  
+  conn.query(query, (err, results) => {
+    if (err) {
+      console.error('Errore query utenti:', err);
+      res.status(500).send('Errore del server');
+      return;
+    }
+    
+    res.json(results);
+  })
+})
+app.get("/admin/select", (req, res)=>{
+  res.sendFile(path.join(__dirname, 'secure/admin/user.html'));
+})
+// Aggiorna utente
+app.post('/admin/users/update', (req, res) => {
+  const { id, username, password, tipo } = req.body;
+  
+  let query = 'UPDATE user SET username = ?, tipo = ?';
+  let params = [username, tipo];
+  
+  if (password && password.trim() !== '') {
+    query += ', password = ?';
+    params.push(password);
+  }
+  
+  query += ' WHERE id = ?';
+  params.push(id);
+  
+  conn.query(query, params, (err, result) => {
+    if (err) {
+      console.error('Errore aggiornamento utente:', err);
+      res.json({ success: false, message: 'Errore del server' });
+      return;
+    }
+    res.json({ success: true, message: 'Utente aggiornato con successo' });
+  });
+});
+
+// Elimina utente
+app.post('/admin/users/delete', (req, res) => {
+  const { id } = req.body;
+  
+  const query = 'DELETE FROM user WHERE id = ?';
+  conn.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Errore eliminazione utente:', err);
+      res.json({ success: false, message: 'Errore del server' });
+      return;
+    }
+    
+    if (result.affectedRows === 0) {
+      res.json({ success: false, message: 'Utente non trovato' });
+      return;
+    }
+    
+    res.json({ success: true, message: 'Utente eliminato con successo' });
+  });
 });
 
 //-----------------------------------------------------------------LISTEN----------------------------------------------------------------

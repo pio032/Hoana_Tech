@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gestione Utenti</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .actions form {
+      margin: 0;
+    }
+    
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--pico-border-color);
+    }
+    
+    .delete-btn {
+      background-color: var(--pico-del-color, #dc3545);
+      border-color: var(--pico-del-color, #dc3545);
+    }
+    
+    .delete-btn:hover {
+      background-color: #c82333 !important;
+      border-color: #c82333 !important;
+    }
+    
+    table th {
+      white-space: nowrap;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    
+    <!-- Header -->
+    <div class="header-section">
+      <div>
+        <h1>👥 Gestione Utenti</h1>
+        <p>Visualizza, modifica ed elimina gli utenti del sistema</p>
+      </div>
+    </div>
+
+    <!-- Tabella Utenti -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Tipo</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody id="users-table">
+          <!-- Gli utenti verranno caricati qui -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Messaggio di caricamento -->
+    <div id="loading" style="text-align: center; padding: 2rem;">
+      <p>Caricamento utenti...</p>
+    </div>
+
+    <!-- Messaggio errore -->
+    <div id="error" style="display: none; text-align: center; padding: 2rem;">
+      <p style="color: var(--pico-del-color);">Errore nel caricamento degli utenti</p>
+    </div>
+
+    <!-- Navigation -->
+    <div style="margin-top: 2rem; text-align: center;">
+      <form action="/admin" method="GET" style="margin: 0;">
+        <input type="submit" value="← Torna alla Dashboard" class="secondary" />
+      </form>
+    </div>
+
+  </main>
+
+  <script>
+    // Carica gli utenti quando la pagina è pronta
+    document.addEventListener('DOMContentLoaded', function() {
+      loadUsers();
+    });
+
+    function loadUsers() {
+      fetch('/admin/user')
+        .then(response => response.json())
+        .then(users => {
+          displayUsers(users);
+        })
+        .catch(error => {
+          console.error('Errore:', error);
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('error').style.display = 'block';
+        });
+    }
+
+    function displayUsers(users) {
+      const tbody = document.getElementById('users-table');
+      const loading = document.getElementById('loading');
+      
+      loading.style.display = 'none';
+      
+      if (users.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; padding: 2rem;">
+              Nessun utente trovato
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = users.map(user => `
+        <tr id="user-row-${user.id}">
+          <td>${user.id}</td>
+          <td><strong>${user.username}</strong></td>
+          <td><span style="background: var(--pico-primary-background); padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">${user.tipo || 'N/A'}</span></td>
+          <td>
+            <div class="actions">
+              <button onclick="toggleEdit(${user.id})" class="secondary" id="edit-btn-${user.id}">Modifica</button>
+              <button onclick="deleteUser(${user.id}, '${user.username}')" class="delete-btn">Elimina</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function toggleEdit(userId) {
+      // Chiudi altre righe di modifica aperte
+      document.querySelectorAll('.edit-row').forEach(row => row.remove());
+      document.querySelectorAll('[id^="edit-btn-"]').forEach(btn => {
+        btn.textContent = 'Modifica';
+        btn.onclick = function() { toggleEdit(btn.id.split('-')[2]); };
+      });
+
+      const editRow = document.getElementById(`edit-row-${userId}`);
+      const editBtn = document.getElementById(`edit-btn-${userId}`);
+      
+      if (editRow) {
+        // Chiudi modifica
+        editRow.remove();
+        editBtn.textContent = 'Modifica';
+        editBtn.onclick = function() { toggleEdit(userId); };
+      } else {
+        // Apri modifica
+        const userRow = document.getElementById(`user-row-${userId}`);
+        const user = getCurrentUserData(userId);
+        
+        const editRowHtml = `
+          <tr class="edit-row" id="edit-row-${userId}" style="background-color: var(--pico-card-background-color);">
+            <td colspan="4">
+              <div style="padding: 1rem; border: 1px solid var(--pico-border-color); border-radius: var(--pico-border-radius);">
+                <h4>Modifica Utente #${userId}</h4>
+                <form id="edit-form-${userId}" onsubmit="saveUser(event, ${userId})">
+                  <div class="grid">
+                    <div>
+                      <label>Username</label>
+                      <input type="text" id="edit-username-${userId}" value="${user.username}" required />
+                    </div>
+                    <div>
+                      <label>Password</label>
+                      <input type="password" id="edit-password-${userId}" placeholder="Lascia vuoto per non modificare" />
+                    </div>
+                    <div>
+                      <label>Tipo</label>
+                      <select id="edit-tipo-${userId}" required>
+                        <option value="admin" ${user.tipo === 'admin' ? 'selected' : ''}>Admin</option>
+                        <option value="cucina" ${user.tipo === 'cucina' ? 'selected' : ''}>Cucina</option>
+                        <option value="cameriere" ${user.tipo === 'cameriere' ? 'selected' : ''}>Cameriere</option>
+                        <option value="cassa" ${user.tipo === 'cassa' ? 'selected' : ''}>Cassa</option>
+                        <option value="bancone" ${user.tipo === 'bancone' ? 'selected' : ''}>Bancone</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="actions" style="margin-top: 1rem;">
+                    <input type="submit" value="Salva Modifiche" />
+                    <button type="button" onclick="closeEdit(${userId})" class="secondary">Annulla</button>
+                  </div>
+                </form>
+              </div>
+            </td>
+          </tr>
+        `;
+        
+        userRow.insertAdjacentHTML('afterend', editRowHtml);
+        editBtn.textContent = 'Chiudi';
+        editBtn.onclick = function() { closeEdit(userId); };
+      }
+    }
+
+    function closeEdit(userId) {
+      const editRow = document.getElementById(`edit-row-${userId}`);
+      const editBtn = document.getElementById(`edit-btn-${userId}`);
+      
+      if (editRow) {
+        editRow.remove();
+      }
+      
+      editBtn.textContent = 'Modifica';
+      editBtn.onclick = function() { toggleEdit(userId); };
+    }
+
+    function getCurrentUserData(userId) {
+      const userRow = document.getElementById(`user-row-${userId}`);
+      return {
+        username: userRow.cells[1].textContent.trim(),
+        tipo: userRow.cells[2].textContent.trim()
+      };
+    }
+
+    function saveUser(event, userId) {
+      event.preventDefault();
+      
+      const username = document.getElementById(`edit-username-${userId}`).value;
+      const password = document.getElementById(`edit-password-${userId}`).value;
+      const tipo = document.getElementById(`edit-tipo-${userId}`).value;
+      
+      const updateData = {
+        id: userId,
+        username: username,
+        tipo: tipo
+      };
+      
+      if (password.trim() !== '') {
+        updateData.password = password;
+      }
+      
+      fetch('/admin/users/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          alert('Utente aggiornato con successo!');
+          loadUsers(); // Ricarica la lista
+        } else {
+          alert('Errore nell\'aggiornamento: ' + result.message);
+        }
+      })
+      .catch(error => {
+        console.error('Errore:', error);
+        alert('Errore nell\'aggiornamento dell\'utente');
+      });
+    }
+
+    function deleteUser(userId, username) {
+      if (!confirm(`Sei sicuro di voler eliminare l'utente "${username}"?\n\nQuesta azione non può essere annullata.`)) {
+        return;
+      }
+
+      fetch('/admin/users/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: userId })
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          alert('Utente eliminato con successo!');
+          loadUsers(); // Ricarica la lista
+        } else {
+          alert('Errore nell\'eliminazione: ' + result.message);
+        }
+      })
+      .catch(error => {
+        console.error('Errore:', error);
+        alert('Errore nell\'eliminazione dell\'utente');
+      });
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('it-IT');
+    }
+
+    function confirmDelete(username) {
+      return confirm(`Sei sicuro di voler eliminare l'utente "${username}"?\n\nQuesta azione non può essere annullata.`);
+    }
+  </script>
+
+</body>
+</html>
