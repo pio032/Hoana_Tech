@@ -341,6 +341,100 @@ app.post('/addProduct', upload.single('foto'), (req, res) => {
 // Middleware per servire file statici dalla cartella uploads
 app.use('/uploads', express.static('uploads'));
 
+app.get("/admin/prod", (req, res)=>{
+  res.sendFile(path.join(__dirname, 'secure/admin/product.html'))
+})
+
+app.get('/api/products', (req, res) => {
+  console.log("SONO QUI ")
+
+  app.get('/api/products', (req, res) => {
+  const query = 'SELECT * FROM prodotti'; 
+
+  conn.query(query, (err, results) => {
+    console.log("res", results)
+    if (err) {
+      console.error('Errore nel recupero dei prodotti:', err);
+      return res.status(500).json({
+        success: false,
+        message: 'Errore nel recupero dei prodotti dal database'
+      });
+    }
+
+    // Se nessun errore, rispondi con i dati
+    res.json({
+      success: true,
+      products: results
+    });
+  });
+});
+
+});
+
+
+app.post("/admin/products/delete", (req, res) => {
+  const { id } = req.body;
+  
+  // Recupera il path della foto per rimuoverla dal filesystem
+  conn.query("SELECT fotoPath FROM prodotti WHERE id = ?", [id], (err, results) => {
+    if (err || results.length === 0) {
+      return res.json({ success: false, message: 'Prodotto non trovato' });
+    }
+
+    const fotoPath = results[0].fotoPath;
+
+    conn.query("DELETE FROM prodotti WHERE id = ?", [id], (err2, result) => {
+      if (err2) {
+        console.error('Errore eliminazione prodotto:', err2);
+        return res.json({ success: false, message: 'Errore durante l\'eliminazione' });
+      }
+
+      if (fotoPath && fs.existsSync(fotoPath)) {
+        fs.unlink(fotoPath, (err) => {
+          if (err) console.error("Errore rimozione immagine:", err);
+        });
+      }
+
+      res.json({ success: true, message: 'Prodotto eliminato' });
+    });
+  });
+});
+
+
+app.post("/admin/products/update", upload.single("foto"), (req, res) => {
+  const { id, nome, descrizione, prezzo } = req.body;
+
+  if (!id || !nome || !descrizione || !prezzo) {
+    return res.status(400).json({ success: false, message: 'Tutti i campi sono obbligatori' });
+  }
+
+  const updateBase = "UPDATE prodotti SET nome = ?, descrizione = ?, prezzo = ?";
+  const values = [nome, descrizione, parseFloat(prezzo)];
+
+  if (req.file) {
+    const fotoPath = 'uploads/' + req.file.filename;
+
+    // Rimuove la vecchia immagine
+    conn.query("SELECT fotoPath FROM prodotti WHERE id = ?", [id], (err, results) => {
+      if (!err && results.length > 0 && results[0].fotoPath) {
+        fs.unlink(results[0].fotoPath, () => {});
+      }
+    });
+
+    conn.query(updateBase + ", fotoPath = ? WHERE id = ?", [...values, fotoPath, id], (err) => {
+      if (err) return res.status(500).json({ success: false, message: 'Errore aggiornamento prodotto' });
+      res.json({ success: true, message: 'Prodotto aggiornato con nuova foto' });
+    });
+  } else {
+    conn.query(updateBase + " WHERE id = ?", [...values, id], (err) => {
+      if (err) return res.status(500).json({ success: false, message: 'Errore aggiornamento prodotto' });
+      res.json({ success: true, message: 'Prodotto aggiornato' });
+    });
+  }
+});
+
+
+
 
 //-----------------------------------------------------------------LISTEN----------------------------------------------------------------
 app.listen(3000, () => {

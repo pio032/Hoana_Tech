@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestione Prodotti</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    .home-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 999;
+      padding: 0.5rem 0.75rem;
+      background: var(--pico-primary);
+      color: var(--pico-primary-inverse);
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    }
+
+    .home-btn:hover {
+      background: var(--pico-primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .home-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .add-product-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--pico-primary);
+      color: var(--pico-primary-inverse);
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .add-product-btn:hover {
+      background: var(--pico-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .add-product-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .products-table {
+      margin-top: 1rem;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .products-table table {
+      margin: 0;
+      border-radius: 0;
+    }
+
+    .product-image {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--pico-border-color);
+    }
+
+    .price-cell {
+      font-weight: 600;
+      color: var(--pico-primary);
+    }
+
+    .description-cell {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .actions-cell {
+      text-align: center;
+      width: 120px;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: all 0.2s ease;
+    }
+
+    .delete-btn:hover {
+      background: #c82333;
+      transform: translateY(-1px);
+    }
+
+    .delete-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .edit-btn {
+      background: var(--pico-primary);
+      color: var(--pico-primary-inverse);
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: all 0.2s ease;
+      margin-right: 0.5rem;
+    }
+
+    .edit-btn:hover {
+      background: var(--pico-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .edit-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--pico-muted-color);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .loading svg {
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--pico-card-background-color);
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+
+    .btn-confirm {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-confirm:hover {
+      background: #c82333;
+    }
+
+    .btn-cancel {
+      background: var(--pico-secondary);
+      color: var(--pico-secondary-inverse);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    main.container {
+      padding-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .home-btn {
+        top: 15px;
+        left: 15px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+      }
+
+      .home-btn svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .products-table {
+        font-size: 0.85rem;
+      }
+
+      .description-cell {
+        max-width: 120px;
+      }
+
+      .actions-cell {
+        width: 100px;
+      }
+
+      .edit-btn, .delete-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+      }
+
+      .modal-content {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Pulsante Home sticky -->
+  <a href="/admin" class="home-btn">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+    </svg>
+    Home
+  </a>
+
+  <main class="container">
+    <h1>Gestione Prodotti</h1>
+
+   
+
+    <!-- Loading State -->
+    <div id="loading" class="loading">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Caricamento prodotti...
+    </div>
+
+    <!-- Tabella Prodotti -->
+    <div id="productsContainer" class="products-table" style="display: none;">
+      <table>
+        <thead>
+          <tr>
+            <th>Foto</th>
+            <th>Nome</th>
+            <th>Descrizione</th>
+            <th>Prezzo</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody id="productsTableBody">
+          <!-- I prodotti verranno inseriti qui dinamicamente -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+      </svg>
+      <h3>Nessun prodotto trovato</h3>
+      <p>Inizia aggiungendo il tuo primo prodotto!</p>
+    </div>
+  </main>
+
+  <!-- Modal di Conferma Eliminazione -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <h3>Conferma Eliminazione</h3>
+      <p>Sei sicuro di voler eliminare questo prodotto?</p>
+      <p><strong id="productToDelete"></strong></p>
+      <div class="modal-buttons">
+        <button id="confirmDelete" class="btn-confirm">Elimina</button>
+        <button id="cancelDelete" class="btn-cancel">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentProductId = null;
+    let products = [];
+
+    // Elementi DOM
+    const loading = document.getElementById('loading');
+    const productsContainer = document.getElementById('productsContainer');
+    const emptyState = document.getElementById('emptyState');
+    const productsTableBody = document.getElementById('productsTableBody');
+    const deleteModal = document.getElementById('deleteModal');
+    const productToDelete = document.getElementById('productToDelete');
+    const confirmDelete = document.getElementById('confirmDelete');
+    const cancelDelete = document.getElementById('cancelDelete');
+
+    // Carica i prodotti all'avvio
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProducts();
+    });
+
+    // Funzione per caricare i prodotti
+    async function loadProducts() {
+      try {
+        loading.style.display = 'block';
+        productsContainer.style.display = 'none';
+        emptyState.style.display = 'none';
+
+        const response = await fetch('/api/products');
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || 'Errore nel caricamento dei prodotti');
+        }
+
+        products = data.products || [];
+        
+        if (products.length === 0) {
+          showEmptyState();
+        } else {
+          displayProducts(products);
+        }
+
+      } catch (error) {
+        console.error('Errore nel caricamento dei prodotti:', error);
+        showError('Errore nel caricamento dei prodotti');
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    // Funzione per visualizzare i prodotti
+    function displayProducts(productList) {
+      productsTableBody.innerHTML = '';
+
+      productList.forEach(product => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>
+            <img src="/${product.foto}" alt="${product.nome}" class="product-image" 
+                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNjY2MiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMmwtMy4wOSAyLjk4TDIgMTJsNi45MSA3LjAyTDEyIDIydjEybC0zLjA5LTIuOThMMiAxMmw2LjkxLTcuMDJMMTIgMnoiLz48L3N2Zz4='">
+          </td>
+          <td><strong>${escapeHtml(product.nome)}</strong></td>
+          <td class="description-cell" title="${escapeHtml(product.descrizione)}">
+            ${escapeHtml(product.descrizione)}
+          </td>
+          <td class="price-cell">€${parseFloat(product.prezzo).toFixed(2)}</td>
+          <td class="actions-cell">
+            <button class="edit-btn" onclick="editProduct(${product.id})">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              Modifica
+            </button>
+            <button class="delete-btn" onclick="showDeleteModal(${product.id}, '${escapeHtml(product.nome)}')">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              Elimina
+            </button>
+          </td>
+        `;
+        productsTableBody.appendChild(row);
+      });
+
+      productsContainer.style.display = 'block';
+    }
+
+    // Funzione per mostrare lo stato vuoto
+    function showEmptyState() {
+      emptyState.style.display = 'block';
+    }
+
+    // Funzione per mostrare errori
+    function showError(message) {
+      // Qui potresti implementare un sistema di notifiche
+      alert(message);
+    }
+
+    // Funzione per mostrare il modal di eliminazione
+    function showDeleteModal(productId, productName) {
+      currentProductId = productId;
+      productToDelete.textContent = productName;
+      deleteModal.classList.add('show');
+    }
+
+    // Funzione per nascondere il modal
+    function hideDeleteModal() {
+      deleteModal.classList.remove('show');
+      currentProductId = null;
+    }
+
+    // Funzione per eliminare un prodotto
+    async function deleteProduct(productId) {
+      try {
+        const response = await fetch(`/api/products/${productId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || 'Errore nell\'eliminazione del prodotto');
+        }
+
+        // Ricarica i prodotti
+        await loadProducts();
+        
+        // Mostra messaggio di successo (opzionale)
+        alert('Prodotto eliminato con successo!');
+
+      } catch (error) {
+        console.error('Errore nell\'eliminazione del prodotto:', error);
+        showError('Errore nell\'eliminazione del prodotto');
+      }
+    }
+
+    // Funzione per modificare un prodotto
+    function editProduct(productId) {
+      window.location.href = `/edit-product/${productId}`;
+    }
+
+    // Escape HTML per prevenire XSS
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Event listeners per il modal
+    confirmDelete.addEventListener('click', async () => {
+      if (currentProductId) {
+        hideDeleteModal();
+        await deleteProduct(currentProductId);
+      }
+    });
+
+    cancelDelete.addEventListener('click', hideDeleteModal);
+
+    // Chiudi modal cliccando fuori
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        hideDeleteModal();
+      }
+    });
+
+    // Chiudi modal con ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && deleteModal.classList.contains('show')) {
+        hideDeleteModal();
+      }
+    });
+  </script>
+</body>
+</html>
