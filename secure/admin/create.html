@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Crea Nuovo Utente</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    .header-section {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--pico-border-color);
+    }
+    
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: var(--pico-card-background-color);
+      border-radius: var(--pico-border-radius);
+      border: 1px solid var(--pico-border-color);
+    }
+    
+    .success-message {
+      background-color: var(--pico-primary-background);
+      color: var(--pico-primary-color);
+      padding: 1rem;
+      border-radius: var(--pico-border-radius);
+      margin-bottom: 1rem;
+      display: none;
+    }
+    
+    .error-message {
+      background-color: #fee;
+      color: #c33;
+      padding: 1rem;
+      border-radius: var(--pico-border-radius);
+      margin-bottom: 1rem;
+      display: none;
+    }
+    
+    .form-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    
+    <!-- Header -->
+    <div class="header-section">
+      <h1>👤 Crea Nuovo Utente</h1>
+      <p>Aggiungi un nuovo utente al sistema</p>
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      
+      <!-- Messages -->
+      <div id="success-message" class="success-message">
+        Utente creato con successo!
+      </div>
+      
+      <div id="error-message" class="error-message">
+        <span id="error-text">Errore nella creazione dell'utente</span>
+      </div>
+      
+      <!-- Create User Form -->
+      <form id="create-user-form">
+        <div class="grid">
+          <div>
+            <label for="username">Username <span style="color: red;">*</span></label>
+            <input type="text" id="username" name="username" placeholder="Inserisci username" required>
+            <small>L'username deve essere unico nel sistema</small>
+          </div>
+          
+          <div>
+            <label for="tipo">Tipo Utente <span style="color: red;">*</span></label>
+            <select id="tipo" name="tipo" required>
+              <option value="">Seleziona tipo...</option>
+              <option value="admin">Admin</option>
+              <option value="cucina">Cucina</option>
+              <option value="cameriere">Cameriere</option>
+              <option value="cassa">Cassa</option>
+              <option value="bancone">Bancone</option>
+            </select>
+          </div>
+        </div>
+        
+        <div>
+          <label for="password">Password <span style="color: red;">*</span></label>
+          <input type="password" id="password" name="password" placeholder="Inserisci password" required>
+          <small>Minimo 6 caratteri</small>
+        </div>
+        
+        <div>
+          <label for="confirm-password">Conferma Password <span style="color: red;">*</span></label>
+          <input type="password" id="confirm-password" placeholder="Conferma password" required>
+          <small>Deve corrispondere alla password inserita sopra</small>
+        </div>
+        </form>
+        <div class="form-actions">
+          <button type="submit" id="submit-btn">
+            Crea Utente
+          </button>
+          <form action="/admin" method="GET" style="margin: 0;">
+            <input type="submit" value="Torna alla home" class="secondary" />
+          </form>
+        </div>
+      
+      
+    </div>
+
+  </main>
+
+  <script>
+    document.getElementById('create-user-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const tipo = document.getElementById('tipo').value;
+      
+      // Validazioni client-side
+      if (!username || !password || !tipo) {
+        showError('Tutti i campi obbligatori devono essere compilati');
+        return;
+      }
+      
+      if (password.length < 6) {
+        showError('La password deve essere di almeno 6 caratteri');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        showError('Le password non corrispondono');
+        return;
+      }
+      
+      // Disabilita il form durante l'invio
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creazione in corso...';
+      
+      // Invia i dati
+      fetch('/admin/users/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          tipo: tipo
+        })
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          showSuccess('Utente creato con successo!');
+          document.getElementById('create-user-form').reset();
+          
+          // Reindirizza dopo 2 secondi con form
+          setTimeout(() => {
+            const form = document.createElement('form');
+            form.method = 'GET';
+            form.action = '/admin/users';
+            document.body.appendChild(form);
+            form.submit();
+          }, 2000);
+        } else {
+          showError(result.message || 'Errore nella creazione dell\'utente');
+        }
+      })
+      .catch(error => {
+        console.error('Errore:', error);
+        showError('Errore di connessione al server');
+      })
+      .finally(() => {
+        // Riabilita il form
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Crea Utente';
+      });
+    });
+    
+    function showSuccess(message) {
+      hideMessages();
+      const successDiv = document.getElementById('success-message');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+    }
+    
+    function showError(message) {
+      hideMessages();
+      const errorDiv = document.getElementById('error-message');
+      document.getElementById('error-text').textContent = message;
+      errorDiv.style.display = 'block';
+    }
+    
+    function hideMessages() {
+      document.getElementById('success-message').style.display = 'none';
+      document.getElementById('error-message').style.display = 'none';
+    }
+    
+    // Validazione in tempo reale per conferma password
+    document.getElementById('confirm-password').addEventListener('input', function() {
+      const password = document.getElementById('password').value;
+      const confirmPassword = this.value;
+      
+      if (confirmPassword && password !== confirmPassword) {
+        this.setCustomValidity('Le password non corrispondono');
+      } else {
+        this.setCustomValidity('');
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -155,6 +155,60 @@ app.post('/admin/users/delete', (req, res) => {
   });
 });
 
+
+// Endpoint per mostrare la pagina di creazione
+app.get('/admin/users/create', (req, res) => {
+  res.sendFile(path.join(__dirname, '/secure/admin/create.html')); 
+});
+
+// Endpoint per creare l'utente
+app.post('/admin/users/create', (req, res) => {
+  const { username, password, tipo } = req.body;
+  
+  // Validazioni server-side
+  if (!username || !password || !tipo) {
+    res.json({ success: false, message: 'Tutti i campi sono obbligatori' });
+    return;
+  }
+  
+  if (password.length < 6) {
+    res.json({ success: false, message: 'La password deve essere di almeno 6 caratteri' });
+    return;
+  }
+  
+  // Verifica se l'username esiste già
+  const checkQuery = 'SELECT id FROM user WHERE username = ?';
+  conn.query(checkQuery, [username], (err, results) => {
+    if (err) {
+      console.error('Errore verifica username:', err);
+      res.json({ success: false, message: 'Errore del server' });
+      return;
+    }
+    
+    if (results.length > 0) {
+      res.json({ success: false, message: 'Username già esistente' });
+      return;
+    }
+    
+    // Crea l'utente (nota: passsword con 3 s)
+    const insertQuery = 'INSERT INTO user (username, passsword, tipo) VALUES (?, ?, ?)';
+    conn.query(insertQuery, [username, password, tipo], (err, result) => {
+      if (err) {
+        console.error('Errore creazione utente:', err);
+        res.json({ success: false, message: 'Errore nella creazione dell\'utente' });
+        return;
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Utente creato con successo',
+        userId: result.insertId 
+      });
+    });
+  });
+});
+
+
 //-----------------------------------------------------------------LISTEN----------------------------------------------------------------
 app.listen(3000, () => {
   console.log('Server su http://localhost:3000');
