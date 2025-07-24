@@ -355,7 +355,7 @@ app.get("/admin/prod", (req, res)=>{
 
 // Ottieni tutti i prodotti
 app.get('/api/products', (req, res) => {
-  const query = 'SELECT nome, descrizione, prezzo, fotoPath as foto FROM prodotti';
+  const query = 'SELECT id, nome, descrizione, prezzo, fotoPath as foto FROM prodotti';
   
   conn.query(query, (err, results) => {
     if (err) {
@@ -375,41 +375,52 @@ app.get('/api/products', (req, res) => {
 
 
 
-// Endpoint GET per eliminazione prodotto
-app.get('/api/products/delete/:id', async (req, res) => {
-  console.log("Richiesta GET di eliminazione ricevuta per ID:", req.params.id);
-  
-  try {
-    const productId = req.params.id;
-    if (!productId) {
-      return res.status(400).json({ success: false, message: "ID prodotto mancante" });
-    }
+app.delete('/api/products/:id', (req, res) => {
+  console.log("Richiesta DELETE di eliminazione ricevuta per ID:", req.params.id);
 
-    // 1. Recupera il prodotto
-    const [product] = await conn.query('SELECT fotoPath FROM prodotti WHERE id = ?', [productId]);
+  const productId = req.params.id;
+  if (!productId) {
+    return res.status(400).json({ success: false, message: "ID prodotto mancante" });
+  }
+
+  // Recupera il prodotto
+  conn.query('SELECT fotoPath FROM prodotti WHERE id = ?', [productId], (err, rows) => {
+    if (err) {
+      console.error("Errore query SELECT:", err);
+      return res.status(500).json({ success: false, message: "Errore server durante la ricerca" });
+    }
     
-    if (!product) {
+    if (rows.length === 0) {
       return res.status(404).json({ success: false, message: "Prodotto non trovato" });
     }
 
-    // 2. Elimina l'immagine se esiste
+    const product = rows[0];
+
+    // Elimina l'immagine se esiste
     if (product.fotoPath) {
       const fullPath = path.join(__dirname, product.fotoPath);
       if (fs.existsSync(fullPath)) {
-        fs.unlinkSync(fullPath);
+        try {
+          fs.unlinkSync(fullPath);
+        } catch (fileError) {
+          console.error("Errore eliminazione file:", fileError);
+          // Continua comunque con l'eliminazione dal DB
+        }
       }
     }
 
-    // 3. Elimina il prodotto dal database
-    await conn.query('DELETE FROM prodotti WHERE id = ?', [productId]);
+    // Elimina il prodotto dal database
+    conn.query('DELETE FROM prodotti WHERE id = ?', [productId], (deleteErr, deleteResult) => {
+      if (deleteErr) {
+        console.error("Errore eliminazione prodotto:", deleteErr);
+        return res.status(500).json({ success: false, message: "Errore server durante l'eliminazione" });
+      }
 
-    res.json({ success: true, message: "Prodotto eliminato con successo" });
-
-  } catch (error) {
-    console.error("Errore eliminazione prodotto:", error);
-    res.status(500).json({ success: false, message: "Errore server durante l'eliminazione" });
-  }
+      res.json({ success: true, message: "Prodotto eliminato con successo" });
+    });
+  });
 });
+
 
 
 

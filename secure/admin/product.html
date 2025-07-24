@@ -122,31 +122,6 @@
       height: 14px;
     }
 
-    .edit-btn {
-      background: var(--pico-primary);
-      color: var(--pico-primary-inverse);
-      border: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      transition: all 0.2s ease;
-      margin-right: 0.5rem;
-    }
-
-    .edit-btn:hover {
-      background: var(--pico-primary-hover);
-      transform: translateY(-1px);
-    }
-
-    .edit-btn svg {
-      width: 14px;
-      height: 14px;
-    }
-
     .empty-state {
       text-align: center;
       padding: 3rem 1rem;
@@ -216,6 +191,10 @@
     .btn-confirm {
       background: #dc3545;
       color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
     .btn-confirm:hover {
@@ -225,6 +204,10 @@
     .btn-cancel {
       background: var(--pico-secondary);
       color: var(--pico-secondary-inverse);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
     @keyframes fadeIn {
@@ -266,7 +249,7 @@
         width: 100px;
       }
 
-      .edit-btn, .delete-btn {
+      .delete-btn {
         padding: 0.3rem 0.6rem;
         font-size: 0.8rem;
       }
@@ -288,8 +271,6 @@
 
   <main class="container">
     <h1>Gestione Prodotti</h1>
-
-   
 
     <!-- Loading State -->
     <div id="loading" class="loading">
@@ -369,11 +350,14 @@
         const response = await fetch('/api/products');
         const data = await response.json();
 
+        console.log('Dati ricevuti dal backend:', data); // DEBUG
+
         if (!data.success) {
           throw new Error(data.message || 'Errore nel caricamento dei prodotti');
         }
 
         products = data.products || [];
+        console.log('Prodotti elaborati:', products); // DEBUG
         
         if (products.length === 0) {
           showEmptyState();
@@ -383,7 +367,7 @@
 
       } catch (error) {
         console.error('Errore nel caricamento dei prodotti:', error);
-        showError('Errore nel caricamento dei prodotti');
+        showError('Errore nel caricamento dei prodotti: ' + error.message);
       } finally {
         loading.style.display = 'none';
       }
@@ -393,7 +377,7 @@
     function displayProducts(productList) {
       productsTableBody.innerHTML = '';
 
-      productList.forEach(product => {
+      productList.forEach((product, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>
@@ -406,13 +390,8 @@
           </td>
           <td class="price-cell">€${parseFloat(product.prezzo).toFixed(2)}</td>
           <td class="actions-cell">
-            <button class="edit-btn" onclick="editProduct(${product.id})">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-              </svg>
-              Modifica
-            </button>
             <button class="delete-btn" onclick="showDeleteModal(${product.id}, '${escapeHtml(product.nome)}')">
+
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
@@ -433,7 +412,6 @@
 
     // Funzione per mostrare errori
     function showError(message) {
-      // Qui potresti implementare un sistema di notifiche
       alert(message);
     }
 
@@ -450,49 +428,52 @@
       currentProductId = null;
     }
 
-   async function deleteProduct(productId) {
-  console.log('Tentativo di eliminazione prodotto ID:', productId);
-  
-  try {
-    const response = await fetch(`http://localhost:3000/api/products/delete/${productId}`, {
-      method: 'GET',  // Cambiato da DELETE a GET
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + localStorage.getItem('token')
-      },
-      credentials: 'include'
-    });
+    // Funzione per eliminare un prodotto
+    async function deleteProduct(productId) {
+      console.log('deleteProduct chiamata con ID:', productId, 'tipo:', typeof productId); // DEBUG
+      
+      if (!productId && productId !== 0) {
+        console.log('Errore: productId mancante o non valido');
+        return;
+      }
 
-    console.log('Stato risposta:', response.status);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `Errore HTTP: ${response.status}`);
-    }
+      console.log('Chiamata DELETE per prodotto ID:', productId);
 
-    const data = await response.json();
-    console.log('Risposta:', data);
-    
-    if (!data.success) {
-      throw new Error(data.message || 'Errore nell\'eliminazione');
-    }
+      try {
+        const response = await fetch(`/api/products/${productId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
 
-    await loadProducts();
-    alert('Prodotto eliminato con successo!');
-    
-  } catch (error) {
-    console.error('Errore eliminazione:', error);
-    showError(error.message || 'Errore durante l\'eliminazione');
-  }
-}
+        console.log('Risposta DELETE ricevuta:', response.status);
 
-    // Funzione per modificare un prodotto
-    function editProduct(productId) {
-      window.location.href = `/edit-product/${productId}`;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Errore HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Dati risposta DELETE:', data);
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Errore durante l\'eliminazione');
+        }
+
+        // Ricarica i prodotti
+        await loadProducts();
+        alert('Prodotto eliminato con successo!');
+
+      } catch (error) {
+        console.error('Errore eliminazione:', error);
+        showError('Errore durante l\'eliminazione: ' + error.message);
+      }
     }
 
     // Escape HTML per prevenire XSS
     function escapeHtml(text) {
+      if (!text) return '';
       const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -500,15 +481,15 @@
         '"': '&quot;',
         "'": '&#039;'
       };
-      return text.replace(/[&<>"']/g, m => map[m]);
+      return text.toString().replace(/[&<>"']/g, m => map[m]);
     }
 
     // Event listeners per il modal
     confirmDelete.addEventListener('click', async () => {
-      if (currentProductId) {
-        hideDeleteModal();
-        await deleteProduct(currentProductId);
-      }
+      console.log('Pulsante Elimina cliccato, ID prodotto:', currentProductId);
+      const productIdToDelete = currentProductId; // Salva l'ID prima di nascondere il modal
+      hideDeleteModal();
+      await deleteProduct(productIdToDelete); // Passa l'ID come parametro
     });
 
     cancelDelete.addEventListener('click', hideDeleteModal);
