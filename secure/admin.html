@@ -1,16 +1,126 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-  <title>Admin Page</title>
+  <title>Admin Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-
+  <style>
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    
+    .admin-card {
+      border: 1px solid var(--pico-border-color);
+      border-radius: var(--pico-border-radius);
+      padding: 1.5rem;
+      background: var(--pico-card-background-color);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .admin-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .card-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    
+    .card-title {
+      margin-bottom: 0.5rem;
+      color: var(--pico-primary-color);
+    }
+    
+    .card-description {
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+    
+    .header-section {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--pico-border-color);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      text-align: center;
+      padding: 1rem;
+      background: var(--pico-primary-background);
+      border-radius: var(--pico-border-radius);
+    }
+    
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--pico-primary-color);
+    }
+  </style>
 </head>
 
 <body>
-  <h1 align ="center">Bevenuto area admin</h1>
-  <form action="/create">
-    
-  </form>
-</body>
+  <main class="container">
+    <!-- Header Section -->
+    <div class="header-section">
+      <h1>Admin Area</h1>
+      <p>Benvenuto nel pannello di controllo amministrativo</p>
+    </div>
 
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">247</div>
+        <div>Utenti Totali</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">89</div>
+        <div>Prodotti</div>
+      </div>
+    </div>
+
+    <!-- Admin Functions Grid -->
+    <div class="dashboard-grid">
+      
+      <!-- Gestione Utenti -->
+      <article class="admin-card">
+        <span class="card-icon">👥</span>
+        <h3 class="card-title">Gestione Utenti</h3>
+        <p class="card-description">Visualizza, modifica ed elimina gli account utente. Gestisci ruoli e permessi.</p>
+        <div class="grid">
+          <button onclick="location.href='/admin/users'">Visualizza Utenti</button>
+          <button onclick="location.href='/admin/users/create'" class="secondary">Crea Utente</button>
+        </div>
+      </article>
+
+      <!-- Gestione Prodotti -->
+      <article class="admin-card">
+        <span class="card-icon">📦</span>
+        <h3 class="card-title">Gestione Prodotti</h3>
+        <p class="card-description">Aggiungi, modifica e rimuovi prodotti dal catalogo. Gestisci inventario e prezzi.</p>
+        <div class="grid">
+          <button onclick="location.href='/admin/products'">Vedi Prodotti</button>
+          <button onclick="location.href='/admin/products/create'" class="secondary">Nuovo Prodotto</button>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="margin-top: 2rem; text-align: center;">
+      <button onclick="location.href='/logout'" class="secondary">Logout</button>
+    </div>
+
+  </main>
+</body>
 </html>
