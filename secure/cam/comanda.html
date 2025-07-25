@@ -92,7 +92,7 @@
             </svg>
             Home
         </a>
-        <h1>Fai Comanda</h1>
+        <h1 align="center">Fai Comanda</h1>
 
         <!-- Ricerca Prodotti -->
         <section>
@@ -108,6 +108,11 @@
             <div class="total">
                 Totale: €<span id="totalAmount">0.00</span>
             </div>
+            <section>
+                <h3>Numero Tavolo</h3>
+                <input type="text" id="tableNumber" placeholder="Inserisci numero tavolo" />
+            </section>
+
             <button id="saveOrder" class="contrast">Salva Comanda</button>
         </section>
     </div>
@@ -141,7 +146,7 @@
 
             // Dati di esempio se l'API non funziona
             products = [
-             
+
             ];
             console.log('Prodotti di esempio caricati:', products);
         }
@@ -174,24 +179,27 @@
 
         // Aggiungi prodotto alla comanda
         function addToOrder(productId) {
-            const product = products.find(p => p.id === productId);
-            const existingItem = currentOrder.find(item => item.id === productId);
+    const product = products.find(p => p.id === productId);
+    const existingItem = currentOrder.find(item => item.id === productId);
 
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                currentOrder.push({
-                    id: product.id,
-                    name: product.name,
-                    price: product.price,
-                    quantity: 1
-                });
-            }
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        currentOrder.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            quantity: 1,
+            foto: product.foto,           // ✅ aggiunto
+            description: product.description // ✅ aggiunto
+        });
+    }
 
-            updateOrderDisplay();
-            document.getElementById('searchInput').value = '';
-            document.getElementById('searchResults').style.display = 'none';
-        }
+    updateOrderDisplay();
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchResults').style.display = 'none';
+}
+
 
         // Aggiorna quantità
         function updateQuantity(productId, change) {
@@ -241,38 +249,43 @@
             const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             document.getElementById('totalAmount').textContent = total.toFixed(2);
         }
-
-        // Salva comanda
+        //salva la comanda
         async function saveOrder() {
-            if (currentOrder.length === 0) {
-                alert('Aggiungi almeno un prodotto alla comanda');
-                return;
-            }
+    const tavolo = document.getElementById('tableNumber').value.trim();
+    if (!tavolo) {
+        alert('Inserisci il numero del tavolo');
+        return;
+    }
+    if (currentOrder.length === 0) {
+        alert('Aggiungi almeno un prodotto alla comanda');
+        return;
+    }
 
-            try {
-                const response = await fetch('/api/orders', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        items: currentOrder,
-                        total: currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-                    })
-                });
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tavolo: tavolo,
+                items: currentOrder,
+                total: currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            })
+        });
 
-                if (response.ok) {
-                    alert('Comanda salvata con successo!');
-                    currentOrder = [];
-                    updateOrderDisplay();
-                } else {
-                    alert('Errore nel salvare la comanda');
-                }
-            } catch (error) {
-                console.error('Errore:', error);
-                alert('Errore nel salvare la comanda');
-            }
+        if (response.ok) {
+            alert('Comanda salvata con successo!');
+            currentOrder = [];
+            document.getElementById('tableNumber').value = '';
+            updateOrderDisplay();
+        } else {
+            alert('Errore nel salvare la comanda');
         }
+    } catch (error) {
+        console.error('Errore:', error);
+        alert('Errore nel salvare la comanda');
+    }
+}
+
 
         // Event listeners
         document.getElementById('searchInput').addEventListener('input', (e) => {

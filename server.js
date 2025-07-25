@@ -429,10 +429,81 @@ app.delete('/api/products/:id', (req, res) => {
 app.get("/doComanda", (req, res)=>{
     res.sendFile(path.join(__dirname, 'secure/cam/comanda.html'));
 })
+
+
 app.post("/api/orders", (req, res)=>{
-  console.log("data", req.body)
-  
-   res.status(200).send("OK");
+
+ const { tavolo, items } = req.body;
+
+  if (!tavolo || !items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: "Dati mancanti o invalidi" });
+  }
+
+  conn.beginTransaction(err => {
+    if (err) return res.status(500).json({ error: "Errore transazione" });
+
+    // Inserisci comanda
+    conn.query(
+      "INSERT INTO comanda (tavolo) VALUES (?)",
+      [tavolo],
+      (err, result) => {
+        if (err) {
+          return conn.rollback(() => {
+            res.status(500).json({ error: "Errore inserimento comanda" });
+          });
+        }
+
+        const comandaId = result.insertId;
+
+        // Funzione per inserire ordini uno alla volta espandendo quantità
+        const insertOrders = (index) => {
+          if (index >= items.length) {
+            // Fine inserimenti, commit transazione
+            return conn.commit(err => {
+              if (err) {
+                return conn.rollback(() => {
+                  res.status(500).json({ error: "Errore commit" });
+                });
+              }
+              res.status(200).send("OK");
+            });
+          }
+
+          const item = items[index];
+
+          // Per ogni unità di quantità crea una riga distinta
+          let count = 0;
+
+          const insertSingleOrder = () => {
+            if (count >= item.quantity) {
+              // Passa all'item successivo
+              return insertOrders(index + 1);
+            }
+            console.log("item", item)
+
+            conn.query(
+              `INSERT INTO ordini (comanda_id, nome_prodotto, prezzo, note, path_foto, pagato)
+   VALUES (?, ?, ?, ?, ?, FALSE)`,
+  [comandaId, item.name, item.price, item.note || '', item.foto],
+              (err) => {
+                if (err) {
+                  return conn.rollback(() => {
+                    res.status(500).json({ error: "Errore inserimento ordine" });
+                  });
+                }
+                count++;
+                insertSingleOrder();
+              }
+            );
+          };
+
+          insertSingleOrder();
+        };
+
+        insertOrders(0);
+      }
+    );
+  });
   
 })
 
