@@ -96,7 +96,13 @@
                 const res = await fetch('/api/comande');
                 const data = await res.json();
               
+                // Ordina le comande in ordine decrescente (dalla più recente alla più vecchia)
+                data.sort((a, b) => b.id - a.id);
+              
                 const container = document.getElementById('comandeContainer');
+                
+                // Svuota il container prima di riempirlo
+                container.innerHTML = '';
 
                 data.forEach(comanda => {
                     const prodottiRaggruppati = {};
@@ -113,28 +119,37 @@
 
                     // Crea l'articolo
                     const article = document.createElement('article');
-                   
+
+                    // Costruisci gli stati solo se diversi da 'n'
+                    let statoHtml = '';
+                    if (comanda.stato && comanda.stato !== 'n') {
+                        statoHtml += `
+                            <span class="stato ${comanda.stato}">
+                                Cucina: ${comanda.stato === 'pronta' ? 'Pronta' : comanda.stato.replace('_', ' ')}
+                            </span>`;
+                    }
+                    if (comanda.stato_drink && comanda.stato_drink !== 'n') {
+                        statoHtml += `
+                            <span class="stato ${comanda.stato_drink}">
+                                Bar: ${comanda.stato_drink === 'pronta' ? 'Pronta' : comanda.stato_drink.replace('_', ' ')}
+                            </span>`;
+                    }
+
                     article.innerHTML = `
-   <h2>
-  Comanda #${comanda.id} - Tavolo ${comanda.tavolo}
-  ${comanda.stato ? `
-    <span class="stato ${comanda.stato}">
-      Stato: ${comanda.stato === 'pronta' ? 'Pronta' : comanda.stato.replace('_', ' ')}
-    </span>` : ''}
+                        <h2>
+                            Comanda #${comanda.id} - Tavolo ${comanda.tavolo}
+                            ${statoHtml}
+                        </h2>
 
-</h2>
-
-
-  <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
-    ${comanda.prodotti.map(prodotto => `
-      <div style="text-align: center;">
-        <img src="${prodotto.foto}" alt="${prodotto.nome}" style="width: 100px; border-radius: 8px;" />
-        <p>${prodotto.nome}</p>
-      </div>
-    `).join('')}
-  </div>
-`;
-
+                        <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                            ${comanda.prodotti.map(prodotto => `
+                                <div style="text-align: center;">
+                                    <img src="${prodotto.foto}" alt="${prodotto.nome}" style="width: 100px; border-radius: 8px;" />
+                                    <p>${prodotto.nome}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
 
                     container.appendChild(article);
                 });
@@ -144,7 +159,11 @@
             }
         }
 
+        // Carica le comande al primo caricamento
         loadComande();
+        
+        // Aggiorna le comande ogni 4 secondi
+        setInterval(loadComande, 4000);
     </script>
 </body>
 

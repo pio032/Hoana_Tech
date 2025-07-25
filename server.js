@@ -434,92 +434,159 @@ app.get("/doComanda", (req, res) => {
 
 
 app.post("/api/orders", (req, res) => {
-
   const { tavolo, items } = req.body;
 
+  // Validazione input
   if (!tavolo || !items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Dati mancanti o invalidi" });
   }
 
-  conn.beginTransaction(err => {
-    if (err) return res.status(500).json({ error: "Errore transazione" });
+  // Estrai tutti i nomi dei prodotti per la query
+  const nomiProdotti = items.map(item => item.name);
 
-    // Inserisci comanda
-    conn.query(
-      "INSERT INTO comanda (tavolo) VALUES (?)",
-      [tavolo],
-      (err, result) => {
-        if (err) {
-          return conn.rollback(() => {
-            res.status(500).json({ error: "Errore inserimento comanda" });
+  // Recupera tipo (food/drink) da prodotti.nome
+  const placeholders = nomiProdotti.map(() => '?').join(',');
+  const query = `SELECT nome, tipo FROM prodotti WHERE nome IN (${placeholders})`;
+
+  conn.query(query, nomiProdotti, (err, risultati) => {
+    if (err) {
+      console.error("Errore durante il recupero dei tipi:", err);
+      return res.status(500).json({ error: "Errore recupero tipi" });
+    }
+
+    // Verifica che tutti i prodotti esistano
+    if (risultati.length !== nomiProdotti.length) {
+      const prodottiTrovati = risultati.map(r => r.nome);
+      const prodottiMancanti = nomiProdotti.filter(nome => !prodottiTrovati.includes(nome));
+      console.error("Prodotti non trovati:", prodottiMancanti);
+      return res.status(400).json({ 
+        error: "Prodotti non trovati", 
+        prodotti_mancanti: prodottiMancanti 
+      });
+    }
+
+    // Crea una mappa nome -> tipo
+    const tipoMap = {};
+    risultati.forEach(r => {
+      tipoMap[r.nome] = r.tipo;
+    });
+
+    // Determina se ci sono food/drink
+    const hasFood = items.some(item => tipoMap[item.name] === 'food');
+    const hasDrink = items.some(item => tipoMap[item.name] === 'drink');
+
+    // Logica corretta con 'n' aggiunto all'ENUM:
+    // - Se ci sono food: stato='in_corso', altrimenti stato='n' 
+    // - Se ci sono drink: stato_drink='in_corso', altrimenti stato_drink='n'
+    const stato = hasFood ? 'in_corso' : 'n';
+    const stato_drink = hasDrink ? 'in_corso' : 'n';
+
+    // Debug: mostra i valori che stiamo per inserire
+    console.log("Valori da inserire:", { 
+      tavolo, 
+      stato, 
+      stato_drink,
+      hasFood,
+      hasDrink,
+      tipoMap 
+    });
+
+    // Inizia la transazione
+    conn.beginTransaction(err => {
+      if (err) {
+        console.error("Errore avvio transazione:", err);
+        return res.status(500).json({ error: "Errore transazione" });
+      }
+
+      // Inserisci comanda con query più esplicita
+      const insertComandaQuery = "INSERT INTO comanda (tavolo, stato, stato_drink) VALUES (?, ?, ?)";
+      const insertComandaValues = [tavolo, stato, stato_drink];
+      
+      console.log("Query:", insertComandaQuery);
+      console.log("Values:", insertComandaValues);
+      
+      conn.query(insertComandaQuery, insertComandaValues, (err, result) => {
+          if (err) {
+            console.error("Errore inserimento comanda:", err);
+            return conn.rollback(() => {
+              res.status(500).json({ error: "Errore inserimento comanda" });
+            });
+          }
+
+          const comandaId = result.insertId;
+          
+          // Prepara tutti gli ordini da inserire
+          const ordiniDaInserire = [];
+          items.forEach(item => {
+            for (let i = 0; i < item.quantity; i++) {
+              ordiniDaInserire.push([
+                comandaId, 
+                item.name, 
+                item.price, 
+                item.note || '', 
+                item.fotoPath || item.foto || null, // Gestisci entrambi i nomi
+                false // pagato
+              ]);
+            }
           });
-        }
 
-        const comandaId = result.insertId;
+          // Inserisci tutti gli ordini in una volta
+          if (ordiniDaInserire.length === 0) {
+            return conn.rollback(() => {
+              res.status(400).json({ error: "Nessun ordine da inserire" });
+            });
+          }
 
-        // Funzione per inserire ordini uno alla volta espandendo quantità
-        const insertOrders = (index) => {
-          if (index >= items.length) {
-            // Fine inserimenti, commit transazione
-            return conn.commit(err => {
+          const insertQuery = `INSERT INTO ordini (comanda_id, nome_prodotto, prezzo, note, path_foto, pagato) VALUES ?`;
+          
+          conn.query(insertQuery, [ordiniDaInserire], (err) => {
+            if (err) {
+              console.error("Errore inserimento ordini:", err);
+              return conn.rollback(() => {
+                res.status(500).json({ error: "Errore inserimento ordini" });
+              });
+            }
+
+            // Commit della transazione
+            conn.commit(err => {
               if (err) {
+                console.error("Errore commit:", err);
                 return conn.rollback(() => {
                   res.status(500).json({ error: "Errore commit" });
                 });
               }
-              res.status(200).send("OK");
+              
+              res.status(200).json({ 
+                success: true, 
+                message: "Ordine inserito con successo",
+                comanda_id: comandaId 
+              });
             });
-          }
-
-          const item = items[index];
-
-          // Per ogni unità di quantità crea una riga distinta
-          let count = 0;
-
-          const insertSingleOrder = () => {
-            if (count >= item.quantity) {
-              // Passa all'item successivo
-              return insertOrders(index + 1);
-            }
-
-
-            conn.query(
-              `INSERT INTO ordini (comanda_id, nome_prodotto, prezzo, note, path_foto, pagato)
-   VALUES (?, ?, ?, ?, ?, FALSE)`,
-              [comandaId, item.name, item.price, item.note || '', item.foto],
-              (err) => {
-                if (err) {
-                  return conn.rollback(() => {
-                    res.status(500).json({ error: "Errore inserimento ordine" });
-                  });
-                }
-                count++;
-                insertSingleOrder();
-              }
-            );
-          };
-
-          insertSingleOrder();
-        };
-
-        insertOrders(0);
-      }
-    );
+          });
+        }
+      );
+    });
   });
+});
 
-})
 app.get("/viewComanda", (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/cam/view.html'));
 })
 
 app.get('/api/comande', (req, res) => {
-  const queryComande = `
-    SELECT c.id AS comanda_id, c.tavolo, c.stato, o.nome_prodotto, o.path_foto
-FROM comanda c
-JOIN ordini o ON c.id = o.comanda_id
-ORDER BY c.id DESC
+ const queryComande = `
+  SELECT 
+    c.id AS comanda_id, 
+    c.tavolo, 
+    c.stato, 
+    c.stato_drink,
+    o.nome_prodotto, 
+    o.path_foto
+  FROM comanda c
+  JOIN ordini o ON c.id = o.comanda_id
+  ORDER BY c.id DESC
+`;
 
-  `;
 
   conn.query(queryComande, (err, results) => {
     if (err) {
@@ -531,12 +598,14 @@ ORDER BY c.id DESC
 
     for (const row of results) {
       if (!comande[row.comanda_id]) {
-        comande[row.comanda_id] = {
-          tavolo: row.tavolo,
-          stato: row.stato,
-          prodotti: []
-        };
-      }
+  comande[row.comanda_id] = {
+    tavolo: row.tavolo,
+    stato: row.stato,
+    stato_drink: row.stato_drink,
+    prodotti: []
+  };
+}
+
 
       comande[row.comanda_id].prodotti.push({
         nome: row.nome_prodotto,
@@ -630,7 +699,7 @@ app.get('/api/bancone', (req, res) => {
     SELECT 
       c.id AS comanda_id,
       c.tavolo,
-      c.stato,
+      c.stato_drink,
       c.orario_creazione,
       o.nome_prodotto,
       o.path_foto,
@@ -638,7 +707,7 @@ app.get('/api/bancone', (req, res) => {
     FROM comanda c
     JOIN ordini o ON o.comanda_id = c.id
     JOIN prodotti p ON o.nome_prodotto = p.nome
-    WHERE p.tipo = 'drink' AND c.stato != 'pronta'
+    WHERE p.tipo = 'drink' AND c.stato_drink != 'pronta'
     ORDER BY c.orario_creazione ASC
   `;
 
@@ -648,14 +717,13 @@ app.get('/api/bancone', (req, res) => {
       return res.status(500).json({ error: 'Errore nel recupero dei dati bancone' });
     }
 
-    // Raggruppamento per comanda
     const comande = {};
     results.forEach(row => {
       if (!comande[row.comanda_id]) {
         comande[row.comanda_id] = {
           comanda_id: row.comanda_id,
           tavolo: row.tavolo,
-          stato: row.stato,
+          stato_drink: row.stato_drink,
           prodotti: []
         };
       }
@@ -671,15 +739,16 @@ app.get('/api/bancone', (req, res) => {
 });
 
 
+
 // API per completare comanda da bancone
 app.post('/api/bancone/complete', (req, res) => {
   const { comandaId } = req.body;
 
-  const query = "UPDATE comanda SET stato = 'pronta' WHERE id = ?";
+  const query = "UPDATE comanda SET stato_drink = 'pronta' WHERE id = ?";
   conn.query(query, [comandaId], (err) => {
     if (err) {
-      console.error('Errore aggiornando comanda:', err);
-      return res.status(500).json({ error: 'Errore aggiornamento stato' });
+      console.error('Errore aggiornando stato_drink:', err);
+      return res.status(500).json({ error: 'Errore aggiornamento stato_drink' });
     }
     res.sendStatus(200);
   });
