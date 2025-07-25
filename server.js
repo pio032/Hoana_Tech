@@ -382,7 +382,7 @@ app.get('/api/products', (req, res) => {
 
 
 app.delete('/api/products/:id', (req, res) => {
-  console.log("Richiesta DELETE di eliminazione ricevuta per ID:", req.params.id);
+  
 
   const productId = req.params.id;
   if (!productId) {
@@ -484,8 +484,7 @@ app.post("/api/orders", (req, res) => {
     const stato = hasFood ? 'in_corso' : 'n';
     const stato_drink = hasDrink ? 'in_corso' : 'n';
 
-    /
-
+    
     // Inizia la transazione
     conn.beginTransaction(err => {
       if (err) {
