@@ -73,7 +73,7 @@ app.post('/login', (req, res) => {
                       res.sendFile(path.join(__dirname, 'secure/admin/admin.html'));
                       break;
                   case "cucina":
-                      res.sendFile(path.join(__dirname, 'secure/cucina.html'));
+                      res.sendFile(path.join(__dirname, 'secure/cucina/cucina.html'));
                       break;
                   case "bancone":
                       res.sendFile(path.join(__dirname, 'secure/bancone.html'));
@@ -550,6 +550,79 @@ app.get('/api/comande', (req, res) => {
     })));
   });
 });
+
+//------------------------------------------------------------------CUCINA-------------------------------------------------------------
+app.get('/api/cucina', (req, res) => {
+  const query = `
+    SELECT 
+      c.id AS comanda_id,
+      c.tavolo,
+      c.stato,
+      c.orario_creazione,
+      o.nome_prodotto,
+      o.path_foto,
+      p.tipo
+    FROM comanda c
+    JOIN ordini o ON o.comanda_id = c.id
+    JOIN prodotti p ON o.nome_prodotto = p.nome
+    WHERE p.tipo = 'food' AND c.stato != 'pronta'
+    ORDER BY c.orario_creazione ASC
+  `;
+
+  conn.query(query, (err, results) => {
+    if (err) {
+      console.error('Errore nella query:', err);
+      return res.status(500).json({ error: 'Errore nel recupero dei dati cucina' });
+    }
+
+    // Raggruppa i risultati per comanda
+    const comande = {};
+    results.forEach(row => {
+      if (!comande[row.comanda_id]) {
+        comande[row.comanda_id] = {
+          comanda_id: row.comanda_id,
+          tavolo: row.tavolo,
+          stato: row.stato,
+          prodotti: []
+        };
+      }
+
+      comande[row.comanda_id].prodotti.push({
+        nome_prodotto: row.nome_prodotto,
+        path_foto: row.path_foto
+      });
+    });
+
+    res.json(Object.values(comande));
+  });
+});
+
+
+app.post('/api/cucina/complete', (req, res) => {
+  const { comandaId } = req.body;
+
+  if (!comandaId) {
+    return res.status(400).json({ error: "Manca il parametro comandaId" });
+  }
+
+  conn.query(
+    'UPDATE comanda SET stato = ? WHERE id = ?',
+    ['pronta', comandaId],
+    (err, results) => {
+      if (err) {
+        console.error('Errore aggiornando comanda:', err);
+        return res.status(500).json({ error: "Errore interno del server" });
+      }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ error: "Comanda non trovata" });
+      }
+
+      res.json({ message: "Comanda completata con successo" });
+    }
+  );
+});
+
 
 
 

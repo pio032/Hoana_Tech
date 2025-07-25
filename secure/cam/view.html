@@ -68,7 +68,7 @@
             color: #92400e;
         }
 
-        .stato.completata {
+        .stato.pronta {
             background-color: #bbf7d0;
             /* verde chiaro */
             color: #166534;
@@ -114,9 +114,11 @@
                     // Crea l'articolo
                     const article = document.createElement('article');
                     article.innerHTML = `
-  <h2>
+   <h2>
   Comanda #${comanda.id} - Tavolo ${comanda.tavolo} 
-  <span class="stato ${comanda.stato}">${comanda.stato.replace('_', ' ')}</span>
+  <span class="stato ${comanda.stato}">
+    ${comanda.stato === 'pronta' ? 'Pronta' : comanda.stato.replace('_', ' ')}
+  </span>
 </h2>
 
   <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
