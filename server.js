@@ -574,19 +574,19 @@ app.get("/viewComanda", (req, res) => {
 })
 
 app.get('/api/comande', (req, res) => {
- const queryComande = `
-  SELECT 
-    c.id AS comanda_id, 
-    c.tavolo, 
-    c.stato, 
-    c.stato_drink,
-    o.nome_prodotto, 
-    o.path_foto
-  FROM comanda c
-  JOIN ordini o ON c.id = o.comanda_id
-  ORDER BY c.id DESC
-`;
-
+  const queryComande = `
+    SELECT 
+      c.id AS comanda_id, 
+      c.tavolo, 
+      c.stato, 
+      c.stato_drink,
+      o.nome_prodotto, 
+      o.path_foto
+    FROM comanda c
+    JOIN ordini o ON c.id = o.comanda_id
+    WHERE c.fine = 0
+    ORDER BY c.id DESC
+  `;
 
   conn.query(queryComande, (err, results) => {
     if (err) {
@@ -598,14 +598,13 @@ app.get('/api/comande', (req, res) => {
 
     for (const row of results) {
       if (!comande[row.comanda_id]) {
-  comande[row.comanda_id] = {
-    tavolo: row.tavolo,
-    stato: row.stato,
-    stato_drink: row.stato_drink,
-    prodotti: []
-  };
-}
-
+        comande[row.comanda_id] = {
+          tavolo: row.tavolo,
+          stato: row.stato,
+          stato_drink: row.stato_drink,
+          prodotti: []
+        };
+      }
 
       comande[row.comanda_id].prodotti.push({
         nome: row.nome_prodotto,
@@ -619,6 +618,53 @@ app.get('/api/comande', (req, res) => {
     })));
   });
 });
+
+app.post("/api/cameriere/done", (req, res) => {
+  const { comanda_id } = req.body;
+
+  // Validazione input
+  if (!comanda_id) {
+    return res.status(400).json({ error: "ID comanda mancante" });
+  }
+
+  // Verifica che la comanda esista
+  conn.query("SELECT id FROM comanda WHERE id = ?", [comanda_id], (err, result) => {
+    if (err) {
+      console.error("Errore verifica comanda:", err);
+      return res.status(500).json({ error: "Errore verifica comanda" });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Comanda non trovata" });
+    }
+
+    // Aggiorna il campo 'fine' a TRUE (1 in MySQL)
+    conn.query(
+      "UPDATE comanda SET fine = TRUE WHERE id = ?",
+      [comanda_id],
+      (err, updateResult) => {
+        if (err) {
+          console.error("Errore aggiornamento comanda:", err);
+          return res.status(500).json({ error: "Errore aggiornamento comanda" });
+        }
+
+        if (updateResult.affectedRows === 0) {
+          return res.status(404).json({ error: "Comanda non trovata per l'aggiornamento" });
+        }
+
+        console.log(`Comanda #${comanda_id} completata - campo 'fine' impostato a TRUE`);
+        
+        res.status(200).json({ 
+          success: true, 
+          message: "Comanda completata con successo",
+          comanda_id: comanda_id
+        });
+      }
+    );
+  });
+});
+
+
 
 //------------------------------------------------------------------CUCINA-------------------------------------------------------------
 app.get('/api/cucina', (req, res) => {

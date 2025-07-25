@@ -73,6 +73,31 @@
             /* verde chiaro */
             color: #166534;
         }
+
+        .cestino-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            margin-left: 1rem;
+        }
+
+        .cestino-btn:hover {
+            background: #b91c1c;
+            transform: scale(1.05);
+        }
+
+        .cestino-btn svg {
+            width: 18px;
+            height: 18px;
+        }
     </style>
 </head>
 
@@ -135,10 +160,32 @@
                             </span>`;
                     }
 
+                    // Verifica se la comanda è completamente pronta
+                    const cucinaOk = !comanda.stato || comanda.stato === 'n' || comanda.stato === 'pronta';
+                    const barOk = !comanda.stato_drink || comanda.stato_drink === 'n' || comanda.stato_drink === 'pronta';
+                    const comandaPronta = cucinaOk && barOk;
+
+                    // Aggiungi il cestino se la comanda è pronta
+                    let cestinoBtnHtml = '';
+                    if (comandaPronta) {
+                        cestinoBtnHtml = `
+                            <button class="cestino-btn" onclick="rimuoviComanda(${comanda.id})">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    </path>
+                                </svg>
+                                Rimuovi
+                            </button>`;
+                    }
+
                     article.innerHTML = `
-                        <h2>
-                            Comanda #${comanda.id} - Tavolo ${comanda.tavolo}
-                            ${statoHtml}
+                        <h2 style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                Comanda #${comanda.id} - Tavolo ${comanda.tavolo}
+                                ${statoHtml}
+                            </div>
+                            ${cestinoBtnHtml}
                         </h2>
 
                         <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
@@ -156,6 +203,31 @@
 
             } catch (err) {
                 console.error('Errore nel caricamento delle comande:', err);
+            }
+        }
+
+        // Funzione per rimuovere una comanda
+        async function rimuoviComanda(comandaId) {
+            try {
+                const res = await fetch('/api/cameriere/done', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ comanda_id: comandaId })
+                });
+
+                if (res.ok) {
+                    console.log(`Comanda #${comandaId} rimossa con successo`);
+                    // Ricarica immediatamente le comande per aggiornare la vista
+                    loadComande();
+                } else {
+                    console.error('Errore nella rimozione della comanda');
+                    alert('Errore nella rimozione della comanda');
+                }
+            } catch (err) {
+                console.error('Errore nella chiamata API:', err);
+                alert('Errore di connessione');
             }
         }
 
