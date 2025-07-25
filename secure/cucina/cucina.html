@@ -8,9 +8,14 @@
 </head>
 
 <body>
+     <div style="display: flex; justify-content: flex-end; padding: 1rem;">
+  <button onclick="loadComande()">🔄 Aggiorna</button>
+</div>
   <main class="container" id="cucinaContainer">
     <h1>Cucina</h1>
   </main>
+ 
+
 
   <script>
     async function loadComande() {
@@ -78,6 +83,8 @@
     }
 
     loadComande();
+    setInterval(loadComande, 4000);
+
   </script>
 </body>
 
