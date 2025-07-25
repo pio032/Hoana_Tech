@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Comande in Corso</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            padding: 0.5rem 0.75rem;
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--pico-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .home-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .product {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        article {
+            padding: 1rem;
+        }
+
+        .stato {
+            font-weight: bold;
+            font-size: 0.9rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .stato.in_corso {
+            background-color: #fef08a;
+            /* giallo chiaro */
+            color: #92400e;
+        }
+
+        .stato.completata {
+            background-color: #bbf7d0;
+            /* verde chiaro */
+            color: #166534;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <a href="/cameriere" class="home-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                </path>
+            </svg>
+            Home
+        </a>
+        <h1 align="center">Comande in corso</h1>
+        <div id="comandeContainer"></div>
+    </main>
+
+    <script>
+        async function loadComande() {
+            try {
+                const res = await fetch('/api/comande');
+                const data = await res.json();
+
+                const container = document.getElementById('comandeContainer');
+
+                data.forEach(comanda => {
+                    const prodottiRaggruppati = {};
+
+                    // Raggruppa per nome prodotto
+                    comanda.prodotti.forEach(p => {
+                        const key = p.nome_prodotto;
+                        if (!prodottiRaggruppati[key]) {
+                            prodottiRaggruppati[key] = { ...p, quantita: 1 };
+                        } else {
+                            prodottiRaggruppati[key].quantita += 1;
+                        }
+                    });
+
+                    // Crea l'articolo
+                    const article = document.createElement('article');
+                    article.innerHTML = `
+  <h2>
+  Comanda #${comanda.id} - Tavolo ${comanda.tavolo} 
+  <span class="stato ${comanda.stato}">${comanda.stato.replace('_', ' ')}</span>
+</h2>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+    ${comanda.prodotti.map(prodotto => `
+      <div style="text-align: center;">
+        <img src="${prodotto.foto}" alt="${prodotto.nome}" style="width: 100px; border-radius: 8px;" />
+        <p>${prodotto.nome}</p>
+      </div>
+    `).join('')}
+  </div>
+`;
+
+
+                    container.appendChild(article);
+                });
+
+            } catch (err) {
+                console.error('Errore nel caricamento delle comande:', err);
+            }
+        }
+
+        loadComande();
+    </script>
+</body>
+
+</html>

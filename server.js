@@ -482,7 +482,7 @@ app.post("/api/orders", (req, res)=>{
               // Passa all'item successivo
               return insertOrders(index + 1);
             }
-            console.log("item", item)
+            
 
             conn.query(
               `INSERT INTO ordini (comanda_id, nome_prodotto, prezzo, note, path_foto, pagato)
@@ -509,6 +509,48 @@ app.post("/api/orders", (req, res)=>{
   });
   
 })
+app.get("/viewComanda", (req, res)=>{
+    res.sendFile(path.join(__dirname, 'secure/cam/view.html'));
+})
+
+app.get('/api/comande', (req, res) => {
+  const queryComande = `
+    SELECT c.id AS comanda_id, c.tavolo, c.stato, o.nome_prodotto, o.path_foto
+    FROM comanda c
+    JOIN ordini o ON c.id = o.comanda_id
+    ORDER BY c.id DESC
+  `;
+
+  conn.query(queryComande, (err, results) => {
+    if (err) {
+      console.error("Errore nel recupero delle comande:", err);
+      return res.status(500).json({ error: "Errore server" });
+    }
+
+    const comande = {};
+
+    for (const row of results) {
+      if (!comande[row.comanda_id]) {
+        comande[row.comanda_id] = {
+          tavolo: row.tavolo,
+          stato: row.stato,
+          prodotti: []
+        };
+      }
+
+      comande[row.comanda_id].prodotti.push({
+        nome: row.nome_prodotto,
+        foto: row.path_foto
+      });
+    }
+
+    res.json(Object.entries(comande).map(([id, data]) => ({
+      id,
+      ...data
+    })));
+  });
+});
+
 
 
 //-----------------------------------------------------------------LISTEN----------------------------------------------------------------
