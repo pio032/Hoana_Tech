@@ -95,7 +95,7 @@
             try {
                 const res = await fetch('/api/comande');
                 const data = await res.json();
-
+              
                 const container = document.getElementById('comandeContainer');
 
                 data.forEach(comanda => {
@@ -113,13 +113,17 @@
 
                     // Crea l'articolo
                     const article = document.createElement('article');
+                   
                     article.innerHTML = `
    <h2>
-  Comanda #${comanda.id} - Tavolo ${comanda.tavolo} 
-  <span class="stato ${comanda.stato}">
-    ${comanda.stato === 'pronta' ? 'Pronta' : comanda.stato.replace('_', ' ')}
-  </span>
+  Comanda #${comanda.id} - Tavolo ${comanda.tavolo}
+  ${comanda.stato ? `
+    <span class="stato ${comanda.stato}">
+      Stato: ${comanda.stato === 'pronta' ? 'Pronta' : comanda.stato.replace('_', ' ')}
+    </span>` : ''}
+
 </h2>
+
 
   <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
     ${comanda.prodotti.map(prodotto => `

@@ -7,7 +7,7 @@ const multer = require('multer');
 const fs = require('fs');
 const cors = require('cors')
 app.use(cors({
-  origin: 'http://localhost:3000', 
+  origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -59,80 +59,80 @@ app.post('/login', (req, res) => {
     }
 
     if (results.length > 0) {
-      
+
       conn.query("select tipo from user where id = ?", [results[0].id], (err, results) => {
         if (err) {
           console.error('Errore query:', err);
           res.status(500).send('Errore del server');
           return;
         }
-        if(results.length>0){
-          switch(results[0].tipo){
-                  case "admin":
-                      res.sendFile(path.join(__dirname, 'secure/admin/admin.html'));
-                      break;
-                  case "cucina":
-                      res.sendFile(path.join(__dirname, 'secure/cucina/cucina.html'));
-                      break;
-                  case "bancone":
-                      res.sendFile(path.join(__dirname, 'secure/bancone/bancone.html'));
-                      break;
-                  case "cassa":
-                      res.sendFile(path.join(__dirname, 'secure/cassa.html'));
-                      break;
-                  case "cameriere":
-                      res.sendFile(path.join(__dirname, 'secure/cam/cam.html'));
-                      
+        if (results.length > 0) {
+          switch (results[0].tipo) {
+            case "admin":
+              res.sendFile(path.join(__dirname, 'secure/admin/admin.html'));
+              break;
+            case "cucina":
+              res.sendFile(path.join(__dirname, 'secure/cucina/cucina.html'));
+              break;
+            case "bancone":
+              res.sendFile(path.join(__dirname, 'secure/bancone/bancone.html'));
+              break;
+            case "cassa":
+              res.sendFile(path.join(__dirname, 'secure/cassa.html'));
+              break;
+            case "cameriere":
+              res.sendFile(path.join(__dirname, 'secure/cam/cam.html'));
+
           }
         }
       })
     } else {
-    
+
     }
   });
- 
+
 });
 //------------------------------------------------------------------ROUTE----------------------------------------------------------------
-app.get("/admin", (req, res)=>{
+app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/admin.html'));
 })
-app.get("/cameriere", (req, res)=>{
+app.get("/cameriere", (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/cam/cam.html'));
 })
 
 //------------------------------------------------------------------ADMIN------------------------------------------------------------------
 
-app.get("/admin/user", (req, res)=>{
- const query = 'SELECT * FROM user';
-  
+app.get("/admin/user", (req, res) => {
+  const query = 'SELECT * FROM user';
+
   conn.query(query, (err, results) => {
     if (err) {
       console.error('Errore query utenti:', err);
       res.status(500).send('Errore del server');
       return;
     }
-    
+
     res.json(results);
   })
 })
-app.get("/admin/select", (req, res)=>{
+app.get("/admin/select", (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/user.html'));
 })
 // Aggiorna utente
 app.post('/admin/users/update', (req, res) => {
   const { id, username, password, tipo } = req.body;
-  
+
   let query = 'UPDATE user SET username = ?, tipo = ?';
   let params = [username, tipo];
-  
+
   if (password && password.trim() !== '') {
     query += ', passsword = ?';
     params.push(password);
   }
-  
+
   query += ' WHERE id = ?';
   params.push(id);
-  
+
   conn.query(query, params, (err, result) => {
     if (err) {
       console.error('Errore aggiornamento utente:', err);
@@ -146,7 +146,7 @@ app.post('/admin/users/update', (req, res) => {
 // Elimina utente
 app.post('/admin/users/delete', (req, res) => {
   const { id } = req.body;
-  
+
   const query = 'DELETE FROM user WHERE id = ?';
   conn.query(query, [id], (err, result) => {
     if (err) {
@@ -154,12 +154,12 @@ app.post('/admin/users/delete', (req, res) => {
       res.json({ success: false, message: 'Errore del server' });
       return;
     }
-    
+
     if (result.affectedRows === 0) {
       res.json({ success: false, message: 'Utente non trovato' });
       return;
     }
-    
+
     res.json({ success: true, message: 'Utente eliminato con successo' });
   });
 });
@@ -167,7 +167,7 @@ app.post('/admin/users/delete', (req, res) => {
 
 // Endpoint per mostrare la pagina di creazione
 app.get('/admin/users/create', (req, res) => {
-  res.sendFile(path.join(__dirname, '/secure/admin/create.html')); 
+  res.sendFile(path.join(__dirname, '/secure/admin/create.html'));
 });
 
 // Endpoint per creare l'utente
@@ -179,12 +179,12 @@ app.post('/admin/users/create', (req, res) => {
     res.json({ success: false, message: 'Tutti i campi sono obbligatori' });
     return;
   }
-  
+
   if (password.length < 6) {
     res.json({ success: false, message: 'La password deve essere di almeno 6 caratteri' });
     return;
   }
-  
+
   // Verifica se l'username esiste già
   const checkQuery = 'SELECT id FROM user WHERE username = ?';
   conn.query(checkQuery, [username], (err, results) => {
@@ -193,13 +193,13 @@ app.post('/admin/users/create', (req, res) => {
       res.json({ success: false, message: 'Errore del server' });
       return;
     }
-    
+
     if (results.length > 0) {
       res.json({ success: false, message: 'Username già esistente' });
       return;
     }
-    
-  
+
+
     const insertQuery = 'INSERT INTO user (username, passsword, tipo) VALUES (?, ?, ?)';
     conn.query(insertQuery, [username, password, tipo], (err, result) => {
       if (err) {
@@ -207,11 +207,11 @@ app.post('/admin/users/create', (req, res) => {
         res.json({ success: false, message: 'Errore nella creazione dell\'utente' });
         return;
       }
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         message: 'Utente creato con successo',
-        userId: result.insertId 
+        userId: result.insertId
       });
     });
   });
@@ -241,8 +241,8 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 
-app.get("/admin/products/create", (req, res)=>{
-    res.sendFile(path.join(__dirname, 'secure/admin/addProduct.html'));
+app.get("/admin/products/create", (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/admin/addProduct.html'));
 })
 
 // Configurazione multer per l'upload delle immagini
@@ -272,7 +272,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
@@ -284,25 +284,25 @@ const upload = multer({
 app.post('/addProduct', upload.single('foto'), (req, res) => {
   try {
     const { nome, descrizione, prezzo, tipo } = req.body;
-    
+
     // Validazione dei dati
     if (!nome || !descrizione || !prezzo) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Nome, descrizione e prezzo sono obbligatori' 
+      return res.status(400).json({
+        success: false,
+        message: 'Nome, descrizione e prezzo sono obbligatori'
       });
     }
 
     if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'La foto del prodotto è obbligatoria' 
+      return res.status(400).json({
+        success: false,
+        message: 'La foto del prodotto è obbligatoria'
       });
     }
 
     // Path relativo della foto da salvare nel database
     const fotoPath = 'uploads/' + req.file.filename;
-    
+
     // Query per inserire il prodotto nel database
     const query = 'INSERT INTO prodotti (nome, descrizione, prezzo, fotoPath, tipo) VALUES (?, ?, ?, ?, ?)';
     const values = [nome, descrizione, parseFloat(prezzo), fotoPath, tipo];
@@ -310,39 +310,39 @@ app.post('/addProduct', upload.single('foto'), (req, res) => {
     conn.query(query, values, (err, result) => {
       if (err) {
         console.error('Errore nell\'inserimento del prodotto:', err);
-        
+
         // Rimuovi il file caricato se c'è un errore nel database
         if (req.file) {
           fs.unlink(req.file.path, (unlinkErr) => {
             if (unlinkErr) console.error('Errore nella rimozione del file:', unlinkErr);
           });
         }
-        
-        return res.status(500).json({ 
-          success: false, 
-          message: 'Errore nell\'inserimento del prodotto nel database' 
+
+        return res.status(500).json({
+          success: false,
+          message: 'Errore nell\'inserimento del prodotto nel database'
         });
       }
 
       console.log('Prodotto inserito con ID:', result.insertId);
-      
+
       // Risposta di successo - reindirizza alla pagina admin
       res.redirect('/admin?success=1&message=Prodotto aggiunto con successo');
     });
 
   } catch (error) {
     console.error('Errore generale:', error);
-    
+
     // Rimuovi il file caricato se c'è un errore
     if (req.file) {
       fs.unlink(req.file.path, (unlinkErr) => {
         if (unlinkErr) console.error('Errore nella rimozione del file:', unlinkErr);
       });
     }
-    
-    res.status(500).json({ 
-      success: false, 
-      message: 'Errore interno del server' 
+
+    res.status(500).json({
+      success: false,
+      message: 'Errore interno del server'
     });
   }
 });
@@ -351,7 +351,7 @@ app.post('/addProduct', upload.single('foto'), (req, res) => {
 app.use('/uploads', express.static('uploads'));
 
 
-app.get("/admin/prod", (req, res)=>{
+app.get("/admin/prod", (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/product.html'))
 })
 
@@ -359,19 +359,19 @@ app.get("/admin/prod", (req, res)=>{
 // Ottieni tutti i prodotti
 app.get('/api/products', (req, res) => {
   const query = 'SELECT id, nome, descrizione, prezzo, fotoPath as foto, tipo FROM prodotti';
-  
+
   conn.query(query, (err, results) => {
     if (err) {
       console.error('Errore query:', err);
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Errore nel recupero dei prodotti' 
+      return res.status(500).json({
+        success: false,
+        message: 'Errore nel recupero dei prodotti'
       });
     }
 
-    res.json({ 
-      success: true, 
-      products: results 
+    res.json({
+      success: true,
+      products: results
     });
   });
 });
@@ -392,7 +392,7 @@ app.delete('/api/products/:id', (req, res) => {
       console.error("Errore query SELECT:", err);
       return res.status(500).json({ success: false, message: "Errore server durante la ricerca" });
     }
-    
+
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: "Prodotto non trovato" });
     }
@@ -428,14 +428,14 @@ app.delete('/api/products/:id', (req, res) => {
 //----------------------------------------------------------------CAMERIERE--------------------------------------------------------------
 
 
-app.get("/doComanda", (req, res)=>{
-    res.sendFile(path.join(__dirname, 'secure/cam/comanda.html'));
+app.get("/doComanda", (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/cam/comanda.html'));
 })
 
 
-app.post("/api/orders", (req, res)=>{
+app.post("/api/orders", (req, res) => {
 
- const { tavolo, items } = req.body;
+  const { tavolo, items } = req.body;
 
   if (!tavolo || !items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Dati mancanti o invalidi" });
@@ -481,12 +481,12 @@ app.post("/api/orders", (req, res)=>{
               // Passa all'item successivo
               return insertOrders(index + 1);
             }
-            
+
 
             conn.query(
               `INSERT INTO ordini (comanda_id, nome_prodotto, prezzo, note, path_foto, pagato)
    VALUES (?, ?, ?, ?, ?, FALSE)`,
-  [comandaId, item.name, item.price, item.note || '', item.foto],
+              [comandaId, item.name, item.price, item.note || '', item.foto],
               (err) => {
                 if (err) {
                   return conn.rollback(() => {
@@ -506,18 +506,19 @@ app.post("/api/orders", (req, res)=>{
       }
     );
   });
-  
+
 })
-app.get("/viewComanda", (req, res)=>{
-    res.sendFile(path.join(__dirname, 'secure/cam/view.html'));
+app.get("/viewComanda", (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/cam/view.html'));
 })
 
 app.get('/api/comande', (req, res) => {
   const queryComande = `
     SELECT c.id AS comanda_id, c.tavolo, c.stato, o.nome_prodotto, o.path_foto
-    FROM comanda c
-    JOIN ordini o ON c.id = o.comanda_id
-    ORDER BY c.id DESC
+FROM comanda c
+JOIN ordini o ON c.id = o.comanda_id
+ORDER BY c.id DESC
+
   `;
 
   conn.query(queryComande, (err, results) => {
