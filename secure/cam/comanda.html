@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            padding: 0.5rem 0.75rem;
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--pico-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .home-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-top: 0.5rem;
+        }
+
+        .product-item {
+            padding: 0.5rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .product-item:hover {
+            background-color: var(--background-color);
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quantity-controls button {
+            padding: 0.25rem 0.5rem;
+            margin: 0;
+        }
+
+        .total {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Pulsante Home sticky -->
+        <a href="/admin" class="home-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                </path>
+            </svg>
+            Home
+        </a>
+        <h1>Fai Comanda</h1>
+
+        <!-- Ricerca Prodotti -->
+        <section>
+            <h3>Aggiungi Prodotti</h3>
+            <input type="text" id="searchInput" placeholder="Cerca prodotti..." />
+            <div id="searchResults" class="search-results" style="display: none;"></div>
+        </section>
+
+        <!-- Comanda Corrente -->
+        <section>
+            <h3>Comanda</h3>
+            <div id="orderItems"></div>
+            <div class="total">
+                Totale: €<span id="totalAmount">0.00</span>
+            </div>
+            <button id="saveOrder" class="contrast">Salva Comanda</button>
+        </section>
+    </div>
+
+    <script>
+        let products = [];
+        let currentOrder = [];
+
+        // Carica prodotti dal server
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.products) {
+                        // Adatta i dati dal database al formato usato nel frontend
+                        products = data.products.map(product => ({
+                            id: product.id,
+                            name: product.nome,
+                            price: parseFloat(product.prezzo),
+                            description: product.descrizione,
+                            foto: product.foto
+                        }));
+                        console.log('Prodotti caricati dall\'API:', products);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log('API non disponibile, uso dati di esempio');
+            }
+
+            // Dati di esempio se l'API non funziona
+            products = [
+             
+            ];
+            console.log('Prodotti di esempio caricati:', products);
+        }
+
+        // Ricerca prodotti
+        function searchProducts(query) {
+            if (!query) return [];
+            return products.filter(product =>
+                product.name.toLowerCase().includes(query.toLowerCase())
+            );
+        }
+
+        // Mostra risultati ricerca
+        function displaySearchResults(results) {
+            const container = document.getElementById('searchResults');
+
+            if (results.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = results.map(product => `
+                <div class="product-item" onclick="addToOrder(${product.id})">
+                    <strong>${product.name}</strong> - €${product.price.toFixed(2)}
+                </div>
+            `).join('');
+
+            container.style.display = 'block';
+        }
+
+        // Aggiungi prodotto alla comanda
+        function addToOrder(productId) {
+            const product = products.find(p => p.id === productId);
+            const existingItem = currentOrder.find(item => item.id === productId);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                currentOrder.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1
+                });
+            }
+
+            updateOrderDisplay();
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+        }
+
+        // Aggiorna quantità
+        function updateQuantity(productId, change) {
+            const item = currentOrder.find(item => item.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromOrder(productId);
+                } else {
+                    updateOrderDisplay();
+                }
+            }
+        }
+
+        // Rimuovi prodotto dalla comanda
+        function removeFromOrder(productId) {
+            currentOrder = currentOrder.filter(item => item.id !== productId);
+            updateOrderDisplay();
+        }
+
+        // Aggiorna visualizzazione comanda
+        function updateOrderDisplay() {
+            const container = document.getElementById('orderItems');
+
+            if (currentOrder.length === 0) {
+                container.innerHTML = '<p>Nessun prodotto nella comanda</p>';
+                document.getElementById('totalAmount').textContent = '0.00';
+                return;
+            }
+
+            container.innerHTML = currentOrder.map(item => `
+                <div class="order-item">
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        €${item.price.toFixed(2)} x ${item.quantity} = €${(item.price * item.quantity).toFixed(2)}
+                    </div>
+                    <div class="quantity-controls">
+                        <button onclick="updateQuantity(${item.id}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="updateQuantity(${item.id}, 1)">+</button>
+                        <button onclick="removeFromOrder(${item.id})" class="secondary">✕</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Calcola totale
+            const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+        }
+
+        // Salva comanda
+        async function saveOrder() {
+            if (currentOrder.length === 0) {
+                alert('Aggiungi almeno un prodotto alla comanda');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        items: currentOrder,
+                        total: currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Comanda salvata con successo!');
+                    currentOrder = [];
+                    updateOrderDisplay();
+                } else {
+                    alert('Errore nel salvare la comanda');
+                }
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('Errore nel salvare la comanda');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const results = searchProducts(e.target.value);
+            displaySearchResults(results);
+        });
+
+        document.getElementById('saveOrder').addEventListener('click', saveOrder);
+
+        // Nascondi risultati quando si clicca fuori
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#searchInput') && !e.target.closest('#searchResults')) {
+                document.getElementById('searchResults').style.display = 'none';
+            }
+        });
+
+        // Carica prodotti all'avvio
+        loadProducts().then(() => {
+            updateOrderDisplay();
+        });
+    </script>
+</body>
+
+</html>

@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <title>Aggiungi Prodotto</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
   <style>
@@ -45,9 +45,14 @@
       font-size: 1rem;
       min-width: 140px;
       justify-content: center;
+      position: relative;
+      z-index: 10;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
-    .photo-btn:hover {
+    .photo-btn:hover,
+    .photo-btn:active {
       background: var(--pico-primary);
       color: var(--pico-primary-inverse);
       transform: translateY(-2px);
@@ -58,7 +63,8 @@
       color: var(--pico-primary-inverse);
     }
 
-    .photo-btn.primary:hover {
+    .photo-btn.primary:hover,
+    .photo-btn.primary:active {
       background: var(--pico-primary-hover);
     }
 
@@ -71,6 +77,7 @@
     .photo-btn svg {
       width: 18px;
       height: 18px;
+      flex-shrink: 0;
     }
 
     #fileInput {
@@ -113,19 +120,24 @@
       font-size: 18px;
       font-weight: bold;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .remove-photo:hover {
+    .remove-photo:hover,
+    .remove-photo:active {
       background: #c82333;
     }
 
     #video {
       max-width: 100%;
+      width: 100%;
+      height: auto;
       border-radius: 8px;
       margin-top: 1rem;
       border: 1px solid var(--pico-border-color);
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       display: none;
+      background: #000;
     }
 
     #canvas {
@@ -195,9 +207,11 @@
       font-weight: 500;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .home-btn:hover {
+    .home-btn:hover,
+    .home-btn:active {
       background: var(--pico-primary-hover);
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -212,7 +226,46 @@
       padding-top: 1rem;
     }
 
-    @media (max-width: 576px) {
+    .message {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .message.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .camera-status {
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .camera-status.loading {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    @media (max-width: 768px) {
       .photo-buttons {
         flex-direction: column;
         align-items: center;
@@ -221,6 +274,8 @@
       .photo-btn {
         width: 100%;
         max-width: 200px;
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
       }
 
       .home-btn {
@@ -234,11 +289,39 @@
         width: 14px;
         height: 14px;
       }
+
+      #video {
+        max-height: 60vh;
+      }
+
+      .drag-text {
+        display: none; /* Nascondi drag&drop su mobile */
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem 0.5rem;
+      }
+      
+      .photo-section {
+        padding: 1rem;
+        margin: 1rem 0;
+      }
+
+      .camera-controls {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .camera-controls .photo-btn {
+        width: 100%;
+        max-width: 180px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Pulsante Home sticky -->
   <a href="/admin" class="home-btn">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
@@ -258,6 +341,15 @@
 
       <label for="prezzo">Prezzo (€)</label>
       <input type="number" id="prezzo" name="prezzo" step="0.01" min="0" required />
+     
+      <!-- Tipo prodotto -->
+      <label for="tipo">Tipo di prodotto</label>
+      <select id="tipo" name="tipo" required>
+        <option value="">-- Seleziona tipo --</option>
+        <option value="food">Cibo</option>
+        <option value="drink">Bevanda</option>
+      </select>
+    
 
       <label>Foto prodotto</label>
       <div class="photo-section" id="photoSection">
@@ -280,7 +372,7 @@
         
         <p class="drag-text">Oppure trascina qui un'immagine</p>
         
-        <input type="file" id="fileInput" name="foto" accept="image/*" />
+        <input type="file" id="fileInput" name="foto" accept="image/*" capture="environment" />
         
         <div class="file-info" id="fileInfo">
           <div class="file-info-content">
@@ -297,14 +389,13 @@
         <button type="button" class="remove-photo" id="removePhoto">×</button>
       </div>
 
-      <video id="video" autoplay></video>
+      <video id="video" autoplay playsinline muted></video>
       <canvas id="canvas"></canvas>
 
       <div class="camera-controls" id="cameraControls">
         <button type="button" class="photo-btn primary" id="captureBtn">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
           </svg>
           Cattura
         </button>
@@ -337,11 +428,34 @@
     const fileName = document.getElementById('fileName');
     const photoSection = document.getElementById('photoSection');
 
-    let stream;
+    let stream = null;
     let cameraActive = false;
+    let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // Detecta capacità del dispositivo
+    function checkCameraSupport() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return false;
+      }
+      
+      // Per iOS Safari, controllo più specifico
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        // iOS 14.3+ supporta getUserMedia in Safari
+        const version = navigator.userAgent.match(/OS (\d+)_(\d+)/);
+        if (version) {
+          const major = parseInt(version[1]);
+          const minor = parseInt(version[2]);
+          return major > 14 || (major === 14 && minor >= 3);
+        }
+      }
+      
+      return true;
+    }
 
     // File selection
-    fileBtn.addEventListener('click', () => {
+    fileBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       fileInput.click();
     });
 
@@ -350,18 +464,36 @@
     function handleFileSelect() {
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
+        
+        if (!file.type.startsWith('image/')) {
+          showMessage('Per favore seleziona un file immagine valido.', 'error');
+          return;
+        }
+        
         displayFile(file);
         stopCamera();
       }
     }
 
     function displayFile(file) {
-      fileName.textContent = file.name;
+      fileName.textContent = `${file.name} (${formatFileSize(file.size)})`;
       fileInfo.classList.add('show');
       
       const url = URL.createObjectURL(file);
       preview.src = url;
       previewContainer.classList.add('show');
+      
+      preview.onload = () => {
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     // Remove photo
@@ -373,106 +505,307 @@
       fileName.textContent = '';
     });
 
-    // Camera functionality
-    cameraBtn.addEventListener('click', async () => {
+    // Camera functionality ottimizzata per mobile
+    cameraBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       if (cameraActive) return;
       
+      // Controllo supporto fotocamera
+      if (!checkCameraSupport()) {
+        // Fallback: usa l'input file con capture
+        if (isMobile) {
+          showMessage('Usa il pulsante "Scegli File" per accedere alla fotocamera.', 'info');
+          fileInput.setAttribute('capture', 'environment');
+          fileInput.click();
+          return;
+        } else {
+          showMessage('La fotocamera non è supportata su questo browser.', 'error');
+          return;
+        }
+      }
+      
+      showCameraStatus('Avvio fotocamera...', 'loading');
+      
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment' // Preferisce la camera posteriore su mobile
-          } 
-        });
+        // Configurazioni diverse per mobile e desktop
+        const constraints = {
+          video: isMobile ? {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 }
+          } : {
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false
+        };
+
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (err) {
+          console.log('Tentativo con camera anteriore:', err);
+          // Fallback: camera anteriore
+          const fallbackConstraints = {
+            video: isMobile ? {
+              facingMode: 'user',
+              width: { ideal: 640 },
+              height: { ideal: 480 }
+            } : {
+              facingMode: 'user'
+            },
+            audio: false
+          };
+          stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+        }
         
-        video.srcObject = stream;
-        video.style.display = 'block';
-        cameraControls.classList.add('show');
-        cameraActive = true;
-        
-        // Hide preview and file info during camera mode
-        previewContainer.classList.remove('show');
-        fileInfo.classList.remove('show');
-        
-        // Reset file input
-        fileInput.value = '';
+        if (stream && stream.getVideoTracks().length > 0) {
+          video.srcObject = stream;
+          
+          // Attendiamo che il video sia pronto
+          const playPromise = video.play();
+          
+          await new Promise((resolve, reject) => {
+            video.onloadedmetadata = () => {
+              video.oncanplay = () => {
+                hideCameraStatus();
+                video.style.display = 'block';
+                cameraControls.classList.add('show');
+                cameraActive = true;
+                
+                // Nascondi preview e file info durante l'uso della camera
+                previewContainer.classList.remove('show');
+                fileInfo.classList.remove('show');
+                fileInput.value = '';
+                
+                resolve();
+              };
+            };
+            
+            video.onerror = reject;
+            
+            // Timeout di sicurezza
+            setTimeout(() => reject(new Error('Timeout')), 10000);
+          });
+          
+          if (playPromise) {
+            await playPromise;
+          }
+          
+        } else {
+          throw new Error('Nessun track video disponibile');
+        }
         
       } catch (err) {
-        alert('Impossibile accedere alla fotocamera. Verifica i permessi del browser.');
         console.error('Camera error:', err);
+        hideCameraStatus();
+        
+        let errorMsg = 'Impossibile accedere alla fotocamera. ';
+        
+        if (err.name === 'NotAllowedError') {
+          errorMsg += 'Permesso negato. Verifica le impostazioni del browser e consenti l\'accesso alla fotocamera.';
+        } else if (err.name === 'NotFoundError') {
+          errorMsg += 'Nessuna fotocamera trovata sul dispositivo.';
+        } else if (err.name === 'NotReadableError') {
+          errorMsg += 'Fotocamera già in uso da un\'altra applicazione.';
+        } else if (err.name === 'OverconstrainedError') {
+          errorMsg += 'Configurazione fotocamera non supportata.';
+        } else {
+          errorMsg += isMobile ? 
+            'Prova ad usare il pulsante "Scegli File" invece.' : 
+            'Errore sconosciuto.';
+        }
+        
+        showMessage(errorMsg, 'error');
+        
+        // Fallback per mobile: usa input file con capture
+        if (isMobile) {
+          setTimeout(() => {
+            fileInput.setAttribute('capture', 'environment');
+            fileInput.click();
+          }, 2000);
+        }
       }
     });
 
-    captureBtn.addEventListener('click', () => {
-      if (!cameraActive) return;
+    captureBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       
-      const context = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      if (!cameraActive || !video.videoWidth || !video.videoHeight) {
+        showMessage('Fotocamera non pronta. Attendi un momento e riprova.', 'error');
+        return;
+      }
+      
+      try {
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Disegna il frame corrente
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      canvas.toBlob(blob => {
-        const file = new File([blob], `foto-${Date.now()}.png`, { type: 'image/png' });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
+        canvas.toBlob(blob => {
+          if (!blob) {
+            showMessage('Errore nella cattura dell\'immagine.', 'error');
+            return;
+          }
+          
+          const file = new File([blob], `foto-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          fileInput.files = dataTransfer.files;
 
-        displayFile(file);
-        stopCamera();
-      }, 'image/png', 0.9);
+          displayFile(file);
+          stopCamera();
+          showMessage('Foto catturata con successo!', 'success');
+        }, 'image/jpeg', 0.85);
+        
+      } catch (err) {
+        console.error('Errore nella cattura:', err);
+        showMessage('Errore nella cattura dell\'immagine.', 'error');
+      }
     });
 
-    cancelCameraBtn.addEventListener('click', () => {
+    cancelCameraBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       stopCamera();
     });
 
     function stopCamera() {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+          track.stop();
+        });
         stream = null;
       }
       video.style.display = 'none';
+      video.srcObject = null;
       cameraControls.classList.remove('show');
       cameraActive = false;
+      hideCameraStatus();
     }
 
-    // Drag and drop functionality
-    photoSection.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      photoSection.classList.add('dragover');
-    });
+    function showCameraStatus(message, type) {
+      hideCameraStatus();
+      const status = document.createElement('div');
+      status.className = `camera-status ${type}`;
+      status.textContent = message;
+      status.id = 'cameraStatus';
+      photoSection.appendChild(status);
+    }
 
-    photoSection.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      photoSection.classList.remove('dragover');
-    });
-
-    photoSection.addEventListener('drop', (e) => {
-      e.preventDefault();
-      photoSection.classList.remove('dragover');
-      
-      const files = e.dataTransfer.files;
-      if (files.length > 0 && files[0].type.startsWith('image/')) {
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(files[0]);
-        fileInput.files = dataTransfer.files;
-        
-        displayFile(files[0]);
-        stopCamera();
+    function hideCameraStatus() {
+      const status = document.getElementById('cameraStatus');
+      if (status) {
+        status.remove();
       }
-    });
+    }
+
+    // Drag and drop (solo desktop)
+    if (!isMobile) {
+      photoSection.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        photoSection.classList.add('dragover');
+      });
+
+      photoSection.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        if (!photoSection.contains(e.relatedTarget)) {
+          photoSection.classList.remove('dragover');
+        }
+      });
+
+      photoSection.addEventListener('drop', (e) => {
+        e.preventDefault();
+        photoSection.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type.startsWith('image/')) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(files[0]);
+          fileInput.files = dataTransfer.files;
+          
+          displayFile(files[0]);
+          stopCamera();
+        } else {
+          showMessage('Per favore trascina un file immagine valido.', 'error');
+        }
+      });
+    }
 
     // Form validation
     document.getElementById('productForm').addEventListener('submit', (e) => {
       if (!fileInput.files || fileInput.files.length === 0) {
         e.preventDefault();
-        alert('Per favore seleziona o scatta una foto del prodotto.');
+        showMessage('Per favore seleziona o scatta una foto del prodotto.', 'error');
+        return false;
+      }
+      
+      const file = fileInput.files[0];
+      if (!file.type.startsWith('image/')) {
+        e.preventDefault();
+        showMessage('Il file selezionato non è un\'immagine valida.', 'error');
+        return false;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        e.preventDefault();
+        showMessage('Il file è troppo grande. Massimo 10MB.', 'error');
         return false;
       }
     });
 
-    // Cleanup on page unload
+    function showMessage(text, type = 'error') {
+      const existingMessages = document.querySelectorAll('.message');
+      existingMessages.forEach(msg => msg.remove());
+      
+      const message = document.createElement('div');
+      message.className = `message ${type}`;
+      message.textContent = text;
+      
+      const form = document.getElementById('productForm');
+      form.insertBefore(message, form.firstChild);
+      
+      setTimeout(() => {
+        if (message.parentNode) {
+          message.remove();
+        }
+      }, 5000);
+    }
+
+    // Cleanup
     window.addEventListener('beforeunload', () => {
       stopCamera();
+    });
+
+    window.addEventListener('pagehide', () => {
+      stopCamera();
+    });
+
+    // Gestione visibilità pagina per mobile
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && cameraActive) {
+        stopCamera();
+      }
+    });
+
+    // Test iniziale capacità fotocamera
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!checkCameraSupport() && isMobile) {
+        // Modifica il testo del pulsante per mobile senza supporto getUserMedia
+        cameraBtn.innerHTML = `
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          Usa Fotocamera
+        `;
+      }
     });
   </script>
 </body>

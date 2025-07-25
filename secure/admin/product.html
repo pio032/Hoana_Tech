@@ -289,6 +289,7 @@
             <th>Nome</th>
             <th>Descrizione</th>
             <th>Prezzo</th>
+            <th>Tipo</th>
             <th>Azioni</th>
           </tr>
         </thead>
@@ -389,6 +390,7 @@
             ${escapeHtml(product.descrizione)}
           </td>
           <td class="price-cell">€${parseFloat(product.prezzo).toFixed(2)}</td>
+          <td>${product.tipo}</td>
           <td class="actions-cell">
             <button class="delete-btn" onclick="showDeleteModal(${product.id}, '${escapeHtml(product.nome)}')">
 

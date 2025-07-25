@@ -281,7 +281,7 @@ const upload = multer({
 // Endpoint per aggiungere un prodotto
 app.post('/addProduct', upload.single('foto'), (req, res) => {
   try {
-    const { nome, descrizione, prezzo } = req.body;
+    const { nome, descrizione, prezzo, tipo } = req.body;
     
     // Validazione dei dati
     if (!nome || !descrizione || !prezzo) {
@@ -302,8 +302,8 @@ app.post('/addProduct', upload.single('foto'), (req, res) => {
     const fotoPath = 'uploads/' + req.file.filename;
     
     // Query per inserire il prodotto nel database
-    const query = 'INSERT INTO prodotti (nome, descrizione, prezzo, fotoPath) VALUES (?, ?, ?, ?)';
-    const values = [nome, descrizione, parseFloat(prezzo), fotoPath];
+    const query = 'INSERT INTO prodotti (nome, descrizione, prezzo, fotoPath, tipo) VALUES (?, ?, ?, ?, ?)';
+    const values = [nome, descrizione, parseFloat(prezzo), fotoPath, tipo];
 
     conn.query(query, values, (err, result) => {
       if (err) {
@@ -356,7 +356,7 @@ app.get("/admin/prod", (req, res)=>{
 
 // Ottieni tutti i prodotti
 app.get('/api/products', (req, res) => {
-  const query = 'SELECT id, nome, descrizione, prezzo, fotoPath as foto FROM prodotti';
+  const query = 'SELECT id, nome, descrizione, prezzo, fotoPath as foto, tipo FROM prodotti';
   
   conn.query(query, (err, results) => {
     if (err) {
@@ -423,6 +423,18 @@ app.delete('/api/products/:id', (req, res) => {
 });
 
 
+//----------------------------------------------------------------CAMERIERE--------------------------------------------------------------
+
+
+app.get("/doComanda", (req, res)=>{
+    res.sendFile(path.join(__dirname, 'secure/cam/comanda.html'));
+})
+app.post("/api/orders", (req, res)=>{
+  console.log("data", req.body)
+  
+   res.status(200).send("OK");
+  
+})
 
 
 //-----------------------------------------------------------------LISTEN----------------------------------------------------------------
