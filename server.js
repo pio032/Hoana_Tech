@@ -59,8 +59,7 @@ app.post('/login', (req, res) => {
     }
 
     if (results.length > 0) {
-      //LOGIN SUCCESS
-      console.log("result", results[0].id);
+      
       conn.query("select tipo from user where id = ?", [results[0].id], (err, results) => {
         if (err) {
           console.error('Errore query:', err);
@@ -76,7 +75,7 @@ app.post('/login', (req, res) => {
                       res.sendFile(path.join(__dirname, 'secure/cucina/cucina.html'));
                       break;
                   case "bancone":
-                      res.sendFile(path.join(__dirname, 'secure/bancone.html'));
+                      res.sendFile(path.join(__dirname, 'secure/bancone/bancone.html'));
                       break;
                   case "cassa":
                       res.sendFile(path.join(__dirname, 'secure/cassa.html'));
@@ -622,6 +621,69 @@ app.post('/api/cucina/complete', (req, res) => {
     }
   );
 });
+
+//--------------------------------------------------------------------BANCONE-------------------------------------------------------------
+// Mostra solo comande con drink non completate
+app.get('/api/bancone', (req, res) => {
+  const query = `
+    SELECT 
+      c.id AS comanda_id,
+      c.tavolo,
+      c.stato,
+      c.orario_creazione,
+      o.nome_prodotto,
+      o.path_foto,
+      p.tipo
+    FROM comanda c
+    JOIN ordini o ON o.comanda_id = c.id
+    JOIN prodotti p ON o.nome_prodotto = p.nome
+    WHERE p.tipo = 'drink' AND c.stato != 'pronta'
+    ORDER BY c.orario_creazione ASC
+  `;
+
+  conn.query(query, (err, results) => {
+    if (err) {
+      console.error('Errore nella query:', err);
+      return res.status(500).json({ error: 'Errore nel recupero dei dati bancone' });
+    }
+
+    // Raggruppamento per comanda
+    const comande = {};
+    results.forEach(row => {
+      if (!comande[row.comanda_id]) {
+        comande[row.comanda_id] = {
+          comanda_id: row.comanda_id,
+          tavolo: row.tavolo,
+          stato: row.stato,
+          prodotti: []
+        };
+      }
+
+      comande[row.comanda_id].prodotti.push({
+        nome_prodotto: row.nome_prodotto,
+        path_foto: row.path_foto
+      });
+    });
+
+    res.json(Object.values(comande));
+  });
+});
+
+
+// API per completare comanda da bancone
+app.post('/api/bancone/complete', (req, res) => {
+  const { comandaId } = req.body;
+
+  const query = "UPDATE comanda SET stato = 'pronta' WHERE id = ?";
+  conn.query(query, [comandaId], (err) => {
+    if (err) {
+      console.error('Errore aggiornando comanda:', err);
+      return res.status(500).json({ error: 'Errore aggiornamento stato' });
+    }
+    res.sendStatus(200);
+  });
+});
+
 
 
 
