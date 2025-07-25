@@ -327,7 +327,7 @@ app.post('/addProduct', upload.single('foto'), (req, res) => {
         });
       }
 
-      console.log('Prodotto inserito con ID:', result.insertId);
+      
 
       // Risposta di successo - reindirizza alla pagina admin
       res.redirect('/admin?success=1&message=Prodotto aggiunto con successo');
@@ -484,15 +484,7 @@ app.post("/api/orders", (req, res) => {
     const stato = hasFood ? 'in_corso' : 'n';
     const stato_drink = hasDrink ? 'in_corso' : 'n';
 
-    // Debug: mostra i valori che stiamo per inserire
-    console.log("Valori da inserire:", { 
-      tavolo, 
-      stato, 
-      stato_drink,
-      hasFood,
-      hasDrink,
-      tipoMap 
-    });
+    /
 
     // Inizia la transazione
     conn.beginTransaction(err => {
@@ -505,8 +497,7 @@ app.post("/api/orders", (req, res) => {
       const insertComandaQuery = "INSERT INTO comanda (tavolo, stato, stato_drink) VALUES (?, ?, ?)";
       const insertComandaValues = [tavolo, stato, stato_drink];
       
-      console.log("Query:", insertComandaQuery);
-      console.log("Values:", insertComandaValues);
+  
       
       conn.query(insertComandaQuery, insertComandaValues, (err, result) => {
           if (err) {
@@ -655,7 +646,7 @@ app.post("/api/cameriere/done", (req, res) => {
           return res.status(404).json({ error: "Comanda non trovata per l'aggiornamento" });
         }
 
-        console.log(`Comanda #${comanda_id} completata - campo 'fine' impostato a TRUE`);
+     
         
         res.status(200).json({ 
           success: true, 
@@ -839,7 +830,7 @@ app.get('/api/cassa', (req, res) => {
       prezzo: parseFloat(ordine.prezzo) // Assicura che il prezzo sia un numero
     }));
 
-    console.log(`Trovati ${ordini.length} ordini non pagati`);
+    
     res.json(ordini);
   });
 });// GET /api/cassa - Restituisce tutti gli ordini NON PAGATI raggruppati per tavoli
@@ -875,7 +866,7 @@ app.get('/api/cassa', (req, res) => {
       prezzo: parseFloat(ordine.prezzo) // Assicura che il prezzo sia un numero
     }));
 
-    console.log(`Trovati ${ordini.length} ordini non pagati`);
+
     res.json(ordini);
   });
 });
@@ -923,7 +914,7 @@ app.post('/api/cassa/paga', (req, res) => {
             return res.status(404).json({ error: "Ordine non trovato per l'aggiornamento" });
           }
 
-          console.log(`Ordine #${ordine_id} (${ordine.nome_prodotto}) pagato - €${ordine.prezzo}`);
+        
           
           res.status(200).json({ 
             success: true, 
@@ -992,9 +983,7 @@ app.post('/api/cassa/paga-tavolo', (req, res) => {
             });
           }
 
-          console.log(`Tavolo ${tavolo} pagato completamente:`);
-          console.log(`- ${resultOrdini.affectedRows} ordini aggiornati`);
-          console.log(`- ${resultComande.affectedRows} comande chiuse`);
+         
           
           res.status(200).json({ 
             success: true, 
