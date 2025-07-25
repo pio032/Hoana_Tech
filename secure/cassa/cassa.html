@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cassa - Gestione Pagamenti</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            padding: 0.5rem 0.75rem;
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--pico-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .home-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tavolo-section {
+            margin-bottom: 2rem;
+        }
+
+        .prodotto-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            border: 1px solid var(--pico-border-color);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            background: var(--pico-background-color);
+            transition: all 0.3s ease;
+        }
+
+        .prodotto-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .prodotto-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .prodotto-dettagli {
+            flex: 1;
+        }
+
+        .prodotto-nome {
+            font-weight: 600;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .prodotto-note {
+            margin: 0.2rem 0 0 0;
+            font-size: 0.8rem;
+            color: var(--pico-muted-color);
+        }
+
+        .prodotto-prezzo {
+            font-weight: bold;
+            font-size: 1rem;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .paga-btn {
+            background: var(--pico-ins-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-left: 0.5rem;
+            min-width: 80px;
+        }
+
+        .paga-btn:hover {
+            background: #059669;
+            transform: scale(1.05);
+        }
+
+        .paga-btn:disabled {
+            background: var(--pico-muted-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pagato-locale {
+            background: #f0fdf4 !important;
+            border-color: #22c55e !important;
+            opacity: 0.8;
+        }
+
+        .pagato-locale .prodotto-nome::after {
+            content: " ✓";
+            color: #22c55e;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .btn-pagato {
+            background: #22c55e !important;
+            color: white !important;
+            cursor: default !important;
+        }
+
+        .btn-pagato:hover {
+            background: #22c55e !important;
+            transform: none !important;
+        }
+
+        .totale-tavolo {
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+
+        .stato-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .stato-badge.in_corso {
+            background: #fef08a;
+            color: #92400e;
+        }
+
+        .stato-badge.pronta {
+            background: #bbf7d0;
+            color: #166534;
+        }
+
+        article {
+            padding: 1.5rem;
+        }
+
+        h2 {
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--pico-primary);
+            padding-bottom: 0.5rem;
+        }
+
+        .paga-tavolo-btn {
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .paga-tavolo-btn:hover:not(:disabled) {
+            background: var(--pico-primary-hover);
+            transform: scale(1.02);
+        }
+
+        .paga-tavolo-btn:disabled {
+            background: var(--pico-muted-color);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .tavolo-completato {
+            margin-top: 1rem;
+            color: var(--pico-ins-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <a href="/" class="home-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                </path>
+            </svg>
+            Home
+        </a>
+        
+        <h1 style="text-align: center; margin-bottom: 2rem;">💳 Cassa - Gestione Pagamenti</h1>
+        
+        <div id="cassakContainer"></div>
+    </main>
+
+    <script>
+        // Stato locale per tenere traccia degli ordini pagati in questa sessione
+        let ordiniPagatiLocalmente = new Set();
+        let tavoliCompletati = new Set();
+
+        async function loadCassa() {
+            try {
+                const res = await fetch('/api/cassa');
+                const data = await res.json();
+                
+                console.log("Dati ricevuti da /api/cassa:", data);
+                console.log("Numero di ordini:", data.length);
+                
+                const container = document.getElementById('cassakContainer');
+                container.innerHTML = '';
+
+                // Raggruppa per tavolo
+                const tavoli = {};
+                data.forEach(ordine => {
+                    console.log("Processando ordine:", ordine);
+                    
+                    if (!tavoli[ordine.tavolo]) {
+                        tavoli[ordine.tavolo] = {
+                            comande: {},
+                            totale: 0,
+                            totale_originale: 0
+                        };
+                    }
+                    
+                    if (!tavoli[ordine.tavolo].comande[ordine.comanda_id]) {
+                        tavoli[ordine.tavolo].comande[ordine.comanda_id] = {
+                            stato: ordine.stato,
+                            stato_drink: ordine.stato_drink,
+                            ordini: []
+                        };
+                    }
+                    
+                    // Aggiungi informazione se l'ordine è stato pagato localmente
+                    ordine.pagato_locale = ordiniPagatiLocalmente.has(ordine.id);
+                    
+                    tavoli[ordine.tavolo].comande[ordine.comanda_id].ordini.push(ordine);
+                    
+                    // Calcola totali
+                    const prezzo = parseFloat(ordine.prezzo);
+                    tavoli[ordine.tavolo].totale_originale += prezzo;
+                    
+                    // Se non è pagato localmente, conta nel totale rimanente
+                    if (!ordine.pagato_locale) {
+                        tavoli[ordine.tavolo].totale += prezzo;
+                    }
+                });
+
+                console.log("Tavoli raggruppati:", tavoli);
+
+                // Crea gli articoli per ogni tavolo
+                Object.keys(tavoli).sort((a, b) => parseInt(a) - parseInt(b)).forEach(numeroTavolo => {
+                    const tavoloData = tavoli[numeroTavolo];
+                    
+                    // Controlla se il tavolo è stato completato
+                    const tavoloCompletato = tavoliCompletati.has(numeroTavolo);
+                    if (tavoloCompletato) {
+                        return; // Salta i tavoli completati
+                    }
+                    
+                    const article = document.createElement('article');
+                    article.className = 'tavolo-section';
+                    
+                    let comandeHtml = '';
+                    Object.keys(tavoloData.comande).forEach(comandaId => {
+                        const comanda = tavoloData.comande[comandaId];
+                        
+                        let statiBadges = '';
+                        if (comanda.stato && comanda.stato !== 'n') {
+                            statiBadges += `<span class="stato-badge ${comanda.stato}">Cucina: ${comanda.stato === 'pronta' ? 'Pronta' : comanda.stato.replace('_', ' ')}</span>`;
+                        }
+                        if (comanda.stato_drink && comanda.stato_drink !== 'n') {
+                            statiBadges += `<span class="stato-badge ${comanda.stato_drink}">Bar: ${comanda.stato_drink === 'pronta' ? 'Pronta' : comanda.stato_drink.replace('_', ' ')}</span>`;
+                        }
+                        
+                        comandeHtml += `
+                            <h4>Comanda #${comandaId} ${statiBadges}</h4>
+                            ${comanda.ordini.map(ordine => `
+                                <div class="prodotto-item ${ordine.pagato_locale ? 'pagato-locale' : ''}">
+                                    <div class="prodotto-info">
+                                        <img src="${ordine.path_foto}" alt="${ordine.nome_prodotto}" class="prodotto-img">
+                                        <div class="prodotto-dettagli">
+                                            <p class="prodotto-nome">${ordine.nome_prodotto}</p>
+                                            ${ordine.note ? `<p class="prodotto-note">Note: ${ordine.note}</p>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="prodotto-prezzo">€${parseFloat(ordine.prezzo).toFixed(2)}</div>
+                                    <button class="paga-btn ${ordine.pagato_locale ? 'btn-pagato' : ''}" 
+                                            onclick="pagaOrdineLocale(${ordine.id})" 
+                                            ${ordine.pagato_locale ? 'disabled' : ''}>
+                                        ${ordine.pagato_locale ? '✓ Pagato' : 'Paga'}
+                                    </button>
+                                </div>
+                            `).join('')}
+                        `;
+                    });
+                    
+                    // Controlla se tutti gli ordini del tavolo sono pagati localmente
+                    const tuttiPagatiLocalmente = tavoloData.totale === 0;
+                    
+                    article.innerHTML = `
+                        <h2>🍽️ Tavolo ${numeroTavolo}</h2>
+                        ${comandeHtml}
+                        <div class="totale-tavolo">
+                            <div>Totale complessivo: €${tavoloData.totale_originale.toFixed(2)}</div>
+                            <div style="margin-top: 0.5rem;">Rimanente da pagare: €${tavoloData.totale.toFixed(2)}</div>
+                            <button class="paga-tavolo-btn" 
+                                    onclick="completaTavolo('${numeroTavolo}')" 
+                                    ${!tuttiPagatiLocalmente ? 'disabled' : ''}>
+                                ${tuttiPagatiLocalmente ? '💳 Completa Pagamento Tavolo' : '⏳ Completa i pagamenti singoli prima'}
+                            </button>
+                        </div>
+                    `;
+                    
+                    container.appendChild(article);
+                });
+                
+                // Mostra messaggio se non ci sono tavoli da visualizzare
+                if (Object.keys(tavoli).length === 0 || Object.keys(tavoli).every(t => tavoliCompletati.has(t))) {
+                    container.innerHTML = '<article><p style="text-align: center; color: var(--pico-muted-color);">Nessuna comanda presente o tutti i tavoli sono stati completati</p></article>';
+                }
+
+            } catch (err) {
+                console.error('Errore nel caricamento della cassa:', err);
+                const container = document.getElementById('cassakContainer');
+                container.innerHTML = '<article><p style="color: var(--pico-del-color);">Errore nel caricamento dei dati</p></article>';
+            }
+        }
+
+        // Funzione per pagare un singolo ordine (solo visivamente)
+        function pagaOrdineLocale(ordineId) {
+            // Aggiungi l'ordine alla lista degli ordini pagati localmente
+            ordiniPagatiLocalmente.add(ordineId);
+            console.log(`Ordine #${ordineId} marcato come pagato localmente`);
+            
+            // Ricarica la vista per aggiornare l'interfaccia
+            loadCassa();
+        }
+
+        // Funzione per completare il pagamento di un tavolo
+        async function completaTavolo(tavolo) {
+            try {
+                // Prima marca tutti gli ordini del tavolo come pagati nel backend
+                const res = await fetch('/api/cassa/paga-tavolo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ tavolo: tavolo })
+                });
+
+                if (res.ok) {
+                    console.log(`Tavolo ${tavolo} completato con successo`);
+                    
+                    // Aggiungi il tavolo alla lista dei tavoli completati
+                    tavoliCompletati.add(tavolo);
+                    
+                    // Rimuovi gli ordini di questo tavolo dalla lista degli ordini pagati localmente
+                    // (non più necessario mantenerli dato che il tavolo è completato)
+                    
+                    // Ricarica i dati per aggiornare la vista
+                    loadCassa();
+                } else {
+                    const errorData = await res.json();
+                    console.error('Errore nel completamento del tavolo:', errorData);
+                    alert('Errore nel completamento del tavolo: ' + (errorData.error || 'Errore sconosciuto'));
+                }
+            } catch (err) {
+                console.error('Errore nella chiamata API:', err);
+                alert('Errore di connessione');
+            }
+        }
+
+        // Carica i dati iniziali
+        loadCassa();
+        
+        // Aggiorna ogni 5 secondi
+        setInterval(loadCassa, 5000);
+    </script>
+</body>
+
+</html>

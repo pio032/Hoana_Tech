@@ -78,7 +78,7 @@ app.post('/login', (req, res) => {
               res.sendFile(path.join(__dirname, 'secure/bancone/bancone.html'));
               break;
             case "cassa":
-              res.sendFile(path.join(__dirname, 'secure/cassa.html'));
+              res.sendFile(path.join(__dirname, 'secure/cassa/cassa.html'));
               break;
             case "cameriere":
               res.sendFile(path.join(__dirname, 'secure/cam/cam.html'));
@@ -98,6 +98,9 @@ app.get("/admin", (req, res) => {
 })
 app.get("/cameriere", (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/cam/cam.html'));
+})
+app.get("/cassa", (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/cassa/cassa.html'));
 })
 
 //------------------------------------------------------------------ADMIN------------------------------------------------------------------
@@ -801,7 +804,209 @@ app.post('/api/bancone/complete', (req, res) => {
 });
 
 
+//---------------------------------------------------------------CASSA--------------------------------------------------------------------
 
+// GET /api/cassa - Restituisce tutti gli ordini NON PAGATI raggruppati per tavoli
+app.get('/api/cassa', (req, res) => {
+  const queryCassa = `
+    SELECT 
+      o.id,
+      o.comanda_id,
+      o.nome_prodotto,
+      o.prezzo,
+      o.note,
+      o.path_foto,
+      o.pagato,
+      c.tavolo,
+      c.stato,
+      c.stato_drink
+    FROM ordini o
+    JOIN comanda c ON o.comanda_id = c.id
+    WHERE o.pagato = FALSE
+    ORDER BY c.tavolo ASC, c.id DESC, o.id ASC
+  `;
+
+  conn.query(queryCassa, (err, results) => {
+    if (err) {
+      console.error("Errore nel recupero dei dati cassa:", err);
+      return res.status(500).json({ error: "Errore server" });
+    }
+
+    // Converti il campo 'pagato' da TINYINT a boolean per JavaScript
+    const ordini = results.map(ordine => ({
+      ...ordine,
+      pagato: Boolean(ordine.pagato), // Converte 0/1 in false/true
+      prezzo: parseFloat(ordine.prezzo) // Assicura che il prezzo sia un numero
+    }));
+
+    console.log(`Trovati ${ordini.length} ordini non pagati`);
+    res.json(ordini);
+  });
+});// GET /api/cassa - Restituisce tutti gli ordini NON PAGATI raggruppati per tavoli
+app.get('/api/cassa', (req, res) => {
+  const queryCassa = `
+    SELECT 
+      o.id,
+      o.comanda_id,
+      o.nome_prodotto,
+      o.prezzo,
+      o.note,
+      o.path_foto,
+      o.pagato,
+      c.tavolo,
+      c.stato,
+      c.stato_drink
+    FROM ordini o
+    JOIN comanda c ON o.comanda_id = c.id
+    WHERE o.pagato = FALSE
+    ORDER BY c.tavolo ASC, c.id DESC, o.id ASC
+  `;
+
+  conn.query(queryCassa, (err, results) => {
+    if (err) {
+      console.error("Errore nel recupero dei dati cassa:", err);
+      return res.status(500).json({ error: "Errore server" });
+    }
+
+    // Converti il campo 'pagato' da TINYINT a boolean per JavaScript
+    const ordini = results.map(ordine => ({
+      ...ordine,
+      pagato: Boolean(ordine.pagato), // Converte 0/1 in false/true
+      prezzo: parseFloat(ordine.prezzo) // Assicura che il prezzo sia un numero
+    }));
+
+    console.log(`Trovati ${ordini.length} ordini non pagati`);
+    res.json(ordini);
+  });
+});
+
+// POST /api/cassa/paga - Marca un ordine come pagato
+app.post('/api/cassa/paga', (req, res) => {
+  const { ordine_id } = req.body;
+
+  // Validazione input
+  if (!ordine_id) {
+    return res.status(400).json({ error: "ID ordine mancante" });
+  }
+
+  // Verifica che l'ordine esista e non sia già pagato
+  conn.query(
+    "SELECT id, pagato, nome_prodotto, prezzo FROM ordini WHERE id = ?", 
+    [ordine_id], 
+    (err, result) => {
+      if (err) {
+        console.error("Errore verifica ordine:", err);
+        return res.status(500).json({ error: "Errore verifica ordine" });
+      }
+
+      if (result.length === 0) {
+        return res.status(404).json({ error: "Ordine non trovato" });
+      }
+
+      const ordine = result[0];
+      
+      if (ordine.pagato) {
+        return res.status(400).json({ error: "Ordine già pagato" });
+      }
+
+      // Aggiorna l'ordine come pagato
+      conn.query(
+        "UPDATE ordini SET pagato = TRUE WHERE id = ?",
+        [ordine_id],
+        (err, updateResult) => {
+          if (err) {
+            console.error("Errore aggiornamento pagamento:", err);
+            return res.status(500).json({ error: "Errore aggiornamento pagamento" });
+          }
+
+          if (updateResult.affectedRows === 0) {
+            return res.status(404).json({ error: "Ordine non trovato per l'aggiornamento" });
+          }
+
+          console.log(`Ordine #${ordine_id} (${ordine.nome_prodotto}) pagato - €${ordine.prezzo}`);
+          
+          res.status(200).json({ 
+            success: true, 
+            message: "Pagamento registrato con successo",
+            ordine_id: ordine_id,
+            prodotto: ordine.nome_prodotto,
+            importo: parseFloat(ordine.prezzo)
+          });
+        }
+      );
+    }
+  );
+});
+
+app.post('/api/cassa/paga-tavolo', (req, res) => {
+  const { tavolo } = req.body;
+
+  if (!tavolo) {
+    return res.status(400).json({ error: "Numero tavolo mancante" });
+  }
+
+  // Inizia una transazione per assicurare consistenza
+  conn.beginTransaction((err) => {
+    if (err) {
+      console.error("Errore inizio transazione:", err);
+      return res.status(500).json({ error: "Errore server" });
+    }
+
+    // 1. Aggiorna tutti gli ordini non pagati del tavolo
+    const queryOrdini = `
+      UPDATE ordini o
+      JOIN comanda c ON o.comanda_id = c.id
+      SET o.pagato = TRUE
+      WHERE c.tavolo = ? AND o.pagato = FALSE
+    `;
+
+    conn.query(queryOrdini, [tavolo], (err, resultOrdini) => {
+      if (err) {
+        return conn.rollback(() => {
+          console.error("Errore pagamento ordini tavolo:", err);
+          res.status(500).json({ error: "Errore pagamento ordini tavolo" });
+        });
+      }
+
+      // 2. Aggiorna tutte le comande del tavolo come pagate
+      const queryComande = `
+        UPDATE comanda 
+        SET pagato = TRUE 
+        WHERE tavolo = ? AND pagato = FALSE
+      `;
+
+      conn.query(queryComande, [tavolo], (err, resultComande) => {
+        if (err) {
+          return conn.rollback(() => {
+            console.error("Errore pagamento comande tavolo:", err);
+            res.status(500).json({ error: "Errore pagamento comande tavolo" });
+          });
+        }
+
+        // Commit della transazione
+        conn.commit((err) => {
+          if (err) {
+            return conn.rollback(() => {
+              console.error("Errore commit transazione:", err);
+              res.status(500).json({ error: "Errore finalizzazione pagamento" });
+            });
+          }
+
+          console.log(`Tavolo ${tavolo} pagato completamente:`);
+          console.log(`- ${resultOrdini.affectedRows} ordini aggiornati`);
+          console.log(`- ${resultComande.affectedRows} comande chiuse`);
+          
+          res.status(200).json({ 
+            success: true, 
+            message: `Tavolo ${tavolo} pagato completamente`,
+            ordini_pagati: resultOrdini.affectedRows,
+            comande_chiuse: resultComande.affectedRows
+          });
+        });
+      });
+    });
+  });
+});
 
 
 //-----------------------------------------------------------------LISTEN----------------------------------------------------------------
