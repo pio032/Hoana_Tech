@@ -3,66 +3,278 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Cameriere</title>
   <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
   <style>
-    .main-btn {
-      font-size: 1.8rem;
-      padding: 2rem;
+    /* Reset e base mobile */
+    * {
+      box-sizing: border-box;
     }
 
-    .secondary-btn {
-      font-size: 1.2rem;
+    html, body {
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    body {
+      font-size: 16px;
+      background: var(--pico-background-color);
+    }
+
+    .app-container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       padding: 1rem;
     }
 
-    .button-group {
-      display: grid;
-      gap: 1.5rem;
-      margin-top: 3rem;
+    main {
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      padding: 0;
     }
 
-    main {
-      max-width: 500px;
-      margin: auto;
-      padding-top: 4rem;
-      text-align: center;
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 2rem;
+      font-weight: 700;
+      color: var(--pico-color);
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .main-btn {
+      font-size: 1.2rem;
+      padding: 1.2rem 1.5rem;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: var(--pico-primary);
+      color: var(--pico-primary-inverse);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-btn:hover {
+      background: var(--pico-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .main-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .secondary-btn {
+      font-size: 1rem;
+      padding: 1rem 1.2rem;
+      font-weight: 500;
+      border-radius: 10px;
+      border: 2px solid var(--pico-primary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: transparent;
+      color: var(--pico-primary);
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .secondary-btn:hover {
+      background: var(--pico-primary);
+      color: var(--pico-primary-inverse);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .secondary-btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .logout-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--pico-border-color);
+    }
+
+    .logout-btn {
+      font-size: 0.9rem;
+      padding: 0.8rem 1.5rem;
+      font-weight: 500;
+      border-radius: 8px;
+      border: 1px solid var(--pico-del-color);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: transparent;
+      color: var(--pico-del-color);
+      min-height: 45px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 120px;
+    }
+
+    .logout-btn:hover {
+      background: var(--pico-del-color);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+    }
+
+    .logout-btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    /* Responsive per schermi molto piccoli */
+    @media (max-width: 375px) {
+      .app-container {
+        padding: 0.75rem;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .main-btn {
+        font-size: 1.1rem;
+        padding: 1rem 1.2rem;
+        min-height: 55px;
+      }
+
+      .secondary-btn {
+        font-size: 0.95rem;
+        padding: 0.9rem 1rem;
+        min-height: 45px;
+      }
+
+      .logout-btn {
+        font-size: 0.85rem;
+        padding: 0.7rem 1.2rem;
+        min-height: 40px;
+      }
+    }
+
+    /* Responsive per schermi più larghi */
+    @media (min-width: 768px) {
+      main {
+        max-width: 500px;
+      }
+
+      .button-group {
+        gap: 1.5rem;
+      }
+
+      .main-btn {
+        font-size: 1.4rem;
+        padding: 1.5rem 2rem;
+        min-height: 70px;
+      }
+
+      .secondary-btn {
+        font-size: 1.1rem;
+        padding: 1.2rem 1.5rem;
+        min-height: 55px;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .logout-section {
+        border-top-color: var(--pico-border-color);
+      }
+    }
+
+    /* Prevenire selezione testo sui pulsanti */
+    button {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Focus visible per accessibilità */
+    button:focus-visible {
+      outline: 2px solid var(--pico-primary);
+      outline-offset: 2px;
     }
   </style>
 </head>
 
 <body>
+  <div class="app-container">
+    <main>
+      <h1>Cameriere</h1>
 
-  <main>
-    <h1>Cameriere</h1>
+      <div class="button-group">
+        <button class="main-btn" id="fai-comanda">Fai Comanda</button>
+        <button class="secondary-btn" id="vedi-comande">Vedi Comande</button>
+        <button class="secondary-btn" id="comande-pronte">Comande Pronte</button>
+      </div>
 
-    <div class="button-group">
-
-      <button class="main-btn" id="fai-comanda">📝 Fai Comanda</button>
-      <button class="secondary-btn" id="vedi-comande">📄 Vedi Comande</button>
-      <button class="secondary-btn" id="comande-pronte">✅ Comande Pronte</button>
-    </div>
-    <div style="margin-top: 2rem; text-align: center;">
-      <form action="/logout" method="POST" style="margin: 0;">
-        <input type="submit" value="Logout" class="secondary" />
-      </form>
-    </div>
-  </main>
+      <div class="logout-section">
+        <form action="/logout" method="POST" style="margin: 0;">
+          <input type="submit" value="Logout" class="logout-btn" />
+        </form>
+      </div>
+    </main>
+  </div>
 
   <script>
-
     document.getElementById("fai-comanda").addEventListener("click", () => {
       window.location.href = "/doComanda";
     });
 
     document.getElementById("vedi-comande").addEventListener("click", () => {
-        window.location.href = "/viewComanda";
+      window.location.href = "/viewComanda";
     });
 
     document.getElementById("comande-pronte").addEventListener("click", () => {
       alert("Mostra le comande pronte da servire.");
     });
+
+    // Prevenire il refresh pull-to-refresh su iOS
+    document.body.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 1 && e.touches[0].clientY === 0) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    document.body.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 1 && e.touches[0].clientY === 0) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    // Aggiungi feedback tattile sui dispositivi che lo supportano
+    if ('vibrate' in navigator) {
+      document.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', () => {
+          navigator.vibrate(50); // Vibrazione leggera di 50ms
+        });
+      });
+    }
   </script>
 
 </body>

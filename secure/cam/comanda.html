@@ -1,15 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Fai Comanda</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <style>
+        /* Reset e base mobile */
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            font-size: 14px;
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Header fisso */
+        .header {
+            background: var(--pico-background-color);
+            border-bottom: 1px solid var(--pico-border-color);
+            padding: 0.75rem;
+            position: relative;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
         .home-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
             z-index: 999;
-            padding: 0.5rem 0.75rem;
+            padding: 0.4rem 0.6rem;
             background: var(--pico-primary);
             color: var(--pico-primary-inverse);
             border: none;
@@ -17,104 +54,369 @@
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            font-size: 0.85rem;
+            gap: 0.3rem;
+            font-size: 0.75rem;
             font-weight: 500;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
             transition: all 0.2s ease;
         }
 
         .home-btn:hover {
             background: var(--pico-primary-hover);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .home-btn svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding-top: 0.2rem;
+        }
+
+        /* Container scrollabile */
+        .content-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.75rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Sezioni */
+        .section {
+            margin-bottom: 1.5rem;
+            background: var(--pico-card-background-color);
+            border: 1px solid var(--pico-border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .section h3 {
+            margin: 0 0 0.75rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--pico-color);
+        }
+
+        /* Ricerca prodotti */
+        .search-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--pico-border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
         }
 
         .search-results {
             max-height: 200px;
             overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
+            border: 1px solid var(--pico-border-color);
+            border-radius: 6px;
             margin-top: 0.5rem;
+            background: var(--pico-background-color);
+            display: none;
         }
 
         .product-item {
-            padding: 0.5rem;
+            padding: 0.75rem;
             cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--pico-border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background 0.2s ease;
         }
 
         .product-item:hover {
-            background-color: var(--background-color);
+            background-color: var(--pico-muted-background-color);
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .product-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .product-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin: 0 0 0.2rem 0;
+            color: var(--pico-color);
+        }
+
+        .product-price {
+            font-size: 0.8rem;
+            color: var(--pico-muted-color);
+            margin: 0;
+        }
+
+        /* Comanda corrente */
+        .order-empty {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--pico-muted-color);
+            font-style: italic;
+            font-size: 0.9rem;
         }
 
         .order-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
+            padding: 0.75rem;
+            border: 1px solid var(--pico-border-color);
+            border-radius: 6px;
             margin-bottom: 0.5rem;
+            background: var(--pico-background-color);
+        }
+
+        .order-item-info {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .order-item-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .order-item-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .order-item-name {
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin: 0 0 0.2rem 0;
+            color: var(--pico-color);
+        }
+
+        .order-item-calc {
+            font-size: 0.75rem;
+            color: var(--pico-muted-color);
+            margin: 0;
         }
 
         .quantity-controls {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
+            flex-shrink: 0;
         }
 
-        .quantity-controls button {
-            padding: 0.25rem 0.5rem;
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid var(--pico-border-color);
+            border-radius: 4px;
+            background: var(--pico-background-color);
+            color: var(--pico-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quantity-btn:hover {
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+            border-color: var(--pico-primary);
+        }
+
+        .remove-btn {
+            background: var(--pico-del-color);
+            color: white;
+            border-color: var(--pico-del-color);
+        }
+
+        .remove-btn:hover {
+            background: #b91c1c;
+        }
+
+        .quantity-display {
+            min-width: 30px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* Totale */
+        .total-section {
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .total-amount {
+            font-size: 1.3rem;
+            font-weight: 700;
             margin: 0;
         }
 
-        .total {
-            font-size: 1.2rem;
-            font-weight: bold;
+        /* Input tavolo */
+        .table-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--pico-border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Pulsante salva */
+        .save-btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            background: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+        }
+
+        .save-btn:hover {
+            background: #15803d;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(22, 163, 74, 0.4);
+        }
+
+        .save-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+        }
+
+        .save-btn:disabled {
+            background: var(--pico-muted-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Responsive per schermi molto piccoli */
+        @media (max-width: 375px) {
+            .content-container {
+                padding: 0.5rem;
+            }
+
+            .section {
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .product-img, .order-item-img {
+                width: 40px;
+                height: 40px;
+            }
+
+            .quantity-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 0.8rem;
+            }
+
+            .total-amount {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Scrollbar styling */
+        .content-container::-webkit-scrollbar,
+        .search-results::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .content-container::-webkit-scrollbar-track,
+        .search-results::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content-container::-webkit-scrollbar-thumb,
+        .search-results::-webkit-scrollbar-thumb {
+            background: var(--pico-muted-color);
+            border-radius: 2px;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <!-- Pulsante Home sticky -->
-        <a href="/cameriere" class="home-btn">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
-                </path>
-            </svg>
-            Home
-        </a>
-        <h1 align="center">Fai Comanda</h1>
+    <div class="app-container">
+        <div class="header">
+            <a href="/cameriere" class="home-btn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                    </path>
+                </svg>
+                Home
+            </a>
+            <h1>Fai Comanda</h1>
+        </div>
 
-        <!-- Ricerca Prodotti -->
-        <section>
-            <h3>Aggiungi Prodotti</h3>
-            <input type="text" id="searchInput" placeholder="Cerca prodotti..." />
-            <div id="searchResults" class="search-results" style="display: none;"></div>
-        </section>
-
-        <!-- Comanda Corrente -->
-        <section>
-            <h3>Comanda</h3>
-            <div id="orderItems"></div>
-            <div class="total">
-                Totale: €<span id="totalAmount">0.00</span>
+        <div class="content-container">
+            <!-- Ricerca Prodotti -->
+            <div class="section">
+                <h3>Aggiungi Prodotti</h3>
+                <input type="text" id="searchInput" class="search-input" placeholder="Cerca prodotti..." />
+                <div id="searchResults" class="search-results"></div>
             </div>
-            <section>
-                <h3>Numero Tavolo</h3>
-                <input type="text" id="tableNumber" placeholder="Inserisci numero tavolo" />
-            </section>
 
-            <button id="saveOrder" class="contrast">Salva Comanda</button>
-        </section>
+            <!-- Numero Tavolo -->
+            <div class="section">
+                <h3>Numero Tavolo</h3>
+                <input type="number" id="tableNumber" class="table-input" placeholder="Inserisci numero tavolo" min="1" />
+            </div>
+
+            <!-- Comanda Corrente -->
+            <div class="section">
+                <h3>Comanda</h3>
+                <div id="orderItems">
+                    <div class="order-empty">Nessun prodotto nella comanda</div>
+                </div>
+                
+                <div class="total-section">
+                    <div class="total-amount">Totale: €<span id="totalAmount">0.00</span></div>
+                </div>
+
+                <button id="saveOrder" class="save-btn">Salva Comanda</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -128,7 +430,6 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.products) {
-                        // Adatta i dati dal database al formato usato nel frontend
                         products = data.products.map(product => ({
                             id: product.id,
                             name: product.nome,
@@ -144,10 +445,7 @@
                 console.log('API non disponibile, uso dati di esempio');
             }
 
-            // Dati di esempio se l'API non funziona
-            products = [
-
-            ];
+            products = [];
             console.log('Prodotti di esempio caricati:', products);
         }
 
@@ -169,18 +467,17 @@
             }
 
             container.innerHTML = results.map(product => `
-        <div class="product-item" onclick="addToOrder(${product.id})" style="display: flex; align-items: center; gap: 1rem;">
-            <img src="${product.foto}" alt="${product.name}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px;">
-            <div>
-                <strong>${product.name}</strong><br>
-                €${product.price.toFixed(2)}
-            </div>
-        </div>
-    `).join('');
+                <div class="product-item" onclick="addToOrder(${product.id})">
+                    <img src="${product.foto}" alt="${product.name}" class="product-img">
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">€${product.price.toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
 
             container.style.display = 'block';
         }
-
 
         // Aggiungi prodotto alla comanda
         function addToOrder(productId) {
@@ -195,16 +492,20 @@
                     name: product.name,
                     price: product.price,
                     quantity: 1,
-                    foto: product.foto,           // ✅ aggiunto
-                    description: product.description // ✅ aggiunto
+                    foto: product.foto,
+                    description: product.description
                 });
             }
 
             updateOrderDisplay();
             document.getElementById('searchInput').value = '';
             document.getElementById('searchResults').style.display = 'none';
+            
+            // Feedback tattile
+            if ('vibrate' in navigator) {
+                navigator.vibrate(30);
+            }
         }
-
 
         // Aggiorna quantità
         function updateQuantity(productId, change) {
@@ -230,35 +531,35 @@
             const container = document.getElementById('orderItems');
 
             if (currentOrder.length === 0) {
-                container.innerHTML = '<p>Nessun prodotto nella comanda</p>';
+                container.innerHTML = '<div class="order-empty">Nessun prodotto nella comanda</div>';
                 document.getElementById('totalAmount').textContent = '0.00';
                 return;
             }
 
             container.innerHTML = currentOrder.map(item => `
-    <div class="order-item">
-        <div style="display: flex; gap: 1rem; align-items: center;">
-            <img src="${item.foto}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
-            <div>
-                <strong>${item.name}</strong><br>
-                €${item.price.toFixed(2)} x ${item.quantity} = €${(item.price * item.quantity).toFixed(2)}
-            </div>
-        </div>
-        <div class="quantity-controls">
-            <button onclick="updateQuantity(${item.id}, -1)">-</button>
-            <span>${item.quantity}</span>
-            <button onclick="updateQuantity(${item.id}, 1)">+</button>
-            <button onclick="removeFromOrder(${item.id})" class="secondary">✕</button>
-        </div>
-    </div>
-`).join('');
-
+                <div class="order-item">
+                    <div class="order-item-info">
+                        <img src="${item.foto}" alt="${item.name}" class="order-item-img">
+                        <div class="order-item-details">
+                            <div class="order-item-name">${item.name}</div>
+                            <div class="order-item-calc">€${item.price.toFixed(2)} x ${item.quantity} = €${(item.price * item.quantity).toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+                        <span class="quantity-display">${item.quantity}</span>
+                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                        <button class="quantity-btn remove-btn" onclick="removeFromOrder(${item.id})">✕</button>
+                    </div>
+                </div>
+            `).join('');
 
             // Calcola totale
             const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             document.getElementById('totalAmount').textContent = total.toFixed(2);
         }
-        //salva la comanda
+
+        // Salva la comanda
         async function saveOrder() {
             const tavolo = document.getElementById('tableNumber').value.trim();
             if (!tavolo) {
@@ -286,6 +587,11 @@
                     currentOrder = [];
                     document.getElementById('tableNumber').value = '';
                     updateOrderDisplay();
+                    
+                    // Feedback tattile successo
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate([100, 50, 100]);
+                    }
                 } else {
                     alert('Errore nel salvare la comanda');
                 }
@@ -294,7 +600,6 @@
                 alert('Errore nel salvare la comanda');
             }
         }
-
 
         // Event listeners
         document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -310,6 +615,19 @@
                 document.getElementById('searchResults').style.display = 'none';
             }
         });
+
+        // Prevenire il refresh pull-to-refresh su iOS
+        document.body.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 1 && e.touches[0].clientY === 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.body.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 1 && e.touches[0].clientY === 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
 
         // Carica prodotti all'avvio
         loadProducts().then(() => {
