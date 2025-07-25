@@ -84,7 +84,7 @@
 <body>
     <div class="container">
         <!-- Pulsante Home sticky -->
-        <a href="/admin" class="home-btn">
+        <a href="/cameriere" class="home-btn">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
@@ -169,36 +169,41 @@
             }
 
             container.innerHTML = results.map(product => `
-                <div class="product-item" onclick="addToOrder(${product.id})">
-                    <strong>${product.name}</strong> - €${product.price.toFixed(2)}
-                </div>
-            `).join('');
+        <div class="product-item" onclick="addToOrder(${product.id})" style="display: flex; align-items: center; gap: 1rem;">
+            <img src="${product.foto}" alt="${product.name}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px;">
+            <div>
+                <strong>${product.name}</strong><br>
+                €${product.price.toFixed(2)}
+            </div>
+        </div>
+    `).join('');
 
             container.style.display = 'block';
         }
 
+
         // Aggiungi prodotto alla comanda
         function addToOrder(productId) {
-    const product = products.find(p => p.id === productId);
-    const existingItem = currentOrder.find(item => item.id === productId);
+            const product = products.find(p => p.id === productId);
+            const existingItem = currentOrder.find(item => item.id === productId);
 
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        currentOrder.push({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            quantity: 1,
-            foto: product.foto,           // ✅ aggiunto
-            description: product.description // ✅ aggiunto
-        });
-    }
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                currentOrder.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1,
+                    foto: product.foto,           // ✅ aggiunto
+                    description: product.description // ✅ aggiunto
+                });
+            }
 
-    updateOrderDisplay();
-    document.getElementById('searchInput').value = '';
-    document.getElementById('searchResults').style.display = 'none';
-}
+            updateOrderDisplay();
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+        }
 
 
         // Aggiorna quantità
@@ -231,19 +236,23 @@
             }
 
             container.innerHTML = currentOrder.map(item => `
-                <div class="order-item">
-                    <div>
-                        <strong>${item.name}</strong><br>
-                        €${item.price.toFixed(2)} x ${item.quantity} = €${(item.price * item.quantity).toFixed(2)}
-                    </div>
-                    <div class="quantity-controls">
-                        <button onclick="updateQuantity(${item.id}, -1)">-</button>
-                        <span>${item.quantity}</span>
-                        <button onclick="updateQuantity(${item.id}, 1)">+</button>
-                        <button onclick="removeFromOrder(${item.id})" class="secondary">✕</button>
-                    </div>
-                </div>
-            `).join('');
+    <div class="order-item">
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <img src="${item.foto}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+            <div>
+                <strong>${item.name}</strong><br>
+                €${item.price.toFixed(2)} x ${item.quantity} = €${(item.price * item.quantity).toFixed(2)}
+            </div>
+        </div>
+        <div class="quantity-controls">
+            <button onclick="updateQuantity(${item.id}, -1)">-</button>
+            <span>${item.quantity}</span>
+            <button onclick="updateQuantity(${item.id}, 1)">+</button>
+            <button onclick="removeFromOrder(${item.id})" class="secondary">✕</button>
+        </div>
+    </div>
+`).join('');
+
 
             // Calcola totale
             const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -251,40 +260,40 @@
         }
         //salva la comanda
         async function saveOrder() {
-    const tavolo = document.getElementById('tableNumber').value.trim();
-    if (!tavolo) {
-        alert('Inserisci il numero del tavolo');
-        return;
-    }
-    if (currentOrder.length === 0) {
-        alert('Aggiungi almeno un prodotto alla comanda');
-        return;
-    }
+            const tavolo = document.getElementById('tableNumber').value.trim();
+            if (!tavolo) {
+                alert('Inserisci il numero del tavolo');
+                return;
+            }
+            if (currentOrder.length === 0) {
+                alert('Aggiungi almeno un prodotto alla comanda');
+                return;
+            }
 
-    try {
-        const response = await fetch('/api/orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                tavolo: tavolo,
-                items: currentOrder,
-                total: currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-            })
-        });
+            try {
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tavolo: tavolo,
+                        items: currentOrder,
+                        total: currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+                    })
+                });
 
-        if (response.ok) {
-            alert('Comanda salvata con successo!');
-            currentOrder = [];
-            document.getElementById('tableNumber').value = '';
-            updateOrderDisplay();
-        } else {
-            alert('Errore nel salvare la comanda');
+                if (response.ok) {
+                    alert('Comanda salvata con successo!');
+                    currentOrder = [];
+                    document.getElementById('tableNumber').value = '';
+                    updateOrderDisplay();
+                } else {
+                    alert('Errore nel salvare la comanda');
+                }
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('Errore nel salvare la comanda');
+            }
         }
-    } catch (error) {
-        console.error('Errore:', error);
-        alert('Errore nel salvare la comanda');
-    }
-}
 
 
         // Event listeners

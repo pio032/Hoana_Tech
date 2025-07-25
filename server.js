@@ -97,6 +97,9 @@ app.post('/login', (req, res) => {
 app.get("/admin", (req, res)=>{
   res.sendFile(path.join(__dirname, 'secure/admin/admin.html'));
 })
+app.get("/cameriere", (req, res)=>{
+  res.sendFile(path.join(__dirname, 'secure/cam/cam.html'));
+})
 
 //------------------------------------------------------------------ADMIN------------------------------------------------------------------
 
