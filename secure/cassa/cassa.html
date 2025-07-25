@@ -131,12 +131,12 @@
         .btn-pagato {
             background: #22c55e !important;
             color: white !important;
-            cursor: default !important;
+            cursor: pointer !important;
         }
 
         .btn-pagato:hover {
-            background: #22c55e !important;
-            transform: none !important;
+            background: #dc2626 !important;
+            transform: scale(1.05) !important;
         }
 
         .totale-tavolo {
@@ -183,23 +183,28 @@
             margin-top: 1rem;
             padding: 0.8rem 1.5rem;
             font-size: 1rem;
-            background: var(--pico-primary);
-            color: var(--pico-primary-inverse);
+            background: #16a34a;
+            color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
         }
 
         .paga-tavolo-btn:hover:not(:disabled) {
-            background: var(--pico-primary-hover);
-            transform: scale(1.02);
+            background: #15803d;
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(22, 163, 74, 0.4);
         }
 
         .paga-tavolo-btn:disabled {
             background: var(--pico-muted-color);
             cursor: not-allowed;
             opacity: 0.6;
+            transform: none;
+            box-shadow: none;
         }
 
         .tavolo-completato {
@@ -319,8 +324,7 @@
                                     </div>
                                     <div class="prodotto-prezzo">€${parseFloat(ordine.prezzo).toFixed(2)}</div>
                                     <button class="paga-btn ${ordine.pagato_locale ? 'btn-pagato' : ''}" 
-                                            onclick="pagaOrdineLocale(${ordine.id})" 
-                                            ${ordine.pagato_locale ? 'disabled' : ''}>
+                                            onclick="${ordine.pagato_locale ? 'rimuoviPagamentoLocale(' + ordine.id + ')' : 'pagaOrdineLocale(' + ordine.id + ')'}">
                                         ${ordine.pagato_locale ? '✓ Pagato' : 'Paga'}
                                     </button>
                                 </div>
@@ -368,6 +372,19 @@
             
             // Ricarica la vista per aggiornare l'interfaccia
             loadCassa();
+        }
+
+        // Funzione per rimuovere il pagamento locale di un ordine
+        function rimuoviPagamentoLocale(ordineId) {
+            // Chiedi conferma all'utente
+            if (confirm('Sei sicuro di voler rimuovere il pagamento di questo ordine?')) {
+                // Rimuovi l'ordine dalla lista degli ordini pagati localmente
+                ordiniPagatiLocalmente.delete(ordineId);
+                console.log(`Pagamento locale rimosso per ordine #${ordineId}`);
+                
+                // Ricarica la vista per aggiornare l'interfaccia
+                loadCassa();
+            }
         }
 
         // Funzione per completare il pagamento di un tavolo
