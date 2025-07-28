@@ -8,8 +8,9 @@
 </head>
 
 <body>
-     <div style="display: flex; justify-content: flex-end; padding: 1rem;">
+     <div style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem;">
   <button onclick="loadComande()">🔄 Aggiorna</button>
+  <button onclick="logout()" style="background-color: #dc3545; border-color: #dc3545;">🚪 Logout</button>
 </div>
   <main class="container" id="cucinaContainer">
     <h1>Cucina</h1>
@@ -80,6 +81,28 @@
           }
         })
         .catch(() => alert('Errore nel completare la comanda'));
+    }
+
+    async function logout() {
+      if (!confirm("Vuoi davvero fare il logout?")) return;
+
+      try {
+        const res = await fetch('/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (res.ok) {
+          alert('Logout effettuato con successo!');
+          // Reindirizza alla pagina di login o home
+          window.location.href = '/';
+        } else {
+          alert('Errore durante il logout');
+        }
+      } catch (err) {
+        console.error("Errore durante il logout:", err);
+        alert('Errore durante il logout');
+      }
     }
 
     loadComande();

@@ -5,22 +5,21 @@ require('dotenv').config();
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
-const cors = require('cors')
+const cors = require('cors');
+const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
+
 app.use(cors({
   origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
+
 const dbHost = process.env.DB_HOST;
 const dbPort = process.env.DB_PORT;
 const dbName = process.env.DB_NAME;
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
-
-// Middleware
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
 // Configurazione MySQL
 const mysql = require('mysql2');
@@ -32,6 +31,39 @@ const conn = mysql.createConnection({
   database: dbName
 });
 
+// Configurazione MySQL Session Store
+const sessionStore = new MySQLStore({
+  expiration: 86400000, // 24 ore in millisecondi
+  createDatabaseTable: true,
+  schema: {
+    tableName: 'sessions',
+    columnNames: {
+      session_id: 'session_id',
+      expires: 'expires',
+      data: 'data'
+    }
+  }
+}, conn);
+
+// Configurazione sessioni
+app.use(session({
+  key: 'restaurant_session',
+  secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-this',
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000, // 24 ore
+    httpOnly: true,
+    secure: false // Metti true se usi HTTPS
+  }
+}));
+
+// Middleware
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
 // Test connessione database
 conn.connect((err) => {
   if (err) {
@@ -41,11 +73,50 @@ conn.connect((err) => {
   console.log('Connesso al database MySQL');
 });
 
+// Middleware per controllare l'autenticazione
+function requireAuth(req, res, next) {
+  if (req.session && req.session.user) {
+    return next();
+  } else {
+    return res.status(401).json({ error: 'Accesso non autorizzato' });
+  }
+}
+
+// Middleware per controllare ruoli specifici
+function requireRole(roles) {
+  return (req, res, next) => {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ error: 'Accesso non autorizzato' });
+    }
+    
+    if (!roles.includes(req.session.user.tipo)) {
+      return res.status(403).json({ error: 'Permessi insufficienti' });
+    }
+    
+    return next();
+  };
+}
+
 //-----------------------------------------------------------------LOGIN----------------------------------------------------------------
 
 app.get('/', (req, res) => {
+  // Se già loggato, reindirizza alla dashboard appropriata
+  if (req.session && req.session.user) {
+    return res.redirect(getDashboardPath(req.session.user.tipo));
+  }
   res.sendFile(path.join(__dirname, 'public/login.html'));
 });
+
+function getDashboardPath(tipo) {
+  switch (tipo) {
+    case "admin": return '/admin';
+    case "cucina": return '/cucina';
+    case "bancone": return '/bancone';
+    case "cassa": return '/cassa';
+    case "cameriere": return '/cameriere';
+    default: return '/';
+  }
+}
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
@@ -54,58 +125,88 @@ app.post('/login', (req, res) => {
   conn.query(query, [username, password], (err, results) => {
     if (err) {
       console.error('Errore query:', err);
-      res.status(500).send('Errore del server');
+      res.status(500).json({ error: 'Errore del server' });
       return;
     }
 
     if (results.length > 0) {
+      const user = results[0];
+      
+      // Crea la sessione
+      req.session.user = {
+        id: user.id,
+        username: user.username,
+        tipo: user.tipo
+      };
 
-      conn.query("select tipo from user where id = ?", [results[0].id], (err, results) => {
-        if (err) {
-          console.error('Errore query:', err);
-          res.status(500).send('Errore del server');
-          return;
-        }
-        if (results.length > 0) {
-          switch (results[0].tipo) {
-            case "admin":
-              res.sendFile(path.join(__dirname, 'secure/admin/admin.html'));
-              break;
-            case "cucina":
-              res.sendFile(path.join(__dirname, 'secure/cucina/cucina.html'));
-              break;
-            case "bancone":
-              res.sendFile(path.join(__dirname, 'secure/bancone/bancone.html'));
-              break;
-            case "cassa":
-              res.sendFile(path.join(__dirname, 'secure/cassa/cassa.html'));
-              break;
-            case "cameriere":
-              res.sendFile(path.join(__dirname, 'secure/cam/cam.html'));
-
-          }
-        }
-      })
+      console.log(`✅ Login effettuato: ${user.username} (${user.tipo})`);
+      
+      // Reindirizza alla dashboard appropriata
+      res.redirect(getDashboardPath(user.tipo));
     } else {
-
+      res.status(401).json({ error: 'Credenziali non valide' });
     }
   });
-
 });
+
+// Endpoint per il logout
+app.post('/logout', (req, res) => {
+  if (req.session) {
+    const username = req.session.user?.username || 'Utente sconosciuto';
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Errore durante il logout:', err);
+        return res.status(500).json({ error: 'Errore durante il logout' });
+      }
+      console.log(`🚪 Logout effettuato: ${username}`);
+      res.clearCookie('restaurant_session');
+      res.json({ success: true, message: 'Logout effettuato con successo' });
+    });
+  } else {
+    res.json({ success: true, message: 'Nessuna sessione attiva' });
+  }
+});
+
+// Endpoint per verificare lo stato della sessione
+app.get('/api/session', (req, res) => {
+  if (req.session && req.session.user) {
+    res.json({
+      authenticated: true,
+      user: {
+        id: req.session.user.id,
+        username: req.session.user.username,
+        tipo: req.session.user.tipo
+      }
+    });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
 //------------------------------------------------------------------ROUTE----------------------------------------------------------------
-app.get("/admin", (req, res) => {
+app.get("/admin", requireRole(['admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/admin.html'));
-})
-app.get("/cameriere", (req, res) => {
+});
+
+app.get("/cameriere", requireRole(['cameriere', 'admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/cam/cam.html'));
-})
-app.get("/cassa", (req, res) => {
+});
+
+app.get("/cassa", requireRole(['cassa', 'admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/cassa/cassa.html'));
-})
+});
+
+app.get("/cucina", requireRole(['cucina', 'admin']), (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/cucina/cucina.html'));
+});
+
+app.get("/bancone", requireRole(['bancone', 'admin']), (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/bancone/bancone.html'));
+});
 
 //------------------------------------------------------------------ADMIN------------------------------------------------------------------
 
-app.get("/admin/user", (req, res) => {
+app.get("/admin/user", requireRole(['admin']), (req, res) => {
   const query = 'SELECT * FROM user';
 
   conn.query(query, (err, results) => {
@@ -116,13 +217,15 @@ app.get("/admin/user", (req, res) => {
     }
 
     res.json(results);
-  })
-})
-app.get("/admin/select", (req, res) => {
+  });
+});
+
+app.get("/admin/select", requireRole(['admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/user.html'));
-})
+});
+
 // Aggiorna utente
-app.post('/admin/users/update', (req, res) => {
+app.post('/admin/users/update', requireRole(['admin']), (req, res) => {
   const { id, username, password, tipo } = req.body;
 
   let query = 'UPDATE user SET username = ?, tipo = ?';
@@ -147,7 +250,7 @@ app.post('/admin/users/update', (req, res) => {
 });
 
 // Elimina utente
-app.post('/admin/users/delete', (req, res) => {
+app.post('/admin/users/delete', requireRole(['admin']), (req, res) => {
   const { id } = req.body;
 
   const query = 'DELETE FROM user WHERE id = ?';
@@ -167,14 +270,13 @@ app.post('/admin/users/delete', (req, res) => {
   });
 });
 
-
 // Endpoint per mostrare la pagina di creazione
-app.get('/admin/users/create', (req, res) => {
+app.get('/admin/users/create', requireRole(['admin']), (req, res) => {
   res.sendFile(path.join(__dirname, '/secure/admin/create.html'));
 });
 
 // Endpoint per creare l'utente
-app.post('/admin/users/create', (req, res) => {
+app.post('/admin/users/create', requireRole(['admin']), (req, res) => {
   const { username, password, tipo } = req.body;
 
   // Validazioni server-side
@@ -202,7 +304,6 @@ app.post('/admin/users/create', (req, res) => {
       return;
     }
 
-
     const insertQuery = 'INSERT INTO user (username, passsword, tipo) VALUES (?, ?, ?)';
     conn.query(insertQuery, [username, password, tipo], (err, result) => {
       if (err) {
@@ -220,7 +321,7 @@ app.post('/admin/users/create', (req, res) => {
   });
 });
 
-app.get('/api/admin/stats', async (req, res) => {
+app.get('/api/admin/stats', requireRole(['admin']), async (req, res) => {
   const stats = {};
 
   conn.query('SELECT COUNT(*) AS totale FROM user', (err, resultUtenti) => {
@@ -243,10 +344,9 @@ app.get('/api/admin/stats', async (req, res) => {
   });
 });
 
-
-app.get("/admin/products/create", (req, res) => {
+app.get("/admin/products/create", requireRole(['admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/addProduct.html'));
-})
+});
 
 // Configurazione multer per l'upload delle immagini
 const storage = multer.diskStorage({
@@ -284,7 +384,7 @@ const upload = multer({
 });
 
 // Endpoint per aggiungere un prodotto
-app.post('/addProduct', upload.single('foto'), (req, res) => {
+app.post('/addProduct', requireRole(['admin']), upload.single('foto'), (req, res) => {
   try {
     const { nome, descrizione, prezzo, tipo } = req.body;
 
@@ -327,8 +427,6 @@ app.post('/addProduct', upload.single('foto'), (req, res) => {
         });
       }
 
-
-
       // Risposta di successo - reindirizza alla pagina admin
       res.redirect('/admin?success=1&message=Prodotto aggiunto con successo');
     });
@@ -353,14 +451,12 @@ app.post('/addProduct', upload.single('foto'), (req, res) => {
 // Middleware per servire file statici dalla cartella uploads
 app.use('/uploads', express.static('uploads'));
 
-
-app.get("/admin/prod", (req, res) => {
-  res.sendFile(path.join(__dirname, 'secure/admin/product.html'))
-})
-
+app.get("/admin/prod", requireRole(['admin']), (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/admin/product.html'));
+});
 
 // Ottieni tutti i prodotti
-app.get('/api/products', (req, res) => {
+app.get('/api/products', requireAuth, (req, res) => {
   const query = 'SELECT id, nome, descrizione, prezzo, fotoPath as foto, tipo FROM prodotti';
 
   conn.query(query, (err, results) => {
@@ -379,11 +475,7 @@ app.get('/api/products', (req, res) => {
   });
 });
 
-
-
-app.delete('/api/products/:id', (req, res) => {
-
-
+app.delete('/api/products/:id', requireRole(['admin']), (req, res) => {
   const productId = req.params.id;
   if (!productId) {
     return res.status(400).json({ success: false, message: "ID prodotto mancante" });
@@ -427,12 +519,11 @@ app.delete('/api/products/:id', (req, res) => {
   });
 });
 
+app.get("/admin/stat", requireRole(['admin']), (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/admin/stat.html'));
+});
 
-app.get("/admin/stat", (req, res) => {
-  res.sendFile(path.join(__dirname, 'secure/admin/stat.html'))
-})
-
-app.get('/api/statistiche', (req, res) => {
+app.get('/api/statistiche', requireRole(['admin']), (req, res) => {
   const dataInizio = req.query.data_inizio || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const dataFine = req.query.data_fine || new Date().toISOString().split('T')[0];
 
@@ -528,18 +619,16 @@ app.get('/api/statistiche', (req, res) => {
   );
 });
 
-
 //----------------------------------------------------------------CAMERIERE--------------------------------------------------------------
 
-
-app.get("/doComanda", (req, res) => {
+app.get("/doComanda", requireRole(['cameriere', 'admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/cam/comanda.html'));
-})
+});
 
-
-app.post("/api/orders", (req, res) => {
+app.post("/api/orders", requireRole(['cameriere', 'admin']), (req, res) => {
   const { tavolo, items } = req.body;
-  console.log("quello che vedo: ", req.body)
+  console.log("Ordine ricevuto da:", req.session.user.username, "- Dati:", req.body);
+  
   // Validazione input
   if (!tavolo || !items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Dati mancanti o invalidi" });
@@ -585,7 +674,6 @@ app.post("/api/orders", (req, res) => {
     const stato = hasFood ? 'in_corso' : 'n';
     const stato_drink = hasDrink ? 'in_corso' : 'n';
 
-
     // Inizia la transazione
     conn.beginTransaction(err => {
       if (err) {
@@ -596,8 +684,6 @@ app.post("/api/orders", (req, res) => {
       // Inserisci comanda con query più esplicita
       const insertComandaQuery = "INSERT INTO comanda (tavolo, stato, stato_drink) VALUES (?, ?, ?)";
       const insertComandaValues = [tavolo, stato, stato_drink];
-
-
 
       conn.query(insertComandaQuery, insertComandaValues, (err, result) => {
         if (err) {
@@ -622,7 +708,6 @@ app.post("/api/orders", (req, res) => {
               false, // pagato
               new Date() // data attuale
             ]);
-
           }
         });
 
@@ -652,6 +737,8 @@ app.post("/api/orders", (req, res) => {
               });
             }
 
+            console.log(`✅ Ordine inserito da ${req.session.user.username} per tavolo ${tavolo}`);
+
             res.status(200).json({
               success: true,
               message: "Ordine inserito con successo",
@@ -659,17 +746,16 @@ app.post("/api/orders", (req, res) => {
             });
           });
         });
-      }
-      );
+      });
     });
   });
 });
 
-app.get("/viewComanda", (req, res) => {
+app.get("/viewComanda", requireRole(['cameriere', 'admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/cam/view.html'));
-})
+});
 
-app.get('/api/comande', (req, res) => {
+app.get('/api/comande', requireRole(['cameriere', 'admin']), (req, res) => {
   const queryComande = `
     SELECT 
       c.id AS comanda_id, 
@@ -715,7 +801,7 @@ app.get('/api/comande', (req, res) => {
   });
 });
 
-app.post("/api/cameriere/done", (req, res) => {
+app.post("/api/cameriere/done", requireRole(['cameriere', 'admin']), (req, res) => {
   const { comanda_id } = req.body;
 
   // Validazione input
@@ -748,7 +834,7 @@ app.post("/api/cameriere/done", (req, res) => {
           return res.status(404).json({ error: "Comanda non trovata per l'aggiornamento" });
         }
 
-
+        console.log(`✅ Comanda #${comanda_id} completata da ${req.session.user.username}`);
 
         res.status(200).json({
           success: true,
@@ -760,10 +846,8 @@ app.post("/api/cameriere/done", (req, res) => {
   });
 });
 
-
-
 //------------------------------------------------------------------CUCINA-------------------------------------------------------------
-app.get('/api/cucina', (req, res) => {
+app.get('/api/cucina', requireRole(['cucina', 'admin']), (req, res) => {
   const query = `
     SELECT 
       c.id AS comanda_id,
@@ -808,8 +892,7 @@ app.get('/api/cucina', (req, res) => {
   });
 });
 
-
-app.post('/api/cucina/complete', (req, res) => {
+app.post('/api/cucina/complete', requireRole(['cucina', 'admin']), (req, res) => {
   const { comandaId } = req.body;
 
   if (!comandaId) {
@@ -829,6 +912,8 @@ app.post('/api/cucina/complete', (req, res) => {
         return res.status(404).json({ error: "Comanda non trovata" });
       }
 
+      console.log(`🍳 Comanda cucina #${comandaId} completata da ${req.session.user.username}`);
+
       res.json({ message: "Comanda completata con successo" });
     }
   );
@@ -836,7 +921,7 @@ app.post('/api/cucina/complete', (req, res) => {
 
 //--------------------------------------------------------------------BANCONE-------------------------------------------------------------
 // Mostra solo comande con drink non completate
-app.get('/api/bancone', (req, res) => {
+app.get('/api/bancone', requireRole(['bancone', 'admin']), (req, res) => {
   const query = `
     SELECT 
       c.id AS comanda_id,
@@ -880,10 +965,8 @@ app.get('/api/bancone', (req, res) => {
   });
 });
 
-
-
 // API per completare comanda da bancone
-app.post('/api/bancone/complete', (req, res) => {
+app.post('/api/bancone/complete', requireRole(['bancone', 'admin']), (req, res) => {
   const { comandaId } = req.body;
 
   const query = "UPDATE comanda SET stato_drink = 'pronta' WHERE id = ?";
@@ -892,15 +975,17 @@ app.post('/api/bancone/complete', (req, res) => {
       console.error('Errore aggiornando stato_drink:', err);
       return res.status(500).json({ error: 'Errore aggiornamento stato_drink' });
     }
+    
+    console.log(`🍹 Comanda bancone #${comandaId} completata da ${req.session.user.username}`);
+    
     res.sendStatus(200);
   });
 });
 
-
 //---------------------------------------------------------------CASSA--------------------------------------------------------------------
 
 // GET /api/cassa - Restituisce TUTTI gli ordini (pagati e non pagati) per mantenere la persistenza
-app.get('/api/cassa', (req, res) => {
+app.get('/api/cassa', requireRole(['cassa', 'admin']), (req, res) => {
   const queryCassa = `
     SELECT 
       o.id,
@@ -938,7 +1023,7 @@ app.get('/api/cassa', (req, res) => {
 });
 
 // POST /api/cassa/paga-ordine - Marca un singolo ordine come pagato
-app.post('/api/cassa/paga-ordine', (req, res) => {
+app.post('/api/cassa/paga-ordine', requireRole(['cassa', 'admin']), (req, res) => {
   const { ordineId } = req.body;
 
   if (!ordineId) {
@@ -979,7 +1064,7 @@ app.post('/api/cassa/paga-ordine', (req, res) => {
             return res.status(404).json({ error: 'Ordine non trovato per l\'aggiornamento' });
           }
 
-          console.log(`✅ Ordine #${ordineId} pagato: ${ordine.nome_prodotto} - €${ordine.prezzo}`);
+          console.log(`💰 Ordine #${ordineId} pagato da ${req.session.user.username}: ${ordine.nome_prodotto} - €${ordine.prezzo}`);
 
           res.json({ 
             success: true, 
@@ -995,7 +1080,7 @@ app.post('/api/cassa/paga-ordine', (req, res) => {
 });
 
 // POST /api/cassa/annulla-pagamento - Annulla il pagamento di un ordine
-app.post('/api/cassa/annulla-pagamento', (req, res) => {
+app.post('/api/cassa/annulla-pagamento', requireRole(['cassa', 'admin']), (req, res) => {
   const { ordineId } = req.body;
 
   if (!ordineId) {
@@ -1036,7 +1121,7 @@ app.post('/api/cassa/annulla-pagamento', (req, res) => {
             return res.status(404).json({ error: 'Ordine non trovato per l\'aggiornamento' });
           }
 
-          console.log(`🔄 Pagamento annullato per ordine #${ordineId}: ${ordine.nome_prodotto}`);
+          console.log(`🔄 Pagamento annullato da ${req.session.user.username} per ordine #${ordineId}: ${ordine.nome_prodotto}`);
 
           res.json({ 
             success: true, 
@@ -1052,7 +1137,7 @@ app.post('/api/cassa/annulla-pagamento', (req, res) => {
 });
 
 // POST /api/cassa/paga-tavolo - Completa il pagamento di tutto il tavolo
-app.post('/api/cassa/paga-tavolo', (req, res) => {
+app.post('/api/cassa/paga-tavolo', requireRole(['cassa', 'admin']), (req, res) => {
   const { tavolo } = req.body;
 
   if (!tavolo) {
@@ -1114,7 +1199,7 @@ app.post('/api/cassa/paga-tavolo', (req, res) => {
             });
           }
 
-          console.log(`🎉 Tavolo ${tavolo} completato e chiuso`);
+          console.log(`🎉 Tavolo ${tavolo} completato e chiuso da ${req.session.user.username}`);
 
           res.status(200).json({
             success: true,
@@ -1126,8 +1211,24 @@ app.post('/api/cassa/paga-tavolo', (req, res) => {
     });
   });
 });
+//-----------------------------------------------------------------ERROR----------------------------------------------------------------
+app.use((req, res) => {
+  console.log(`🚫 404 - Pagina non trovata: ${req.method} ${req.url}`);
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
+
+// ⚠️ OPZIONALE: Gestione errori generici (deve essere l'ultimo middleware)
+app.use((err, req, res, next) => {
+  console.error('Errore server:', err);
+  res.status(500).json({ 
+    error: 'Errore interno del server',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Qualcosa è andato storto'
+  });
+});
 
 //-----------------------------------------------------------------LISTEN----------------------------------------------------------------
 app.listen(3000, () => {
-  console.log('Server su http://localhost:3000');
+  console.log('🚀 Server avviato su http://localhost:3000');
+  console.log('📦 Sistema di sessioni attivo');
+  console.log('🔐 Autenticazione obbligatoria per tutte le aree protette');
 });

@@ -234,9 +234,7 @@
       </div>
 
       <div class="logout-section">
-        <form action="/logout" method="POST" style="margin: 0;">
-          <input type="submit" value="Logout" class="logout-btn" />
-        </form>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
       </div>
     </main>
   </div>
@@ -253,6 +251,27 @@
     document.getElementById("comande-pronte").addEventListener("click", () => {
       alert("Mostra le comande pronte da servire.");
     });
+
+    async function logout() {
+      if (!confirm("Vuoi davvero fare il logout?")) return;
+
+      try {
+        const res = await fetch('/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (res.ok) {
+          alert('Logout effettuato con successo!');
+          window.location.href = '/';
+        } else {
+          alert('Errore durante il logout');
+        }
+      } catch (err) {
+        console.error("Errore durante il logout:", err);
+        alert('Errore durante il logout');
+      }
+    }
 
     // Prevenire il refresh pull-to-refresh su iOS
     document.body.addEventListener('touchstart', function(e) {

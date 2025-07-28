@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>404 - Pagina Non Trovata</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    .error-container {
+      text-align: center;
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .error-code {
+      font-size: 8rem;
+      font-weight: bold;
+      color: var(--pico-primary-color);
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      animation: bounce 2s infinite;
+    }
+
+    .error-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--pico-color);
+    }
+
+    .error-message {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      opacity: 0.8;
+      max-width: 600px;
+    }
+
+    .error-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: shake 1s infinite;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 2px solid;
+      min-width: 180px;
+      justify-content: center;
+    }
+
+    .back-button {
+      background: linear-gradient(135deg, #6c757d, #5a6268);
+      color: white;
+      border-color: #6c757d;
+      box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    .back-button:hover {
+      background: linear-gradient(135deg, #5a6268, #495057);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+      color: white;
+    }
+
+    .home-button {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      border-color: #007bff;
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+
+    .home-button:hover {
+      background: linear-gradient(135deg, #0056b3, #004085);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+      color: white;
+    }
+
+    .btn-icon {
+      font-size: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+
+    .back-button:hover .btn-icon {
+      transform: translateX(-2px);
+    }
+
+    .home-button:hover .btn-icon {
+      transform: scale(1.1);
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-10px);
+      }
+      60% {
+        transform: translateY(-5px);
+      }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-5deg); }
+      75% { transform: rotate(5deg); }
+    }
+
+    .error-details {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--pico-card-background-color);
+      border-radius: var(--pico-border-radius);
+      border: 1px solid var(--pico-border-color);
+      max-width: 500px;
+    }
+
+    .error-url {
+      font-family: monospace;
+      background: var(--pico-code-background-color);
+      padding: 0.5rem;
+      border-radius: 4px;
+      word-break: break-all;
+      margin: 0.5rem 0;
+    }
+
+    .suggestions {
+      text-align: left;
+      margin-top: 1rem;
+    }
+
+    .suggestions ul {
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+    }
+
+    .suggestions li {
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <div class="error-container">
+      <div class="error-icon">🔍</div>
+      <div class="error-code">404</div>
+      <h1 class="error-title">Pagina Non Trovata</h1>
+      <p class="error-message">
+        Oops! La pagina che stai cercando non esiste o è stata spostata.
+        Non preoccuparti, può capitare a tutti di perdersi nel web!
+      </p>
+
+      <div class="action-buttons">
+        <button onclick="goBack()" class="action-btn back-button">
+          <span class="btn-icon">←</span>
+          <span>Torna Indietro</span>
+        </button>
+        <a href="/" class="action-btn home-button">
+          <span class="btn-icon">🏠</span>
+          <span>Vai alla Home</span>
+        </a>
+      </div>
+
+      <div class="error-details">
+        <h4>Dettagli dell'errore:</h4>
+        <div class="error-url" id="error-url">
+          <!-- URL sarà inserito dinamicamente -->
+        </div>
+        
+        <div class="suggestions">
+          <h5>Cosa puoi fare:</h5>
+          <ul>
+            <li>Controlla che l'URL sia scritto correttamente</li>
+            <li>Usa il pulsante "Torna Indietro" per tornare alla pagina precedente</li>
+            <li>Vai alla <a href="/">pagina principale</a></li>
+            <li>Contatta il supporto se il problema persiste</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; opacity: 0.6;">
+        <small>Codice errore: HTTP 404 - Not Found</small>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Mostra l'URL corrente nella pagina di errore
+    document.getElementById('error-url').textContent = window.location.href;
+
+    function goBack() {
+      // Controlla se c'è una pagina precedente nella cronologia
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // Se non c'è cronologia, vai alla home
+        window.location.href = '/';
+      }
+    }
+
+    // Aggiungi un piccolo easter egg
+    let clickCount = 0;
+    document.querySelector('.error-code').addEventListener('click', function() {
+      clickCount++;
+      if (clickCount === 5) {
+        this.textContent = '🎉';
+        setTimeout(() => {
+          this.textContent = '404';
+          clickCount = 0;
+        }, 2000);
+      }
+    });
+  </script>
+</body>
+
+</html>
