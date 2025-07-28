@@ -6,126 +6,354 @@
     <title>Statistiche Vendite Bar</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <style>
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            padding: 0.5rem 0.75rem;
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: var(--pico-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .home-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
+
         .stat-card {
-            background: var(--pico-card-background-color);
-            padding: 1rem;
-            border-radius: var(--pico-border-radius);
-            border: var(--pico-border-width) solid var(--pico-border-color);
+            background: linear-gradient(135deg, var(--pico-card-background-color), rgba(255,255,255,0.05));
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--pico-border-color);
             text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(45deg, var(--pico-primary), var(--pico-secondary));
+        }
+
         .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--pico-primary-color);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--pico-primary);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--pico-muted-color);
+            font-weight: 500;
+            margin: 0;
+        }
+
         .chart-container {
             background: var(--pico-card-background-color);
-            padding: 1rem;
-            border-radius: var(--pico-border-radius);
-            border: var(--pico-border-width) solid var(--pico-border-color);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--pico-border-color);
             margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
+
+        .chart-container h3 {
+            margin-bottom: 1.5rem;
+            color: var(--pico-primary);
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--pico-primary);
+            padding-bottom: 0.5rem;
+        }
+
         .bar-chart {
             display: flex;
             align-items: end;
-            height: 200px;
-            gap: 4px;
+            height: 220px;
+            gap: 6px;
             padding: 1rem 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.02), transparent);
+            border-radius: 8px;
         }
+
         .bar {
-            background: var(--pico-primary-color);
+            background: linear-gradient(45deg, var(--pico-primary), var(--pico-secondary));
             min-height: 10px;
             flex: 1;
             display: flex;
             align-items: end;
             justify-content: center;
             color: white;
-            font-size: 0.8rem;
-            padding: 2px;
-            border-radius: 2px 2px 0 0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 2px;
+            border-radius: 4px 4px 0 0;
             position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
+
+        .bar:hover {
+            filter: brightness(1.1);
+            transform: scaleY(1.05);
+        }
+
         .bar-value {
             position: absolute;
-            top: -20px;
+            top: -25px;
             font-size: 0.7rem;
             color: var(--pico-color);
+            font-weight: 600;
+            background: rgba(255,255,255,0.9);
+            padding: 2px 4px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
         .bar-labels {
             display: flex;
-            gap: 4px;
-            margin-top: 0.5rem;
+            gap: 6px;
+            margin-top: 0.8rem;
         }
+
         .bar-label {
             flex: 1;
             font-size: 0.7rem;
             text-align: center;
+            font-weight: 500;
+            color: var(--pico-muted-color);
         }
+
         .filter-form {
-            background: var(--pico-card-background-color);
-            padding: 1rem;
-            border-radius: var(--pico-border-radius);
-            border: var(--pico-border-width) solid var(--pico-border-color);
+            background: linear-gradient(135deg, var(--pico-card-background-color), rgba(255,255,255,0.05));
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--pico-border-color);
             margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
+
+        .filter-form h3 {
+            margin-bottom: 1.5rem;
+            color: var(--pico-primary);
+            font-weight: 600;
+        }
+
+        .filter-form button {
+            background: linear-gradient(45deg, var(--pico-primary), var(--pico-secondary));
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-form button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
         .loading {
             text-align: center;
-            padding: 2rem;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: var(--pico-primary);
         }
+
+        .loading::after {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 3px solid var(--pico-primary);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .prodotto-card {
-            padding: 1rem;
+            padding: 1.5rem;
             border: 1px solid var(--pico-border-color);
-            border-radius: var(--pico-border-radius);
-            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            margin-bottom: 0.8rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: all 0.3s ease;
+            background: var(--pico-card-background-color);
         }
+
+        .prodotto-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-color: var(--pico-primary);
+        }
+
         .prodotto-info {
             flex: 1;
         }
+
         .prodotto-stats {
             text-align: right;
             font-size: 0.9rem;
         }
+
         .error-message {
-            background: var(--pico-del-background-color);
+            background: linear-gradient(135deg, var(--pico-del-background-color), rgba(255,0,0,0.1));
             color: var(--pico-del-color);
-            padding: 1rem;
-            border-radius: var(--pico-border-radius);
+            padding: 1.5rem;
+            border-radius: 10px;
             margin-bottom: 2rem;
+            border-left: 4px solid var(--pico-del-color);
+            font-weight: 500;
         }
+
         .top-product {
             background: linear-gradient(135deg, #ffd700, #ffed4e);
             color: #333;
             font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
         }
+
         .ranking-badge {
-            background: var(--pico-primary-color);
+            background: var(--pico-primary);
             color: white;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             margin-right: 1rem;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        .gold { background: #ffd700; }
-        .silver { background: #c0c0c0; }
-        .bronze { background: #cd7f32; }
+
+        .gold { 
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+        }
+        .silver { 
+            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            color: #333;
+        }
+        .bronze { 
+            background: linear-gradient(135deg, #cd7f32, #e4a853);
+            color: #fff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--pico-muted-color);
+            font-size: 1.1rem;
+        }
+
+        .empty-state::before {
+            content: "📭";
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+            
+            .stat-number {
+                font-size: 1.8rem;
+            }
+            
+            .filter-form .grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .prodotto-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .prodotto-stats {
+                text-align: left;
+                width: 100%;
+            }
+        }
+
+        /* Quick stats badges */
+        .quick-badge {
+            display: inline-block;
+            background: var(--pico-primary);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .positive { background: #10b981; }
+        .negative { background: #ef4444; }
+        .neutral { background: #6b7280; }
     </style>
 </head>
 <body>
     <main class="container">
-        <h1>📊 Statistiche Vendite Bar</h1>
+        <a href="/" class="home-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                </path>
+            </svg>
+            Home
+        </a>
+
+        <h1 style="text-align: center; margin-bottom: 2rem; color: var(--pico-primary);">📊 Statistiche Vendite Bar</h1>
         
         <!-- Filtri Data -->
         <div class="filter-form">
@@ -148,7 +376,7 @@
         </div>
 
         <div id="loading" class="loading" style="display: none;">
-            <p>📈 Caricamento statistiche...</p>
+            📈 Caricamento statistiche...
         </div>
 
         <div id="errorContainer"></div>
@@ -161,7 +389,7 @@
 
             <!-- Grafico Ordini per Giorno -->
             <div class="chart-container">
-                <h3>📈 Ordini per Giorno</h3>
+                <h3>📈 Andamento Ordini Giornalieri</h3>
                 <div class="bar-chart" id="ordiniChart">
                     <!-- Popolato dinamicamente -->
                 </div>
@@ -172,7 +400,7 @@
 
             <!-- Grafico Incassi Giornalieri -->
             <div class="chart-container">
-                <h3>💰 Incassi Giornalieri</h3>
+                <h3>💰 Andamento Incassi Giornalieri</h3>
                 <div class="bar-chart" id="incassiChart">
                     <!-- Popolato dinamicamente -->
                 </div>
@@ -238,26 +466,29 @@
         function creaStatsCards(riassunto) {
             const container = document.getElementById('statsCards');
             
+            const tassoColor = riassunto.tasso_pagamento >= 80 ? 'positive' : 
+                             riassunto.tasso_pagamento >= 60 ? 'neutral' : 'negative';
+            
             container.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${formatNumero(riassunto.totale_ordini)}</div>
-                    <p>📋 Ordini Totali</p>
+                    <p class="stat-label">📋 Ordini Totali</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${formatNumero(riassunto.ordini_pagati)}</div>
-                    <p>✅ Ordini Pagati</p>
+                    <p class="stat-label">✅ Ordini Pagati</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${riassunto.tasso_pagamento}%</div>
-                    <p>📊 Tasso Pagamento</p>
+                    <p class="stat-label">📊 Tasso Pagamento <span class="quick-badge ${tassoColor}">${riassunto.tasso_pagamento >= 80 ? 'Ottimo' : riassunto.tasso_pagamento >= 60 ? 'Buono' : 'Da migliorare'}</span></p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${formatValuta(riassunto.totale_incassi)}</div>
-                    <p>💰 Incassi Totali</p>
+                    <p class="stat-label">💰 Incassi Totali</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${formatNumero(riassunto.giorni_attivi)}</div>
-                    <p>📅 Giorni Attivi</p>
+                    <p class="stat-label">📅 Giorni Attivi</p>
                 </div>
             `;
         }
@@ -268,7 +499,7 @@
             const labelsContainer = document.getElementById(labelsId);
             
             if (!data || data.length === 0) {
-                container.innerHTML = '<p>📭 Nessun dato disponibile per il periodo selezionato</p>';
+                container.innerHTML = '<div class="empty-state">Nessun dato disponibile per il periodo selezionato</div>';
                 labelsContainer.innerHTML = '';
                 return;
             }
@@ -277,7 +508,7 @@
             
             container.innerHTML = data.map(item => {
                 const value = item[valueKey] || 0;
-                const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
+                const height = maxValue > 0 ? Math.max((value / maxValue) * 100, 5) : 5;
                 const displayValue = formatValue ? formatValuta(value) : formatNumero(value);
                 
                 return `
@@ -297,7 +528,7 @@
             const container = document.getElementById('topEarnersContainer');
             
             if (!data || data.length === 0) {
-                container.innerHTML = '<p>📭 Nessun prodotto con incassi nel periodo selezionato</p>';
+                container.innerHTML = '<div class="empty-state">Nessun prodotto con incassi nel periodo selezionato</div>';
                 return;
             }
 
@@ -320,14 +551,16 @@
                             <div class="prodotto-info">
                                 <strong>${prodotto.nome_prodotto}</strong>
                                 <br>
-                                <small>Prezzo medio: ${formatValuta(prodotto.prezzo_medio)}</small>
+                                <small style="color: var(--pico-muted-color);">
+                                    Prezzo medio: ${formatValuta(prodotto.prezzo_medio)} • 
+                                    Vendite: ${formatNumero(prodotto.quantita_pagata)} unità
+                                </small>
                             </div>
                         </div>
                         <div class="prodotto-stats">
-                            <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #10b981;">
                                 💰 ${formatValuta(prodotto.incasso_prodotto)}
                             </div>
-                            <div>Venduti: <strong>${formatNumero(prodotto.quantita_pagata)}</strong></div>
                         </div>
                     </div>
                 `;
@@ -339,7 +572,7 @@
             const container = document.getElementById('prodottiContainer');
             
             if (!data || data.length === 0) {
-                container.innerHTML = '<p>📭 Nessun prodotto venduto nel periodo selezionato</p>';
+                container.innerHTML = '<div class="empty-state">Nessun prodotto venduto nel periodo selezionato</div>';
                 return;
             }
 
@@ -348,20 +581,25 @@
                     ? ((prodotto.quantita_pagata / prodotto.quantita_ordinata) * 100).toFixed(1)
                     : 0;
 
+                const badgeColor = percentualePagamento >= 80 ? 'positive' : 
+                                 percentualePagamento >= 60 ? 'neutral' : 'negative';
+
                 return `
                     <div class="prodotto-card">
                         <div class="prodotto-info">
-                            <strong>#${index + 1} ${prodotto.nome_prodotto}</strong>
+                            <strong style="color: var(--pico-primary);">#${index + 1} ${prodotto.nome_prodotto}</strong>
                             <br>
-                            <small>
-                                Prezzo: ${formatValuta(prodotto.prezzo_medio)} | 
-                                Tasso pagamento: ${percentualePagamento}%
+                            <small style="color: var(--pico-muted-color);">
+                                Prezzo: ${formatValuta(prodotto.prezzo_medio)} • 
+                                Tasso pagamento: <span class="quick-badge ${badgeColor}">${percentualePagamento}%</span>
                             </small>
                         </div>
                         <div class="prodotto-stats">
-                            <div>Ordinati: <strong>${formatNumero(prodotto.quantita_ordinata)}</strong></div>
-                            <div>Pagati: <strong>${formatNumero(prodotto.quantita_pagata)}</strong></div>
-                            <div>Incasso: <strong>${formatValuta(prodotto.incasso_prodotto)}</strong></div>
+                            <div><strong>Ordinati:</strong> ${formatNumero(prodotto.quantita_ordinata)}</div>
+                            <div><strong>Pagati:</strong> ${formatNumero(prodotto.quantita_pagata)}</div>
+                            <div style="color: var(--pico-primary); font-weight: bold;">
+                                <strong>Incasso:</strong> ${formatValuta(prodotto.incasso_prodotto)}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -374,7 +612,7 @@
             const dataFine = document.getElementById('data_fine').value;
             
             if (!dataInizio || !dataFine) {
-                mostraErrore('Seleziona entrambe le date');
+                mostraErrore('Seleziona entrambe le date per visualizzare le statistiche');
                 return;
             }
 
@@ -396,7 +634,7 @@
                 const data = await response.json();
                 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Errore nel caricamento');
+                    throw new Error(data.error || 'Errore nel caricamento delle statistiche');
                 }
                 
                 // Popola tutti i componenti
