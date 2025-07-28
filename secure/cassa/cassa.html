@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
     <meta charset="UTF-8">
     <title>Cassa - Gestione Pagamenti</title>
@@ -215,7 +214,6 @@
         }
     </style>
 </head>
-
 <body>
     <main class="container">
         <a href="/" class="home-btn">
@@ -226,33 +224,142 @@
             </svg>
             Home
         </a>
-        
+
         <h1 style="text-align: center; margin-bottom: 2rem;">💳 Cassa - Gestione Pagamenti</h1>
-        
+
         <div id="cassakContainer"></div>
     </main>
 
     <script>
-        // Stato locale per tenere traccia degli ordini pagati in questa sessione
-        let ordiniPagatiLocalmente = new Set();
-        let tavoliCompletati = new Set();
+        const container = document.getElementById('cassakContainer');
+
+        // Event delegation
+        container.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+
+            if (action === 'paga') {
+                pagaOrdine(id);
+            } else if (action === 'annulla') {
+                annullaPagamentoOrdine(id);
+            } else if (action === 'completa') {
+                completaTavolo(id);
+            }
+        });
+
+        async function pagaOrdine(ordineId) {
+            // Feedback immediato: disabilita il pulsante
+            const btn = document.querySelector(`button[data-id="${ordineId}"]`);
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Pagando...';
+            }
+
+            try {
+                const res = await fetch('/api/cassa/paga-ordine', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ordineId })
+                });
+
+                if (res.ok) {
+                    console.log(`Ordine #${ordineId} pagato`);
+                    // Ricarica immediatamente per mostrare il nuovo stato
+                    loadCassa();
+                } else {
+                    const err = await res.json();
+                    alert('Errore pagamento: ' + err.error);
+                    // Ripristina il pulsante in caso di errore
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = 'Paga';
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Errore connessione');
+                // Ripristina il pulsante in caso di errore
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Paga';
+                }
+            }
+        }
+
+        async function annullaPagamentoOrdine(ordineId) {
+            if (!confirm('Vuoi davvero annullare il pagamento?')) return;
+
+            // Feedback immediato: disabilita il pulsante
+            const btn = document.querySelector(`button[data-id="${ordineId}"]`);
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Annullando...';
+            }
+
+            try {
+                const res = await fetch('/api/cassa/annulla-pagamento', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ordineId })
+                });
+
+                if (res.ok) {
+                    console.log(`Pagamento annullato per ordine #${ordineId}`);
+                    loadCassa();
+                } else {
+                    const err = await res.json();
+                    alert('Errore annullamento: ' + err.error);
+                    // Ripristina il pulsante in caso di errore
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '✓ Pagato (annulla)';
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Errore connessione');
+                // Ripristina il pulsante in caso di errore
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '✓ Pagato (annulla)';
+                }
+            }
+        }
+
+        async function completaTavolo(tavolo) {
+            try {
+                const res = await fetch('/api/cassa/paga-tavolo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tavolo })
+                });
+
+                if (res.ok) {
+                    console.log(`Tavolo ${tavolo} completato`);
+                    loadCassa();
+                } else {
+                    const err = await res.json();
+                    alert('Errore completamento tavolo: ' + err.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Errore connessione');
+            }
+        }
 
         async function loadCassa() {
             try {
                 const res = await fetch('/api/cassa');
                 const data = await res.json();
-                
-                console.log("Dati ricevuti da /api/cassa:", data);
-                console.log("Numero di ordini:", data.length);
-                
-                const container = document.getElementById('cassakContainer');
                 container.innerHTML = '';
 
-                // Raggruppa per tavolo
                 const tavoli = {};
+
+                // Raggruppa tutti gli ordini per tavolo (sia pagati che non pagati)
                 data.forEach(ordine => {
-                    console.log("Processando ordine:", ordine);
-                    
                     if (!tavoli[ordine.tavolo]) {
                         tavoli[ordine.tavolo] = {
                             comande: {},
@@ -260,7 +367,7 @@
                             totale_originale: 0
                         };
                     }
-                    
+
                     if (!tavoli[ordine.tavolo].comande[ordine.comanda_id]) {
                         tavoli[ordine.tavolo].comande[ordine.comanda_id] = {
                             stato: ordine.stato,
@@ -268,41 +375,27 @@
                             ordini: []
                         };
                     }
-                    
-                    // Aggiungi informazione se l'ordine è stato pagato localmente
-                    ordine.pagato_locale = ordiniPagatiLocalmente.has(ordine.id);
-                    
+
                     tavoli[ordine.tavolo].comande[ordine.comanda_id].ordini.push(ordine);
-                    
-                    // Calcola totali
                     const prezzo = parseFloat(ordine.prezzo);
                     tavoli[ordine.tavolo].totale_originale += prezzo;
-                    
-                    // Se non è pagato localmente, conta nel totale rimanente
-                    if (!ordine.pagato_locale) {
+
+                    // Somma solo gli ordini NON pagati per il totale rimanente
+                    // Controlla sia boolean che integer per compatibilità
+                    const isPagato = ordine.pagato === true || ordine.pagato === 1;
+                    if (!isPagato) {
                         tavoli[ordine.tavolo].totale += prezzo;
                     }
                 });
 
-                console.log("Tavoli raggruppati:", tavoli);
-
-                // Crea gli articoli per ogni tavolo
                 Object.keys(tavoli).sort((a, b) => parseInt(a) - parseInt(b)).forEach(numeroTavolo => {
                     const tavoloData = tavoli[numeroTavolo];
-                    
-                    // Controlla se il tavolo è stato completato
-                    const tavoloCompletato = tavoliCompletati.has(numeroTavolo);
-                    if (tavoloCompletato) {
-                        return; // Salta i tavoli completati
-                    }
-                    
                     const article = document.createElement('article');
                     article.className = 'tavolo-section';
-                    
+
                     let comandeHtml = '';
-                    Object.keys(tavoloData.comande).forEach(comandaId => {
-                        const comanda = tavoloData.comande[comandaId];
-                        
+
+                    Object.entries(tavoloData.comande).forEach(([comandaId, comanda]) => {
                         let statiBadges = '';
                         if (comanda.stato && comanda.stato !== 'n') {
                             statiBadges += `<span class="stato-badge ${comanda.stato}">Cucina: ${comanda.stato === 'pronta' ? 'Pronta' : comanda.stato.replace('_', ' ')}</span>`;
@@ -310,123 +403,66 @@
                         if (comanda.stato_drink && comanda.stato_drink !== 'n') {
                             statiBadges += `<span class="stato-badge ${comanda.stato_drink}">Bar: ${comanda.stato_drink === 'pronta' ? 'Pronta' : comanda.stato_drink.replace('_', ' ')}</span>`;
                         }
-                        
-                        comandeHtml += `
-                            <h4>Comanda #${comandaId} ${statiBadges}</h4>
-                            ${comanda.ordini.map(ordine => `
-                                <div class="prodotto-item ${ordine.pagato_locale ? 'pagato-locale' : ''}">
-                                    <div class="prodotto-info">
-                                        <img src="${ordine.path_foto}" alt="${ordine.nome_prodotto}" class="prodotto-img">
-                                        <div class="prodotto-dettagli">
-                                            <p class="prodotto-nome">${ordine.nome_prodotto}</p>
-                                            ${ordine.note ? `<p class="prodotto-note">Note: ${ordine.note}</p>` : ''}
-                                        </div>
+
+                        const ordiniHtml = comanda.ordini.map(ordine => {
+                            // Controlla se l'ordine è pagato (compatibilità boolean/integer)
+                            const isPagato = ordine.pagato === true || ordine.pagato === 1;
+                            
+                            return `
+                            <div class="prodotto-item ${isPagato ? 'pagato-locale' : ''}">
+                                <div class="prodotto-info">
+                                    <img src="${ordine.path_foto}" alt="${ordine.nome_prodotto}" class="prodotto-img">
+                                    <div class="prodotto-dettagli">
+                                        <p class="prodotto-nome">${ordine.nome_prodotto}</p>
+                                        ${ordine.note ? `<p class="prodotto-note">Note: ${ordine.note}</p>` : ''}
                                     </div>
-                                    <div class="prodotto-prezzo">€${parseFloat(ordine.prezzo).toFixed(2)}</div>
-                                    <button class="paga-btn ${ordine.pagato_locale ? 'btn-pagato' : ''}" 
-                                            onclick="${ordine.pagato_locale ? 'rimuoviPagamentoLocale(' + ordine.id + ')' : 'pagaOrdineLocale(' + ordine.id + ')'}">
-                                        ${ordine.pagato_locale ? '✓ Pagato' : 'Paga'}
-                                    </button>
                                 </div>
-                            `).join('')}
+                                <div class="prodotto-prezzo">€${parseFloat(ordine.prezzo).toFixed(2)}</div>
+                                <button class="paga-btn ${isPagato ? 'btn-pagato' : ''}"
+                                        data-action="${isPagato ? 'annulla' : 'paga'}"
+                                        data-id="${ordine.id}">
+                                    ${isPagato ? '✓ Pagato (annulla)' : 'Paga'}
+                                </button>
+                            </div>
                         `;
+                        }).join('');
+
+                        comandeHtml += `<h4>Comanda #${comandaId} ${statiBadges}</h4>${ordiniHtml}`;
                     });
-                    
-                    // Controlla se tutti gli ordini del tavolo sono pagati localmente
-                    const tuttiPagatiLocalmente = tavoloData.totale === 0;
-                    
+
+                    // Verifica se tutti gli ordini del tavolo sono pagati
+                    const tuttiPagati = tavoloData.totale === 0;
+
                     article.innerHTML = `
                         <h2>🍽️ Tavolo ${numeroTavolo}</h2>
                         ${comandeHtml}
                         <div class="totale-tavolo">
                             <div>Totale complessivo: €${tavoloData.totale_originale.toFixed(2)}</div>
                             <div style="margin-top: 0.5rem;">Rimanente da pagare: €${tavoloData.totale.toFixed(2)}</div>
-                            <button class="paga-tavolo-btn" 
-                                    onclick="completaTavolo('${numeroTavolo}')" 
-                                    ${!tuttiPagatiLocalmente ? 'disabled' : ''}>
-                                ${tuttiPagatiLocalmente ? '💳 Completa Pagamento Tavolo' : '⏳ Completa i pagamenti singoli prima'}
+                            <button class="paga-tavolo-btn"
+                                    data-action="completa"
+                                    data-id="${numeroTavolo}"
+                                    ${!tuttiPagati ? 'disabled' : ''}>
+                                ${tuttiPagati ? '💳 Completa Pagamento Tavolo' : '⏳ Completa i pagamenti singoli prima'}
                             </button>
                         </div>
                     `;
-                    
+
                     container.appendChild(article);
                 });
-                
-                // Mostra messaggio se non ci sono tavoli da visualizzare
-                if (Object.keys(tavoli).length === 0 || Object.keys(tavoli).every(t => tavoliCompletati.has(t))) {
-                    container.innerHTML = '<article><p style="text-align: center; color: var(--pico-muted-color);">Nessuna comanda presente o tutti i tavoli sono stati completati</p></article>';
+
+                if (Object.keys(tavoli).length === 0) {
+                    container.innerHTML = '<article><p style="text-align: center; color: var(--pico-muted-color);">Nessuna comanda presente</p></article>';
                 }
 
             } catch (err) {
                 console.error('Errore nel caricamento della cassa:', err);
-                const container = document.getElementById('cassakContainer');
                 container.innerHTML = '<article><p style="color: var(--pico-del-color);">Errore nel caricamento dei dati</p></article>';
             }
         }
 
-        // Funzione per pagare un singolo ordine (solo visivamente)
-        function pagaOrdineLocale(ordineId) {
-            // Aggiungi l'ordine alla lista degli ordini pagati localmente
-            ordiniPagatiLocalmente.add(ordineId);
-            console.log(`Ordine #${ordineId} marcato come pagato localmente`);
-            
-            // Ricarica la vista per aggiornare l'interfaccia
-            loadCassa();
-        }
-
-        // Funzione per rimuovere il pagamento locale di un ordine
-        function rimuoviPagamentoLocale(ordineId) {
-            // Chiedi conferma all'utente
-            if (confirm('Sei sicuro di voler rimuovere il pagamento di questo ordine?')) {
-                // Rimuovi l'ordine dalla lista degli ordini pagati localmente
-                ordiniPagatiLocalmente.delete(ordineId);
-                console.log(`Pagamento locale rimosso per ordine #${ordineId}`);
-                
-                // Ricarica la vista per aggiornare l'interfaccia
-                loadCassa();
-            }
-        }
-
-        // Funzione per completare il pagamento di un tavolo
-        async function completaTavolo(tavolo) {
-            try {
-                // Prima marca tutti gli ordini del tavolo come pagati nel backend
-                const res = await fetch('/api/cassa/paga-tavolo', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ tavolo: tavolo })
-                });
-
-                if (res.ok) {
-                    console.log(`Tavolo ${tavolo} completato con successo`);
-                    
-                    // Aggiungi il tavolo alla lista dei tavoli completati
-                    tavoliCompletati.add(tavolo);
-                    
-                    // Rimuovi gli ordini di questo tavolo dalla lista degli ordini pagati localmente
-                    // (non più necessario mantenerli dato che il tavolo è completato)
-                    
-                    // Ricarica i dati per aggiornare la vista
-                    loadCassa();
-                } else {
-                    const errorData = await res.json();
-                    console.error('Errore nel completamento del tavolo:', errorData);
-                    alert('Errore nel completamento del tavolo: ' + (errorData.error || 'Errore sconosciuto'));
-                }
-            } catch (err) {
-                console.error('Errore nella chiamata API:', err);
-                alert('Errore di connessione');
-            }
-        }
-
-        // Carica i dati iniziali
         loadCassa();
-        
-        // Aggiorna ogni 5 secondi
         setInterval(loadCassa, 5000);
     </script>
 </body>
-
 </html>
