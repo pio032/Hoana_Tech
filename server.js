@@ -539,7 +539,7 @@ app.get("/doComanda", (req, res) => {
 
 app.post("/api/orders", (req, res) => {
   const { tavolo, items } = req.body;
-
+  console.log("quello che vedo: ", req.body)
   // Validazione input
   if (!tavolo || !items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Dati mancanti o invalidi" });

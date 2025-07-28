@@ -435,7 +435,8 @@
                             name: product.nome,
                             price: parseFloat(product.prezzo),
                             description: product.descrizione,
-                            foto: product.foto
+                            foto: product.foto,
+                            tipo: product.tipo // AGGIUNTO CAMPO TIPO
                         }));
                         console.log('Prodotti caricati dall\'API:', products);
                         return;
@@ -493,7 +494,8 @@
                     price: product.price,
                     quantity: 1,
                     foto: product.foto,
-                    description: product.description
+                    description: product.description,
+                    tipo: product.tipo // AGGIUNTO CAMPO TIPO
                 });
             }
 
