@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiche Vendite Bar</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--pico-card-background-color);
+            padding: 1rem;
+            border-radius: var(--pico-border-radius);
+            border: var(--pico-border-width) solid var(--pico-border-color);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--pico-primary-color);
+        }
+        .chart-container {
+            background: var(--pico-card-background-color);
+            padding: 1rem;
+            border-radius: var(--pico-border-radius);
+            border: var(--pico-border-width) solid var(--pico-border-color);
+            margin-bottom: 2rem;
+        }
+        .bar-chart {
+            display: flex;
+            align-items: end;
+            height: 200px;
+            gap: 4px;
+            padding: 1rem 0;
+        }
+        .bar {
+            background: var(--pico-primary-color);
+            min-height: 10px;
+            flex: 1;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            padding: 2px;
+            border-radius: 2px 2px 0 0;
+            position: relative;
+        }
+        .bar-value {
+            position: absolute;
+            top: -20px;
+            font-size: 0.7rem;
+            color: var(--pico-color);
+        }
+        .bar-labels {
+            display: flex;
+            gap: 4px;
+            margin-top: 0.5rem;
+        }
+        .bar-label {
+            flex: 1;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+        .filter-form {
+            background: var(--pico-card-background-color);
+            padding: 1rem;
+            border-radius: var(--pico-border-radius);
+            border: var(--pico-border-width) solid var(--pico-border-color);
+            margin-bottom: 2rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+        .prodotto-card {
+            padding: 1rem;
+            border: 1px solid var(--pico-border-color);
+            border-radius: var(--pico-border-radius);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .prodotto-info {
+            flex: 1;
+        }
+        .prodotto-stats {
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        .error-message {
+            background: var(--pico-del-background-color);
+            color: var(--pico-del-color);
+            padding: 1rem;
+            border-radius: var(--pico-border-radius);
+            margin-bottom: 2rem;
+        }
+        .top-product {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            font-weight: bold;
+        }
+        .ranking-badge {
+            background: var(--pico-primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        .gold { background: #ffd700; }
+        .silver { background: #c0c0c0; }
+        .bronze { background: #cd7f32; }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <h1>📊 Statistiche Vendite Bar</h1>
+        
+        <!-- Filtri Data -->
+        <div class="filter-form">
+            <h3>📅 Seleziona Periodo</h3>
+            <form id="filtroForm">
+                <div class="grid">
+                    <div>
+                        <label for="data_inizio">Data Inizio:</label>
+                        <input type="date" id="data_inizio" name="data_inizio" required>
+                    </div>
+                    <div>
+                        <label for="data_fine">Data Fine:</label>
+                        <input type="date" id="data_fine" name="data_fine" required>
+                    </div>
+                    <div style="display: flex; align-items: end;">
+                        <button type="submit">🔍 Aggiorna Statistiche</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <p>📈 Caricamento statistiche...</p>
+        </div>
+
+        <div id="errorContainer"></div>
+
+        <div id="content">
+            <!-- Cards Statistiche Principali -->
+            <div class="stats-grid" id="statsCards">
+                <!-- Popolato dinamicamente -->
+            </div>
+
+            <!-- Grafico Ordini per Giorno -->
+            <div class="chart-container">
+                <h3>📈 Ordini per Giorno</h3>
+                <div class="bar-chart" id="ordiniChart">
+                    <!-- Popolato dinamicamente -->
+                </div>
+                <div class="bar-labels" id="ordiniLabels">
+                    <!-- Popolato dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Grafico Incassi Giornalieri -->
+            <div class="chart-container">
+                <h3>💰 Incassi Giornalieri</h3>
+                <div class="bar-chart" id="incassiChart">
+                    <!-- Popolato dinamicamente -->
+                </div>
+                <div class="bar-labels" id="incassiLabels">
+                    <!-- Popolato dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Top Earners -->
+            <div class="chart-container">
+                <h3>💎 TOP 10 - Prodotti che Generano Più Incassi</h3>
+                <div id="topEarnersContainer">
+                    <!-- Popolato dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Prodotti Più Venduti -->
+            <div class="chart-container">
+                <h3>🏆 TOP 20 - Prodotti Più Venduti</h3>
+                <div id="prodottiContainer">
+                    <!-- Popolato dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Formatta numero con separatori
+        function formatNumero(num) {
+            if (num === null || num === undefined) return '0';
+            return Number(num).toLocaleString('it-IT');
+        }
+
+        // Formatta valuta
+        function formatValuta(num) {
+            if (num === null || num === undefined) return '€0,00';
+            return Number(num).toLocaleString('it-IT', {
+                style: 'currency',
+                currency: 'EUR'
+            });
+        }
+
+        // Formatta data
+        function formatData(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit'
+            });
+        }
+
+        // Mostra errore
+        function mostraErrore(messaggio) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `
+                <div class="error-message">
+                    <strong>❌ Errore:</strong> ${messaggio}
+                </div>
+            `;
+        }
+
+        // Crea cards statistiche principali
+        function creaStatsCards(riassunto) {
+            const container = document.getElementById('statsCards');
+            
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${formatNumero(riassunto.totale_ordini)}</div>
+                    <p>📋 Ordini Totali</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${formatNumero(riassunto.ordini_pagati)}</div>
+                    <p>✅ Ordini Pagati</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${riassunto.tasso_pagamento}%</div>
+                    <p>📊 Tasso Pagamento</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${formatValuta(riassunto.totale_incassi)}</div>
+                    <p>💰 Incassi Totali</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${formatNumero(riassunto.giorni_attivi)}</div>
+                    <p>📅 Giorni Attivi</p>
+                </div>
+            `;
+        }
+
+        // Crea grafico a barre
+        function creaGraficoBarre(containerId, labelsId, data, valueKey, labelKey, formatValue = false) {
+            const container = document.getElementById(containerId);
+            const labelsContainer = document.getElementById(labelsId);
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p>📭 Nessun dato disponibile per il periodo selezionato</p>';
+                labelsContainer.innerHTML = '';
+                return;
+            }
+
+            const maxValue = Math.max(...data.map(item => item[valueKey] || 0));
+            
+            container.innerHTML = data.map(item => {
+                const value = item[valueKey] || 0;
+                const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
+                const displayValue = formatValue ? formatValuta(value) : formatNumero(value);
+                
+                return `
+                    <div class="bar" style="height: ${height}%" title="${formatData(item[labelKey])}: ${displayValue}">
+                        <span class="bar-value">${displayValue}</span>
+                    </div>
+                `;
+            }).join('');
+
+            labelsContainer.innerHTML = data.map(item => 
+                `<div class="bar-label">${formatData(item[labelKey])}</div>`
+            ).join('');
+        }
+
+        // Crea lista top earners
+        function creaTopEarners(data) {
+            const container = document.getElementById('topEarnersContainer');
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p>📭 Nessun prodotto con incassi nel periodo selezionato</p>';
+                return;
+            }
+
+            container.innerHTML = data.map((prodotto, index) => {
+                let badgeClass = '';
+                let badgeIcon = '';
+                
+                if (index === 0) { badgeClass = 'gold'; badgeIcon = '🥇'; }
+                else if (index === 1) { badgeClass = 'silver'; badgeIcon = '🥈'; }
+                else if (index === 2) { badgeClass = 'bronze'; badgeIcon = '🥉'; }
+                
+                const cardClass = index === 0 ? 'prodotto-card top-product' : 'prodotto-card';
+                
+                return `
+                    <div class="${cardClass}">
+                        <div style="display: flex; align-items: center;">
+                            <div class="ranking-badge ${badgeClass}">
+                                ${badgeIcon || (index + 1)}
+                            </div>
+                            <div class="prodotto-info">
+                                <strong>${prodotto.nome_prodotto}</strong>
+                                <br>
+                                <small>Prezzo medio: ${formatValuta(prodotto.prezzo_medio)}</small>
+                            </div>
+                        </div>
+                        <div class="prodotto-stats">
+                            <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">
+                                💰 ${formatValuta(prodotto.incasso_prodotto)}
+                            </div>
+                            <div>Venduti: <strong>${formatNumero(prodotto.quantita_pagata)}</strong></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Crea lista prodotti più venduti
+        function creaProdottiPiuVenduti(data) {
+            const container = document.getElementById('prodottiContainer');
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p>📭 Nessun prodotto venduto nel periodo selezionato</p>';
+                return;
+            }
+
+            container.innerHTML = data.map((prodotto, index) => {
+                const percentualePagamento = prodotto.quantita_ordinata > 0 
+                    ? ((prodotto.quantita_pagata / prodotto.quantita_ordinata) * 100).toFixed(1)
+                    : 0;
+
+                return `
+                    <div class="prodotto-card">
+                        <div class="prodotto-info">
+                            <strong>#${index + 1} ${prodotto.nome_prodotto}</strong>
+                            <br>
+                            <small>
+                                Prezzo: ${formatValuta(prodotto.prezzo_medio)} | 
+                                Tasso pagamento: ${percentualePagamento}%
+                            </small>
+                        </div>
+                        <div class="prodotto-stats">
+                            <div>Ordinati: <strong>${formatNumero(prodotto.quantita_ordinata)}</strong></div>
+                            <div>Pagati: <strong>${formatNumero(prodotto.quantita_pagata)}</strong></div>
+                            <div>Incasso: <strong>${formatValuta(prodotto.incasso_prodotto)}</strong></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Carica statistiche
+        async function caricaStatistiche() {
+            const dataInizio = document.getElementById('data_inizio').value;
+            const dataFine = document.getElementById('data_fine').value;
+            
+            if (!dataInizio || !dataFine) {
+                mostraErrore('Seleziona entrambe le date');
+                return;
+            }
+
+            if (new Date(dataInizio) > new Date(dataFine)) {
+                mostraErrore('La data di inizio deve essere precedente alla data di fine');
+                return;
+            }
+            
+            const params = new URLSearchParams();
+            params.append('data_inizio', dataInizio);
+            params.append('data_fine', dataFine);
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('errorContainer').innerHTML = '';
+            
+            try {
+                const response = await fetch(`/api/statistiche?${params}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Errore nel caricamento');
+                }
+                
+                // Popola tutti i componenti
+                creaStatsCards(data.riassunto);
+                creaGraficoBarre('ordiniChart', 'ordiniLabels', data.ordini_per_giorno, 'numero_ordini', 'data');
+                creaGraficoBarre('incassiChart', 'incassiLabels', data.incassi_giornalieri, 'incasso_giorno', 'data', true);
+                creaTopEarners(data.top_earners);
+                creaProdottiPiuVenduti(data.prodotti_piu_venduti);
+                
+            } catch (error) {
+                console.error('Errore:', error);
+                mostraErrore(error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+            }
+        }
+
+        // Imposta date di default (ultimi 30 giorni)
+        function impostaDateDefault() {
+            const oggi = new Date();
+            const trentaGiorniFa = new Date(oggi.getTime() - 30 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('data_fine').value = oggi.toISOString().split('T')[0];
+            document.getElementById('data_inizio').value = trentaGiorniFa.toISOString().split('T')[0];
+        }
+
+        // Event listeners
+        document.getElementById('filtroForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            caricaStatistiche();
+        });
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            impostaDateDefault();
+            caricaStatistiche();
+        });
+    </script>
+</body>
+</html>

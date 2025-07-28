@@ -327,7 +327,7 @@ app.post('/addProduct', upload.single('foto'), (req, res) => {
         });
       }
 
-      
+
 
       // Risposta di successo - reindirizza alla pagina admin
       res.redirect('/admin?success=1&message=Prodotto aggiunto con successo');
@@ -382,7 +382,7 @@ app.get('/api/products', (req, res) => {
 
 
 app.delete('/api/products/:id', (req, res) => {
-  
+
 
   const productId = req.params.id;
   if (!productId) {
@@ -428,6 +428,107 @@ app.delete('/api/products/:id', (req, res) => {
 });
 
 
+app.get("/admin/stat", (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/admin/stat.html'))
+})
+
+app.get('/api/statistiche', (req, res) => {
+  const dataInizio = req.query.data_inizio || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const dataFine = req.query.data_fine || new Date().toISOString().split('T')[0];
+
+  let risultato = {
+    periodo: { data_inizio: dataInizio, data_fine: dataFine }
+  };
+  let queriesCompleted = 0;
+  let hasError = false;
+  const totalQueries = 6;
+
+  const checkCompletion = () => {
+    if (++queriesCompleted === totalQueries && !hasError) {
+      const totaleOrdini = risultato.totale_ordini || 0;
+      const ordiniPagati = risultato.ordini_pagati || 0;
+      const incassoTotale = risultato.incassi_totali || 0;
+      const giorniAttivi = risultato.ordini_per_giorno?.length || 0;
+
+      risultato.riassunto = {
+        totale_ordini: totaleOrdini,
+        ordini_pagati: ordiniPagati,
+        tasso_pagamento: totaleOrdini > 0 ? ((ordiniPagati / totaleOrdini) * 100).toFixed(1) : 0,
+        totale_incassi: incassoTotale,
+        giorni_attivi: giorniAttivi
+      };
+
+      return res.json(risultato);
+    }
+  };
+
+  // Query 1: Ordini totali
+  conn.query(
+    `SELECT COUNT(*) as totale_ordini FROM ordini WHERE data BETWEEN ? AND ?`,
+    [dataInizio, dataFine],
+    (err, results) => {
+      if (err || !Array.isArray(results)) return res.status(500).json({ error: 'Errore ordini totali', details: err?.message });
+      risultato.totale_ordini = results?.[0]?.totale_ordini || 0;
+      checkCompletion();
+    }
+  );
+
+  // Query 2: Ordini pagati
+  conn.query(
+    `SELECT COUNT(*) as ordini_pagati FROM ordini WHERE data BETWEEN ? AND ? AND pagato = 1`,
+    [dataInizio, dataFine],
+    (err, results) => {
+      if (err || !Array.isArray(results)) return res.status(500).json({ error: 'Errore ordini pagati', details: err?.message });
+      risultato.ordini_pagati = results?.[0]?.ordini_pagati || 0;
+      checkCompletion();
+    }
+  );
+
+  // Query 3: Ordini per giorno
+  conn.query(
+    `SELECT DATE(data) as data, COUNT(*) as numero_ordini FROM ordini WHERE data BETWEEN ? AND ? GROUP BY DATE(data) ORDER BY DATE(data)`,
+    [dataInizio, dataFine],
+    (err, results) => {
+      risultato.ordini_per_giorno = Array.isArray(results) ? results : [];
+      checkCompletion();
+    }
+  );
+
+  // Query 4: Incassi giornalieri
+  conn.query(
+    `SELECT DATE(data) as data, SUM(prezzo) as incasso_giorno FROM ordini WHERE data BETWEEN ? AND ? AND pagato = 1 GROUP BY DATE(data) ORDER BY DATE(data)`,
+    [dataInizio, dataFine],
+    (err, results) => {
+      risultato.incassi_giornalieri = Array.isArray(results) ? results : [];
+      checkCompletion();
+    }
+  );
+
+  // Query 5: Top earners
+  conn.query(
+    `SELECT nome_prodotto, SUM(prezzo) as incasso_prodotto, AVG(prezzo) as prezzo_medio, COUNT(*) as quantita_pagata FROM ordini WHERE data BETWEEN ? AND ? AND pagato = 1 GROUP BY nome_prodotto ORDER BY incasso_prodotto DESC LIMIT 10`,
+    [dataInizio, dataFine],
+    (err, results) => {
+      risultato.top_earners = Array.isArray(results) ? results : [];
+      checkCompletion();
+    }
+  );
+
+  // Query 6: Prodotti più venduti
+  conn.query(
+    `SELECT nome_prodotto, COUNT(*) as quantita_ordinata, SUM(CASE WHEN pagato = 1 THEN 1 ELSE 0 END) as quantita_pagata, AVG(prezzo) as prezzo_medio, SUM(CASE WHEN pagato = 1 THEN prezzo ELSE 0 END) as incasso_prodotto FROM ordini WHERE data BETWEEN ? AND ? GROUP BY nome_prodotto ORDER BY quantita_ordinata DESC LIMIT 20`,
+    [dataInizio, dataFine],
+    (err, results) => {
+      risultato.prodotti_piu_venduti = Array.isArray(results) ? results : [];
+      risultato.incassi_totali = Array.isArray(results)
+        ? results.reduce((sum, item) => sum + parseFloat(item.incasso_prodotto || 0), 0)
+        : 0;
+      checkCompletion();
+    }
+  );
+});
+
+
 //----------------------------------------------------------------CAMERIERE--------------------------------------------------------------
 
 
@@ -462,9 +563,9 @@ app.post("/api/orders", (req, res) => {
       const prodottiTrovati = risultati.map(r => r.nome);
       const prodottiMancanti = nomiProdotti.filter(nome => !prodottiTrovati.includes(nome));
       console.error("Prodotti non trovati:", prodottiMancanti);
-      return res.status(400).json({ 
-        error: "Prodotti non trovati", 
-        prodotti_mancanti: prodottiMancanti 
+      return res.status(400).json({
+        error: "Prodotti non trovati",
+        prodotti_mancanti: prodottiMancanti
       });
     }
 
@@ -484,7 +585,7 @@ app.post("/api/orders", (req, res) => {
     const stato = hasFood ? 'in_corso' : 'n';
     const stato_drink = hasDrink ? 'in_corso' : 'n';
 
-    
+
     // Inizia la transazione
     conn.beginTransaction(err => {
       if (err) {
@@ -495,68 +596,70 @@ app.post("/api/orders", (req, res) => {
       // Inserisci comanda con query più esplicita
       const insertComandaQuery = "INSERT INTO comanda (tavolo, stato, stato_drink) VALUES (?, ?, ?)";
       const insertComandaValues = [tavolo, stato, stato_drink];
-      
-  
-      
+
+
+
       conn.query(insertComandaQuery, insertComandaValues, (err, result) => {
-          if (err) {
-            console.error("Errore inserimento comanda:", err);
-            return conn.rollback(() => {
-              res.status(500).json({ error: "Errore inserimento comanda" });
-            });
-          }
-
-          const comandaId = result.insertId;
-          
-          // Prepara tutti gli ordini da inserire
-          const ordiniDaInserire = [];
-          items.forEach(item => {
-            for (let i = 0; i < item.quantity; i++) {
-              ordiniDaInserire.push([
-                comandaId, 
-                item.name, 
-                item.price, 
-                item.note || '', 
-                item.fotoPath || item.foto || null, // Gestisci entrambi i nomi
-                false // pagato
-              ]);
-            }
-          });
-
-          // Inserisci tutti gli ordini in una volta
-          if (ordiniDaInserire.length === 0) {
-            return conn.rollback(() => {
-              res.status(400).json({ error: "Nessun ordine da inserire" });
-            });
-          }
-
-          const insertQuery = `INSERT INTO ordini (comanda_id, nome_prodotto, prezzo, note, path_foto, pagato) VALUES ?`;
-          
-          conn.query(insertQuery, [ordiniDaInserire], (err) => {
-            if (err) {
-              console.error("Errore inserimento ordini:", err);
-              return conn.rollback(() => {
-                res.status(500).json({ error: "Errore inserimento ordini" });
-              });
-            }
-
-            // Commit della transazione
-            conn.commit(err => {
-              if (err) {
-                console.error("Errore commit:", err);
-                return conn.rollback(() => {
-                  res.status(500).json({ error: "Errore commit" });
-                });
-              }
-              
-              res.status(200).json({ 
-                success: true, 
-                message: "Ordine inserito con successo",
-                comanda_id: comandaId 
-              });
-            });
+        if (err) {
+          console.error("Errore inserimento comanda:", err);
+          return conn.rollback(() => {
+            res.status(500).json({ error: "Errore inserimento comanda" });
           });
         }
+
+        const comandaId = result.insertId;
+
+        // Prepara tutti gli ordini da inserire
+        const ordiniDaInserire = [];
+        items.forEach(item => {
+          for (let i = 0; i < item.quantity; i++) {
+            ordiniDaInserire.push([
+              comandaId,
+              item.name,
+              item.price,
+              item.note || '',
+              item.fotoPath || item.foto || null,
+              false, // pagato
+              new Date() // data attuale
+            ]);
+
+          }
+        });
+
+        // Inserisci tutti gli ordini in una volta
+        if (ordiniDaInserire.length === 0) {
+          return conn.rollback(() => {
+            res.status(400).json({ error: "Nessun ordine da inserire" });
+          });
+        }
+
+        const insertQuery = `INSERT INTO ordini (comanda_id, nome_prodotto, prezzo, note, path_foto, pagato, data) VALUES ?`;
+
+        conn.query(insertQuery, [ordiniDaInserire], (err) => {
+          if (err) {
+            console.error("Errore inserimento ordini:", err);
+            return conn.rollback(() => {
+              res.status(500).json({ error: "Errore inserimento ordini" });
+            });
+          }
+
+          // Commit della transazione
+          conn.commit(err => {
+            if (err) {
+              console.error("Errore commit:", err);
+              return conn.rollback(() => {
+                res.status(500).json({ error: "Errore commit" });
+              });
+            }
+
+            res.status(200).json({
+              success: true,
+              message: "Ordine inserito con successo",
+              comanda_id: comandaId
+            });
+          });
+        });
+      }
       );
     });
   });
@@ -645,10 +748,10 @@ app.post("/api/cameriere/done", (req, res) => {
           return res.status(404).json({ error: "Comanda non trovata per l'aggiornamento" });
         }
 
-     
-        
-        res.status(200).json({ 
-          success: true, 
+
+
+        res.status(200).json({
+          success: true,
           message: "Comanda completata con successo",
           comanda_id: comanda_id
         });
@@ -829,7 +932,7 @@ app.get('/api/cassa', (req, res) => {
       prezzo: parseFloat(ordine.prezzo) // Assicura che il prezzo sia un numero
     }));
 
-    
+
     res.json(ordini);
   });
 });// GET /api/cassa - Restituisce tutti gli ordini NON PAGATI raggruppati per tavoli
@@ -881,8 +984,8 @@ app.post('/api/cassa/paga', (req, res) => {
 
   // Verifica che l'ordine esista e non sia già pagato
   conn.query(
-    "SELECT id, pagato, nome_prodotto, prezzo FROM ordini WHERE id = ?", 
-    [ordine_id], 
+    "SELECT id, pagato, nome_prodotto, prezzo FROM ordini WHERE id = ?",
+    [ordine_id],
     (err, result) => {
       if (err) {
         console.error("Errore verifica ordine:", err);
@@ -894,7 +997,7 @@ app.post('/api/cassa/paga', (req, res) => {
       }
 
       const ordine = result[0];
-      
+
       if (ordine.pagato) {
         return res.status(400).json({ error: "Ordine già pagato" });
       }
@@ -913,10 +1016,10 @@ app.post('/api/cassa/paga', (req, res) => {
             return res.status(404).json({ error: "Ordine non trovato per l'aggiornamento" });
           }
 
-        
-          
-          res.status(200).json({ 
-            success: true, 
+
+
+          res.status(200).json({
+            success: true,
             message: "Pagamento registrato con successo",
             ordine_id: ordine_id,
             prodotto: ordine.nome_prodotto,
@@ -982,10 +1085,10 @@ app.post('/api/cassa/paga-tavolo', (req, res) => {
             });
           }
 
-         
-          
-          res.status(200).json({ 
-            success: true, 
+
+
+          res.status(200).json({
+            success: true,
             message: `Tavolo ${tavolo} pagato completamente`,
             ordini_pagati: resultOrdini.affectedRows,
             comande_chiuse: resultComande.affectedRows
