@@ -3,544 +3,221 @@
 
 <head>
   <title>Admin Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      font-size: 16px;
-      -webkit-text-size-adjust: 100%;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .container {
-      padding: 0 1rem;
-      max-width: 100%;
-    }
-
-    /* Top Bar Mobile */
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background: var(--pico-background-color);
-      border-bottom: 1px solid var(--pico-border-color);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .admin-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--pico-primary);
-      margin: 0;
-    }
-
-    .logout-btn {
-      background-color: #dc3545;
-      border: none;
-      color: white;
-      padding: 0.6rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .logout-btn:hover,
-    .logout-btn:active {
-      background-color: #c82333;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
-    }
-
-    /* Header Section */
-    .header-section {
-      text-align: center;
-      padding: 2rem 0 1.5rem 0;
-      background: linear-gradient(135deg, var(--pico-primary) 0%, var(--pico-primary-hover) 100%);
-      color: var(--pico-primary-inverse);
-      margin: 0 -1rem 1.5rem -1rem;
-    }
-
-    .header-section h1 {
-      font-size: 1.8rem;
-      margin: 0 0 0.5rem 0;
-      font-weight: 800;
-    }
-
-    .header-section p {
-      margin: 0;
-      opacity: 0.9;
-      font-size: 1rem;
-    }
-
-    /* Stats Grid Mobile */
-    .stats-grid {
+    .dashboard-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
     }
 
-    .stat-card {
-      background: var(--pico-card-background-color);
+    .admin-card {
       border: 1px solid var(--pico-border-color);
-      border-radius: 12px;
-      padding: 1.25rem 0.75rem;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border-radius: var(--pico-border-radius);
+      padding: 1.5rem;
+      background: var(--pico-card-background-color);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .stat-card:active {
-      transform: scale(0.98);
+    .admin-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .card-title {
+      margin-bottom: 0.5rem;
+      color: var(--pico-primary-color);
+    }
+
+    .card-description {
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+
+    .header-section {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--pico-border-color);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 1rem;
+      background: var(--pico-primary-background);
+      border-radius: var(--pico-border-radius);
     }
 
     .stat-number {
       font-size: 2rem;
-      font-weight: 800;
-      color: var(--pico-primary);
-      margin: 0 0 0.25rem 0;
-      line-height: 1;
+      font-weight: bold;
+      color: var(--pico-primary-color);
     }
 
-    .stat-label {
-      font-size: 0.8rem;
-      color: var(--pico-muted-color);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 0;
-    }
-
-    /* Admin Functions Grid Mobile */
-    .dashboard-grid {
+    .top-bar {
       display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-top: 0;
-    }
-
-    .admin-card {
-      background: var(--pico-card-background-color);
-      border: 1px solid var(--pico-border-color);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      transition: all 0.2s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .admin-card:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+      justify-content: flex-end;
+      padding: 1rem;
+      border-bottom: 1px solid var(--pico-border-color);
       margin-bottom: 1rem;
     }
 
-    .card-icon {
-      font-size: 2.2rem;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--pico-primary-background);
-      border-radius: 12px;
-      flex-shrink: 0;
-    }
-
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--pico-color);
-      margin: 0;
-      line-height: 1.2;
-    }
-
-    .card-description {
-      font-size: 0.9rem;
-      color: var(--pico-muted-color);
-      line-height: 1.4;
-      margin-bottom: 1.25rem;
-    }
-
-    /* Button Grid Mobile */
-    .button-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .btn-mobile {
-      width: 100%;
-      padding: 0.9rem 1.25rem;
-      font-size: 1rem;
-      font-weight: 600;
-      border-radius: 10px;
+    .logout-btn {
+      background-color: #dc3545;
+      border-color: #dc3545;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: var(--pico-border-radius);
       border: none;
       cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.2s ease;
     }
 
-    .btn-primary {
-      background: var(--pico-primary);
-      color: var(--pico-primary-inverse);
-    }
-
-    .btn-primary:hover,
-    .btn-primary:active {
-      background: var(--pico-primary-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-secondary {
-      background: var(--pico-secondary);
-      color: var(--pico-secondary-inverse);
-    }
-
-    .btn-secondary:hover,
-    .btn-secondary:active {
-      background: var(--pico-secondary-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Loading States */
-    .loading {
-      opacity: 0.7;
-      pointer-events: none;
-    }
-
-    .loading::after {
-      content: "";
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid transparent;
-      border-top: 2px solid currentColor;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-left: 0.5rem;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* iPhone specific optimizations */
-    @media screen and (max-width: 430px) {
-      .container {
-        padding: 0 0.75rem;
-      }
-
-      .header-section {
-        padding: 1.5rem 0 1.25rem 0;
-      }
-
-      .header-section h1 {
-        font-size: 1.6rem;
-      }
-
-      .stats-grid {
-        gap: 0.5rem;
-      }
-
-      .stat-card {
-        padding: 1rem 0.5rem;
-      }
-
-      .stat-number {
-        font-size: 1.8rem;
-      }
-
-      .admin-card {
-        padding: 1.25rem;
-      }
-
-      .card-icon {
-        width: 45px;
-        height: 45px;
-        font-size: 2rem;
-      }
-
-      .card-title {
-        font-size: 1rem;
-      }
-
-      .card-description {
-        font-size: 0.85rem;
-      }
-    }
-
-    /* iPhone SE and smaller */
-    @media screen and (max-width: 375px) {
-      .admin-title {
-        font-size: 1.1rem;
-      }
-
-      .logout-btn {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
-      }
-
-      .header-section h1 {
-        font-size: 1.4rem;
-      }
-
-      .header-section p {
-        font-size: 0.9rem;
-      }
-
-      .stat-number {
-        font-size: 1.6rem;
-      }
-
-      .stat-label {
-        font-size: 0.75rem;
-      }
-    }
-
-    /* Safe area for iPhone with notch */
-    @supports (padding: max(0px)) {
-      .top-bar {
-        padding-top: max(1rem, env(safe-area-inset-top));
-        padding-left: max(1rem, env(safe-area-inset-left));
-        padding-right: max(1rem, env(safe-area-inset-right));
-      }
-
-      .container {
-        padding-left: max(1rem, env(safe-area-inset-left));
-        padding-right: max(1rem, env(safe-area-inset-right));
-        padding-bottom: max(1rem, env(safe-area-inset-bottom));
-      }
+    .logout-btn:hover {
+      background-color: #c82333;
     }
   </style>
 </head>
 
 <body>
-  <!-- Top Bar Mobile -->
+  <!-- Top Bar con Logout -->
   <div class="top-bar">
-    <h2 class="admin-title">Admin Panel</h2>
-    <button class="logout-btn" onclick="logout()">
-      🚪 Esci
-    </button>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
   </div>
 
   <main class="container">
     <!-- Header Section -->
     <div class="header-section">
-      <h1>Dashboard</h1>
-      <p>Gestisci il tuo ristorante</p>
+      <h1>Admin Area</h1>
+      <p>Benvenuto nel pannello di controllo amministrativo</p>
     </div>
 
     <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-number" id="utenti-stat">--</div>
-        <div class="stat-label">Utenti</div>
+        <div>Utenti Totali</div>
       </div>
       <div class="stat-card">
         <div class="stat-number" id="prodotti-stat">--</div>
-        <div class="stat-label">Prodotti</div>
+        <div>Prodotti</div>
       </div>
     </div>
 
-    <!-- Admin Functions -->
+    <!-- Admin Functions Grid -->
     <div class="dashboard-grid">
+
       <!-- Gestione Utenti -->
       <article class="admin-card">
-        <div class="card-header">
-          <div class="card-icon">👥</div>
-          <h3 class="card-title">Gestione Utenti</h3>
-        </div>
+        <span class="card-icon">👥</span>
+        <h3 class="card-title">Gestione Utenti</h3>
         <p class="card-description">Visualizza, modifica ed elimina gli account utente. Gestisci ruoli e permessi.</p>
-        <div class="button-grid">
+        <div class="grid">
           <form action="/admin/select" method="GET" style="margin: 0;">
-            <button type="submit" class="btn-mobile btn-primary">
-              👀 Visualizza Utenti
-            </button>
+            <input type="submit" value="Visualizza Utenti" />
           </form>
           <form action="/admin/users/create" method="GET" style="margin: 0;">
-            <button type="submit" class="btn-mobile btn-secondary">
-              ➕ Crea Utente
-            </button>
+            <input type="submit" value="Crea Utente" class="secondary" />
           </form>
         </div>
       </article>
 
       <!-- Gestione Prodotti -->
       <article class="admin-card">
-        <div class="card-header">
-          <div class="card-icon">📦</div>
-          <h3 class="card-title">Gestione Prodotti</h3>
-        </div>
-        <p class="card-description">Aggiungi, modifica e rimuovi prodotti dal catalogo. Gestisci inventario e prezzi.</p>
-        <div class="button-grid">
+        <span class="card-icon">📦</span>
+        <h3 class="card-title">Gestione Prodotti</h3>
+        <p class="card-description">Aggiungi, modifica e rimuovi prodotti dal catalogo. Gestisci inventario e prezzi.
+        </p>
+        <div class="grid">
           <form action="/admin/prod" method="GET" style="margin: 0;">
-            <button type="submit" class="btn-mobile btn-primary">
-              📋 Vedi Prodotti
-            </button>
+            <input type="submit" value="Vedi Prodotti" />
           </form>
           <form action="/admin/products/create" method="GET" style="margin: 0;">
-            <button type="submit" class="btn-mobile btn-secondary">
-              ➕ Nuovo Prodotto
-            </button>
+            <input type="submit" value="Nuovo Prodotto" class="secondary" />
           </form>
         </div>
       </article>
-
-      <!-- Statistiche Prodotti -->
+    </div>
+       <div class="dashboard-grid"></div>
       <article class="admin-card">
-        <div class="card-header">
-          <div class="card-icon">📊</div>
-          <h3 class="card-title">Statistiche</h3>
-        </div>
-        <p class="card-description">Visualizza, analizza e confronta le statistiche in tempo reale. Monitora trend e performance.</p>
-        <div class="button-grid">
+        <span class="card-icon">📊</span>
+        <h3 class="card-title">Statistiche Prodotti</h3>
+        <p class="card-description">Visualizza, analizza e confronta le statistiche in tempo reale. Monitora trend e performance.
+        </p>
+        <div class="grid">
           <form action="/admin/stat" method="GET" style="margin: 0;">
-            <button type="submit" class="btn-mobile btn-primary">
-              📈 Vedi Statistiche
-            </button>
+            <input type="submit" value="Vedi Statistiche" />
+          </form>
+        </div>
+      </article>
+      <article class="admin-card">
+        <span class="card-icon">🟢🔴</span>
+        <h3 class="card-title">Disponibile</h3>
+        <p class="card-description">Scrivi la disponibilità di ogni prodotto
+        </p>
+        <div class="grid">
+          <form action="/admin/disp" method="GET" style="margin: 0;">
+            <input type="submit" value="Scrivi la disponibilita" />
           </form>
         </div>
       </article>
 
-      <!-- Disponibilità -->
-      <article class="admin-card">
-        <div class="card-header">
-          <div class="card-icon">🟢</div>
-          <h3 class="card-title">Disponibilità</h3>
-        </div>
-        <p class="card-description">Gestisci la disponibilità di ogni prodotto in tempo reale.</p>
-        <div class="button-grid">
-          <form action="/admin/disp" method="GET" style="margin: 0;">
-            <button type="submit" class="btn-mobile btn-primary">
-              ⚙️ Gestisci Disponibilità
-            </button>
-          </form>
-        </div>
-      </article>
     </div>
 
   </main>
   
   <script>
-    async function caricaStatistiche() {
-      const utentiElement = document.getElementById('utenti-stat');
-      const prodottiElement = document.getElementById('prodotti-stat');
-      
-      // Mostra loading
-      utentiElement.classList.add('loading');
-      prodottiElement.classList.add('loading');
-      
-      try {
-        const risposta = await fetch('/api/admin/stats');
-        if (!risposta.ok) throw new Error("Errore nel recupero dati");
+  async function caricaStatistiche() {
+    try {
+      const risposta = await fetch('/api/admin/stats');
+      if (!risposta.ok) throw new Error("Errore nel recupero dati");
 
-        const dati = await risposta.json();
+      const dati = await risposta.json();
 
-        // Aggiorna i valori nelle stat cards
-        utentiElement.textContent = dati.utenti ?? '0';
-        prodottiElement.textContent = dati.prodotti ?? '0';
+      // Aggiorna i valori nelle stat cards
+      document.getElementById('utenti-stat').textContent = dati.utenti ?? '0';
+      document.getElementById('prodotti-stat').textContent = dati.prodotti ?? '0';
 
-      } catch (errore) {
-        console.error("Errore nel caricamento delle statistiche:", errore);
-        utentiElement.textContent = '--';
-        prodottiElement.textContent = '--';
-      } finally {
-        // Rimuovi loading
-        utentiElement.classList.remove('loading');
-        prodottiElement.classList.remove('loading');
-      }
+    } catch (errore) {
+      console.error("Errore nel caricamento delle statistiche:", errore);
     }
+  }
 
-    function logout() {
-      if (!confirm("Vuoi davvero uscire?")) return;
+  function logout() {
+    if (!confirm("Vuoi davvero uscire?")) return;
 
-      // Mostra loading nel pulsante
-      const logoutBtn = document.querySelector('.logout-btn');
-      const originalText = logoutBtn.innerHTML;
-      logoutBtn.innerHTML = '⏳ Uscita...';
-      logoutBtn.disabled = true;
-
-      fetch('/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      })
-        .then(res => {
-          if (res.ok) {
-            alert('Logout effettuato!');
-            window.location.href = '/';
-          } else {
-            throw new Error('Errore server');
-          }
-        })
-        .catch(() => {
+    fetch('/logout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(res => {
+        if (res.ok) {
+          alert('Logout effettuato!');
+          // Reindirizza alla pagina di login o home
+          window.location.href = '/';
+        } else {
           alert('Errore durante il logout');
-          logoutBtn.innerHTML = originalText;
-          logoutBtn.disabled = false;
-        });
-    }
+        }
+      })
+      .catch(() => alert('Errore durante il logout'));
+  }
 
-    // Prevenire zoom accidentale su iOS
-    document.addEventListener('gesturestart', function (e) {
-      e.preventDefault();
-    });
-
-    // Prevenire pull-to-refresh su iOS
-    document.body.addEventListener('touchstart', function (e) {
-      if (e.touches.length === 1 && e.touches[0].clientY === 0) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    document.body.addEventListener('touchmove', function (e) {
-      if (e.touches.length === 1 && e.touches[0].clientY === 0) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    // Carica statistiche all'avvio
-    document.addEventListener('DOMContentLoaded', caricaStatistiche);
-
-    // Ricarica statistiche quando la pagina diventa visibile
-    document.addEventListener('visibilitychange', function() {
-      if (!document.hidden) {
-        caricaStatistiche();
-      }
-    });
-  </script>
+  document.addEventListener('DOMContentLoaded', caricaStatistiche);
+</script>
 
 </body>
 
