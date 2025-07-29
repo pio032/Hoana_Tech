@@ -1,0 +1,4 @@
+[2025-07-29T19:46:17.261Z] 🚀 Server avviato su http://localhost:3000
+[2025-07-29T19:46:17.264Z] 📦 Sistema di sessioni attivo
+[2025-07-29T19:46:17.264Z] 🔐 Autenticazione obbligatoria per tutte le aree protette
+[2025-07-29T19:46:17.281Z] Connesso al database MySQL

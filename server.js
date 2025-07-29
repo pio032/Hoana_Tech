@@ -9,6 +9,12 @@ const cors = require('cors');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 
+function writeLog(message) {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+  fs.appendFileSync('log.txt', logMessage, 'utf8');
+}
+
 app.use(cors({
   origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -21,7 +27,6 @@ const dbName = process.env.DB_NAME;
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
 
-// Configurazione MySQL
 const mysql = require('mysql2');
 const conn = mysql.createConnection({
   host: dbHost,
@@ -31,9 +36,8 @@ const conn = mysql.createConnection({
   database: dbName
 });
 
-// Configurazione MySQL Session Store
 const sessionStore = new MySQLStore({
-  expiration: 86400000, // 24 ore in millisecondi
+  expiration: 86400000,
   createDatabaseTable: true,
   schema: {
     tableName: 'sessions',
@@ -45,7 +49,6 @@ const sessionStore = new MySQLStore({
   }
 }, conn);
 
-// Configurazione sessioni
 app.use(session({
   key: 'restaurant_session',
   secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-this',
@@ -53,27 +56,24 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 24 * 60 * 60 * 1000, // 24 ore
+    maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: false // Metti true se usi HTTPS
+    secure: false
   }
 }));
 
-// Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Test connessione database
 conn.connect((err) => {
   if (err) {
-    console.error('Errore connessione database:', err);
+    writeLog('Errore connessione database: ' + err.message);
     return;
   }
-  console.log('Connesso al database MySQL');
+  writeLog('Connesso al database MySQL');
 });
 
-// Middleware per controllare l'autenticazione
 function requireAuth(req, res, next) {
   if (req.session && req.session.user) {
     return next();
@@ -82,7 +82,6 @@ function requireAuth(req, res, next) {
   }
 }
 
-// Middleware per controllare ruoli specifici
 function requireRole(roles) {
   return (req, res, next) => {
     if (!req.session || !req.session.user) {
@@ -100,7 +99,6 @@ function requireRole(roles) {
 //-----------------------------------------------------------------LOGIN----------------------------------------------------------------
 
 app.get('/', (req, res) => {
-  // Se già loggato, reindirizza alla dashboard appropriata
   if (req.session && req.session.user) {
     return res.redirect(getDashboardPath(req.session.user.tipo));
   }
@@ -124,7 +122,7 @@ app.post('/login', (req, res) => {
   const query = 'SELECT * FROM user WHERE username = ? AND passsword = ?';
   conn.query(query, [username, password], (err, results) => {
     if (err) {
-      console.error('Errore query:', err);
+      writeLog('Errore query: ' + err.message);
       res.status(500).json({ error: 'Errore del server' });
       return;
     }
@@ -132,16 +130,14 @@ app.post('/login', (req, res) => {
     if (results.length > 0) {
       const user = results[0];
 
-      // Crea la sessione
       req.session.user = {
         id: user.id,
         username: user.username,
         tipo: user.tipo
       };
 
-      console.log(`✅ Login effettuato: ${user.username} (${user.tipo})`);
+      writeLog(`✅ Login effettuato: ${user.username} (${user.tipo})`);
 
-      // Reindirizza alla dashboard appropriata
       res.redirect(getDashboardPath(user.tipo));
     } else {
       res.status(401).json({ error: 'Credenziali non valide' });
@@ -149,16 +145,15 @@ app.post('/login', (req, res) => {
   });
 });
 
-// Endpoint per il logout
 app.post('/logout', (req, res) => {
   if (req.session) {
     const username = req.session.user?.username || 'Utente sconosciuto';
     req.session.destroy((err) => {
       if (err) {
-        console.error('Errore durante il logout:', err);
+        writeLog('Errore durante il logout: ' + err.message);
         return res.status(500).json({ error: 'Errore durante il logout' });
       }
-      console.log(`🚪 Logout effettuato: ${username}`);
+      writeLog(`🚪 Logout effettuato: ${username}`);
       res.clearCookie('restaurant_session');
       res.json({ success: true, message: 'Logout effettuato con successo' });
     });
@@ -167,7 +162,6 @@ app.post('/logout', (req, res) => {
   }
 });
 
-// Endpoint per verificare lo stato della sessione
 app.get('/api/session', (req, res) => {
   if (req.session && req.session.user) {
     res.json({
@@ -211,7 +205,7 @@ app.get("/admin/user", requireRole(['admin']), (req, res) => {
 
   conn.query(query, (err, results) => {
     if (err) {
-      console.error('Errore query utenti:', err);
+      writeLog('Errore query utenti: ' + err.message);
       res.status(500).send('Errore del server');
       return;
     }
@@ -224,7 +218,6 @@ app.get("/admin/select", requireRole(['admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/user.html'));
 });
 
-// Aggiorna utente
 app.post('/admin/users/update', requireRole(['admin']), (req, res) => {
   const { id, username, password, tipo } = req.body;
 
@@ -241,7 +234,7 @@ app.post('/admin/users/update', requireRole(['admin']), (req, res) => {
 
   conn.query(query, params, (err, result) => {
     if (err) {
-      console.error('Errore aggiornamento utente:', err);
+      writeLog('Errore aggiornamento utente: ' + err.message);
       res.json({ success: false, message: 'Errore del server' });
       return;
     }
@@ -249,14 +242,13 @@ app.post('/admin/users/update', requireRole(['admin']), (req, res) => {
   });
 });
 
-// Elimina utente
 app.post('/admin/users/delete', requireRole(['admin']), (req, res) => {
   const { id } = req.body;
 
   const query = 'DELETE FROM user WHERE id = ?';
   conn.query(query, [id], (err, result) => {
     if (err) {
-      console.error('Errore eliminazione utente:', err);
+      writeLog('Errore eliminazione utente: ' + err.message);
       res.json({ success: false, message: 'Errore del server' });
       return;
     }
@@ -270,16 +262,13 @@ app.post('/admin/users/delete', requireRole(['admin']), (req, res) => {
   });
 });
 
-// Endpoint per mostrare la pagina di creazione
 app.get('/admin/users/create', requireRole(['admin']), (req, res) => {
   res.sendFile(path.join(__dirname, '/secure/admin/create.html'));
 });
 
-// Endpoint per creare l'utente
 app.post('/admin/users/create', requireRole(['admin']), (req, res) => {
   const { username, password, tipo } = req.body;
 
-  // Validazioni server-side
   if (!username || !password || !tipo) {
     res.json({ success: false, message: 'Tutti i campi sono obbligatori' });
     return;
@@ -290,11 +279,10 @@ app.post('/admin/users/create', requireRole(['admin']), (req, res) => {
     return;
   }
 
-  // Verifica se l'username esiste già
   const checkQuery = 'SELECT id FROM user WHERE username = ?';
   conn.query(checkQuery, [username], (err, results) => {
     if (err) {
-      console.error('Errore verifica username:', err);
+      writeLog('Errore verifica username: ' + err.message);
       res.json({ success: false, message: 'Errore del server' });
       return;
     }
@@ -307,7 +295,7 @@ app.post('/admin/users/create', requireRole(['admin']), (req, res) => {
     const insertQuery = 'INSERT INTO user (username, passsword, tipo) VALUES (?, ?, ?)';
     conn.query(insertQuery, [username, password, tipo], (err, result) => {
       if (err) {
-        console.error('Errore creazione utente:', err);
+        writeLog('Errore creazione utente: ' + err.message);
         res.json({ success: false, message: 'Errore nella creazione dell\'utente' });
         return;
       }
@@ -326,7 +314,7 @@ app.get('/api/admin/stats', requireRole(['admin']), async (req, res) => {
 
   conn.query('SELECT COUNT(*) AS totale FROM user', (err, resultUtenti) => {
     if (err) {
-      console.error('Errore nel conteggio utenti:', err);
+      writeLog('Errore nel conteggio utenti: ' + err.message);
       return res.status(500).json({ success: false, message: 'Errore nel conteggio utenti' });
     }
 
@@ -334,7 +322,7 @@ app.get('/api/admin/stats', requireRole(['admin']), async (req, res) => {
 
     conn.query('SELECT COUNT(*) AS totale FROM prodotti', (err2, resultProdotti) => {
       if (err2) {
-        console.error('Errore nel conteggio prodotti:', err2);
+        writeLog('Errore nel conteggio prodotti: ' + err2.message);
         return res.status(500).json({ success: false, message: 'Errore nel conteggio prodotti' });
       }
 
@@ -348,25 +336,21 @@ app.get("/admin/products/create", requireRole(['admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/addProduct.html'));
 });
 
-// Configurazione multer per l'upload delle immagini
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = './uploads';
-    // Crea la cartella uploads se non esiste
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // Genera un nome univoco per il file
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const extension = path.extname(file.originalname);
     cb(null, 'product-' + uniqueSuffix + extension);
   }
 });
 
-// Filtro per accettare solo immagini
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
@@ -379,16 +363,14 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // Limite 5MB
+    fileSize: 5 * 1024 * 1024
   }
 });
 
-// Endpoint per aggiungere un prodotto
 app.post('/addProduct', requireRole(['admin']), upload.single('foto'), (req, res) => {
   try {
     const { nome, descrizione, prezzo, tipo } = req.body;
 
-    // Validazione dei dati
     if (!nome || !descrizione || !prezzo) {
       return res.status(400).json({
         success: false,
@@ -403,21 +385,18 @@ app.post('/addProduct', requireRole(['admin']), upload.single('foto'), (req, res
       });
     }
 
-    // Path relativo della foto da salvare nel database
     const fotoPath = 'uploads/' + req.file.filename;
 
-    // Query per inserire il prodotto nel database
     const query = 'INSERT INTO prodotti (nome, descrizione, prezzo, fotoPath, tipo) VALUES (?, ?, ?, ?, ?)';
     const values = [nome, descrizione, parseFloat(prezzo), fotoPath, tipo];
 
     conn.query(query, values, (err, result) => {
       if (err) {
-        console.error('Errore nell\'inserimento del prodotto:', err);
+        writeLog('Errore nell\'inserimento del prodotto: ' + err.message);
 
-        // Rimuovi il file caricato se c'è un errore nel database
         if (req.file) {
           fs.unlink(req.file.path, (unlinkErr) => {
-            if (unlinkErr) console.error('Errore nella rimozione del file:', unlinkErr);
+            if (unlinkErr) writeLog('Errore nella rimozione del file: ' + unlinkErr.message);
           });
         }
 
@@ -427,17 +406,15 @@ app.post('/addProduct', requireRole(['admin']), upload.single('foto'), (req, res
         });
       }
 
-      // Risposta di successo - reindirizza alla pagina admin
       res.redirect('/admin?success=1&message=Prodotto aggiunto con successo');
     });
 
   } catch (error) {
-    console.error('Errore generale:', error);
+    writeLog('Errore generale: ' + error.message);
 
-    // Rimuovi il file caricato se c'è un errore
     if (req.file) {
       fs.unlink(req.file.path, (unlinkErr) => {
-        if (unlinkErr) console.error('Errore nella rimozione del file:', unlinkErr);
+        if (unlinkErr) writeLog('Errore nella rimozione del file: ' + unlinkErr.message);
       });
     }
 
@@ -448,20 +425,18 @@ app.post('/addProduct', requireRole(['admin']), upload.single('foto'), (req, res
   }
 });
 
-// Middleware per servire file statici dalla cartella uploads
 app.use('/uploads', express.static('uploads'));
 
 app.get("/admin/prod", requireRole(['admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/product.html'));
 });
 
-
 app.get('/api/products', requireAuth, (req, res) => {
   const query = 'SELECT id, nome, descrizione, prezzo, fotoPath as foto, tipo, disponibile FROM prodotti';
 
   conn.query(query, (err, results) => {
     if (err) {
-      console.error('Errore query:', err);
+      writeLog('Errore query: ' + err.message);
       return res.status(500).json({
         success: false,
         message: 'Errore nel recupero dei prodotti'
@@ -481,10 +456,9 @@ app.delete('/api/products/:id', requireRole(['admin']), (req, res) => {
     return res.status(400).json({ success: false, message: "ID prodotto mancante" });
   }
 
-  // Recupera il prodotto
   conn.query('SELECT fotoPath FROM prodotti WHERE id = ?', [productId], (err, rows) => {
     if (err) {
-      console.error("Errore query SELECT:", err);
+      writeLog("Errore query SELECT: " + err.message);
       return res.status(500).json({ success: false, message: "Errore server durante la ricerca" });
     }
 
@@ -494,23 +468,20 @@ app.delete('/api/products/:id', requireRole(['admin']), (req, res) => {
 
     const product = rows[0];
 
-    // Elimina l'immagine se esiste
     if (product.fotoPath) {
       const fullPath = path.join(__dirname, product.fotoPath);
       if (fs.existsSync(fullPath)) {
         try {
           fs.unlinkSync(fullPath);
         } catch (fileError) {
-          console.error("Errore eliminazione file:", fileError);
-          // Continua comunque con l'eliminazione dal DB
+          writeLog("Errore eliminazione file: " + fileError.message);
         }
       }
     }
 
-    // Elimina il prodotto dal database
     conn.query('DELETE FROM prodotti WHERE id = ?', [productId], (deleteErr, deleteResult) => {
       if (deleteErr) {
-        console.error("Errore eliminazione prodotto:", deleteErr);
+        writeLog("Errore eliminazione prodotto: " + deleteErr.message);
         return res.status(500).json({ success: false, message: "Errore server durante l'eliminazione" });
       }
 
@@ -553,7 +524,6 @@ app.get('/api/statistiche', requireRole(['admin']), (req, res) => {
     }
   };
 
-  // Query 1: Ordini totali
   conn.query(
     `SELECT COUNT(*) as totale_ordini FROM ordini WHERE data BETWEEN ? AND ?`,
     [dataInizio, dataFine],
@@ -564,7 +534,6 @@ app.get('/api/statistiche', requireRole(['admin']), (req, res) => {
     }
   );
 
-  // Query 2: Ordini pagati
   conn.query(
     `SELECT COUNT(*) as ordini_pagati FROM ordini WHERE data BETWEEN ? AND ? AND pagato = 1`,
     [dataInizio, dataFine],
@@ -575,7 +544,6 @@ app.get('/api/statistiche', requireRole(['admin']), (req, res) => {
     }
   );
 
-  // Query 3: Ordini per giorno
   conn.query(
     `SELECT DATE(data) as data, COUNT(*) as numero_ordini FROM ordini WHERE data BETWEEN ? AND ? GROUP BY DATE(data) ORDER BY DATE(data)`,
     [dataInizio, dataFine],
@@ -585,7 +553,6 @@ app.get('/api/statistiche', requireRole(['admin']), (req, res) => {
     }
   );
 
-  // Query 4: Incassi giornalieri
   conn.query(
     `SELECT DATE(data) as data, SUM(prezzo) as incasso_giorno FROM ordini WHERE data BETWEEN ? AND ? AND pagato = 1 GROUP BY DATE(data) ORDER BY DATE(data)`,
     [dataInizio, dataFine],
@@ -595,7 +562,6 @@ app.get('/api/statistiche', requireRole(['admin']), (req, res) => {
     }
   );
 
-  // Query 5: Top earners
   conn.query(
     `SELECT nome_prodotto, SUM(prezzo) as incasso_prodotto, AVG(prezzo) as prezzo_medio, COUNT(*) as quantita_pagata FROM ordini WHERE data BETWEEN ? AND ? AND pagato = 1 GROUP BY nome_prodotto ORDER BY incasso_prodotto DESC LIMIT 10`,
     [dataInizio, dataFine],
@@ -605,7 +571,6 @@ app.get('/api/statistiche', requireRole(['admin']), (req, res) => {
     }
   );
 
-  // Query 6: Prodotti più venduti
   conn.query(
     `SELECT nome_prodotto, COUNT(*) as quantita_ordinata, SUM(CASE WHEN pagato = 1 THEN 1 ELSE 0 END) as quantita_pagata, AVG(prezzo) as prezzo_medio, SUM(CASE WHEN pagato = 1 THEN prezzo ELSE 0 END) as incasso_prodotto FROM ordini WHERE data BETWEEN ? AND ? GROUP BY nome_prodotto ORDER BY quantita_ordinata DESC LIMIT 20`,
     [dataInizio, dataFine],
@@ -627,9 +592,8 @@ app.put('/api/products/:id/availability', (req, res) => {
   const productId = req.params.id;
   const { disponibile } = req.body; 
 
-  console.log("cio che vedo in availability", disponibile, productId);
+  writeLog("cio che vedo in availability " + disponibile + " " + productId);
 
-  // Validazione input
   if (typeof disponibile !== 'boolean') {
     return res.status(400).json({
       success: false,
@@ -644,22 +608,21 @@ app.put('/api/products/:id/availability', (req, res) => {
     [disponibile, productId],
     (err, results) => {
       if (err) {
-        console.log("errore query:", err);
+        writeLog("errore query: " + err.message);
         return res.status(500).json({
           success: false,
           message: 'Errore database: ' + err.message
         });
       }
 
-      // Controlla se almeno una riga è stata modificata
       if (results.affectedRows > 0) {
-        console.log("Aggiornamento riuscito, righe modificate:", results.affectedRows);
+        writeLog("Aggiornamento riuscito, righe modificate: " + results.affectedRows);
         res.json({
           success: true,
           message: 'Disponibilità aggiornata con successo'
         });
       } else {
-        console.log("Nessuna riga modificata, probabilmente ID non trovato");
+        writeLog("Nessuna riga modificata, probabilmente ID non trovato");
         res.status(404).json({
           success: false,
           message: 'Prodotto non trovato'
@@ -678,63 +641,54 @@ app.get("/doComanda", requireRole(['cameriere', 'admin']), (req, res) => {
 app.post("/api/orders", requireRole(['cameriere', 'admin']), (req, res) => {
   const { tavolo, items } = req.body;
 
-
-  // Validazione input
   if (!tavolo || !items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Dati mancanti o invalidi" });
   }
 
-  // Estrai tutti i nomi dei prodotti per la query
   const nomiProdotti = items.map(item => item.name);
 
-  // Recupera tipo (food/drink) da prodotti.nome
   const placeholders = nomiProdotti.map(() => '?').join(',');
   const query = `SELECT nome, tipo FROM prodotti WHERE nome IN (${placeholders})`;
 
   conn.query(query, nomiProdotti, (err, risultati) => {
     if (err) {
-      console.error("Errore durante il recupero dei tipi:", err);
+      writeLog("Errore durante il recupero dei tipi: " + err.message);
       return res.status(500).json({ error: "Errore recupero tipi" });
     }
 
-    // Verifica che tutti i prodotti esistano
     if (risultati.length !== nomiProdotti.length) {
       const prodottiTrovati = risultati.map(r => r.nome);
       const prodottiMancanti = nomiProdotti.filter(nome => !prodottiTrovati.includes(nome));
-      console.error("Prodotti non trovati:", prodottiMancanti);
+      writeLog("Prodotti non trovati: " + prodottiMancanti.join(', '));
       return res.status(400).json({
         error: "Prodotti non trovati",
         prodotti_mancanti: prodottiMancanti
       });
     }
 
- 
     const tipoMap = {};
     risultati.forEach(r => {
       tipoMap[r.nome] = r.tipo;
     });
 
-  
     const hasFood = items.some(item => tipoMap[item.name] === 'food');
     const hasDrink = items.some(item => tipoMap[item.name] === 'drink');
 
     const stato = hasFood ? 'in_corso' : 'n';
     const stato_drink = hasDrink ? 'in_corso' : 'n';
 
- 
     conn.beginTransaction(err => {
       if (err) {
-        console.error("Errore avvio transazione:", err);
+        writeLog("Errore avvio transazione: " + err.message);
         return res.status(500).json({ error: "Errore transazione" });
       }
 
-     
       const insertComandaQuery = "INSERT INTO comanda (tavolo, stato, stato_drink) VALUES (?, ?, ?)";
       const insertComandaValues = [tavolo, stato, stato_drink];
 
       conn.query(insertComandaQuery, insertComandaValues, (err, result) => {
         if (err) {
-          console.error("Errore inserimento comanda:", err);
+          writeLog("Errore inserimento comanda: " + err.message);
           return conn.rollback(() => {
             res.status(500).json({ error: "Errore inserimento comanda" });
           });
@@ -742,7 +696,6 @@ app.post("/api/orders", requireRole(['cameriere', 'admin']), (req, res) => {
 
         const comandaId = result.insertId;
 
-        // Prepara tutti gli ordini da inserire
         const ordiniDaInserire = [];
         items.forEach(item => {
           for (let i = 0; i < item.quantity; i++) {
@@ -752,13 +705,12 @@ app.post("/api/orders", requireRole(['cameriere', 'admin']), (req, res) => {
               item.price,
               item.note || '',
               item.fotoPath || item.foto || null,
-              false, // pagato
-              new Date() // data attuale
+              false,
+              new Date()
             ]);
           }
         });
 
-        // Inserisci tutti gli ordini in una volta
         if (ordiniDaInserire.length === 0) {
           return conn.rollback(() => {
             res.status(400).json({ error: "Nessun ordine da inserire" });
@@ -769,22 +721,21 @@ app.post("/api/orders", requireRole(['cameriere', 'admin']), (req, res) => {
 
         conn.query(insertQuery, [ordiniDaInserire], (err) => {
           if (err) {
-            console.error("Errore inserimento ordini:", err);
+            writeLog("Errore inserimento ordini: " + err.message);
             return conn.rollback(() => {
               res.status(500).json({ error: "Errore inserimento ordini" });
             });
           }
 
-          // Commit della transazione
           conn.commit(err => {
             if (err) {
-              console.error("Errore commit:", err);
+              writeLog("Errore commit: " + err.message);
               return conn.rollback(() => {
                 res.status(500).json({ error: "Errore commit" });
               });
             }
 
-            console.log(`✅ Ordine inserito da ${req.session.user.username} per tavolo ${tavolo}`);
+            writeLog(`✅ Ordine inserito da ${req.session.user.username} per tavolo ${tavolo}`);
 
             res.status(200).json({
               success: true,
@@ -819,7 +770,7 @@ app.get('/api/comande', requireRole(['cameriere', 'admin']), (req, res) => {
 
   conn.query(queryComande, (err, results) => {
     if (err) {
-      console.error("Errore nel recupero delle comande:", err);
+      writeLog("Errore nel recupero delle comande: " + err.message);
       return res.status(500).json({ error: "Errore server" });
     }
 
@@ -851,15 +802,13 @@ app.get('/api/comande', requireRole(['cameriere', 'admin']), (req, res) => {
 app.post("/api/cameriere/done", requireRole(['cameriere', 'admin']), (req, res) => {
   const { comanda_id } = req.body;
 
-  // Validazione input
   if (!comanda_id) {
     return res.status(400).json({ error: "ID comanda mancante" });
   }
 
-  // Verifica che la comanda esista
   conn.query("SELECT id FROM comanda WHERE id = ?", [comanda_id], (err, result) => {
     if (err) {
-      console.error("Errore verifica comanda:", err);
+      writeLog("Errore verifica comanda: " + err.message);
       return res.status(500).json({ error: "Errore verifica comanda" });
     }
 
@@ -867,13 +816,12 @@ app.post("/api/cameriere/done", requireRole(['cameriere', 'admin']), (req, res) 
       return res.status(404).json({ error: "Comanda non trovata" });
     }
 
-    // Aggiorna il campo 'fine' a TRUE (1 in MySQL)
     conn.query(
       "UPDATE comanda SET fine = TRUE WHERE id = ?",
       [comanda_id],
       (err, updateResult) => {
         if (err) {
-          console.error("Errore aggiornamento comanda:", err);
+          writeLog("Errore aggiornamento comanda: " + err.message);
           return res.status(500).json({ error: "Errore aggiornamento comanda" });
         }
 
@@ -881,7 +829,7 @@ app.post("/api/cameriere/done", requireRole(['cameriere', 'admin']), (req, res) 
           return res.status(404).json({ error: "Comanda non trovata per l'aggiornamento" });
         }
 
-        console.log(`✅ Comanda #${comanda_id} completata da ${req.session.user.username}`);
+        writeLog(`✅ Comanda #${comanda_id} completata da ${req.session.user.username}`);
 
         res.status(200).json({
           success: true,
@@ -917,11 +865,10 @@ app.get('/api/cucina', requireRole(['cucina', 'admin', 'cameriere']), (req, res)
 
   conn.query(query, (err, results) => {
     if (err) {
-      console.error('Errore nella query:', err);
+      writeLog('Errore nella query: ' + err.message);
       return res.status(500).json({ error: 'Errore nel recupero dei dati cucina' });
     }
 
-    // Raggruppa i risultati per comanda
     const comande = {};
     results.forEach(row => {
       if (!comande[row.comanda_id]) {
@@ -955,7 +902,7 @@ app.post('/api/cucina/complete', requireRole(['cucina', 'admin']), (req, res) =>
     ['pronta', comandaId],
     (err, results) => {
       if (err) {
-        console.error('Errore aggiornando comanda:', err);
+        writeLog('Errore aggiornando comanda: ' + err.message);
         return res.status(500).json({ error: "Errore interno del server" });
       }
 
@@ -963,7 +910,7 @@ app.post('/api/cucina/complete', requireRole(['cucina', 'admin']), (req, res) =>
         return res.status(404).json({ error: "Comanda non trovata" });
       }
 
-      console.log(`🍳 Comanda cucina #${comandaId} completata da ${req.session.user.username}`);
+      writeLog(`🍳 Comanda cucina #${comandaId} completata da ${req.session.user.username}`);
 
       res.json({ message: "Comanda completata con successo" });
     }
@@ -971,7 +918,6 @@ app.post('/api/cucina/complete', requireRole(['cucina', 'admin']), (req, res) =>
 });
 
 //--------------------------------------------------------------------BANCONE-------------------------------------------------------------
-// Mostra solo comande con drink non completate
 app.get('/api/bancone', requireRole(['bancone', 'admin']), (req, res) => {
   const query = `
     SELECT 
@@ -991,7 +937,7 @@ app.get('/api/bancone', requireRole(['bancone', 'admin']), (req, res) => {
 
   conn.query(query, (err, results) => {
     if (err) {
-      console.error('Errore nella query:', err);
+      writeLog('Errore nella query: ' + err.message);
       return res.status(500).json({ error: 'Errore nel recupero dei dati bancone' });
     }
 
@@ -1016,18 +962,17 @@ app.get('/api/bancone', requireRole(['bancone', 'admin']), (req, res) => {
   });
 });
 
-// API per completare comanda da bancone
 app.post('/api/bancone/complete', requireRole(['bancone', 'admin']), (req, res) => {
   const { comandaId } = req.body;
 
   const query = "UPDATE comanda SET stato_drink = 'pronta' WHERE id = ?";
   conn.query(query, [comandaId], (err) => {
     if (err) {
-      console.error('Errore aggiornando stato_drink:', err);
+      writeLog('Errore aggiornando stato_drink: ' + err.message);
       return res.status(500).json({ error: 'Errore aggiornamento stato_drink' });
     }
 
-    console.log(`🍹 Comanda bancone #${comandaId} completata da ${req.session.user.username}`);
+    writeLog(`🍹 Comanda bancone #${comandaId} completata da ${req.session.user.username}`);
 
     res.sendStatus(200);
   });
@@ -1035,7 +980,6 @@ app.post('/api/bancone/complete', requireRole(['bancone', 'admin']), (req, res) 
 
 //---------------------------------------------------------------CASSA--------------------------------------------------------------------
 
-// GET /api/cassa - Restituisce TUTTI gli ordini (pagati e non pagati) per mantenere la persistenza
 app.get('/api/cassa', requireRole(['cassa', 'admin', 'cameriere']), (req, res) => {
   const queryCassa = `
     SELECT 
@@ -1058,22 +1002,20 @@ app.get('/api/cassa', requireRole(['cassa', 'admin', 'cameriere']), (req, res) =
 
   conn.query(queryCassa, (err, results) => {
     if (err) {
-      console.error("Errore nel recupero dei dati cassa:", err);
+      writeLog("Errore nel recupero dei dati cassa: " + err.message);
       return res.status(500).json({ error: "Errore server" });
     }
 
-    // Converti i campi dal database
     const ordini = results.map(ordine => ({
       ...ordine,
-      pagato: Boolean(ordine.pagato), // Converte 0/1 in false/true
-      prezzo: parseFloat(ordine.prezzo) // Assicura che il prezzo sia un numero
+      pagato: Boolean(ordine.pagato),
+      prezzo: parseFloat(ordine.prezzo)
     }));
 
     res.json(ordini);
   });
 });
 
-// POST /api/cassa/paga-ordine - Marca un singolo ordine come pagato
 app.post('/api/cassa/paga-ordine', requireRole(['cassa', 'admin']), (req, res) => {
   const { ordineId } = req.body;
 
@@ -1081,13 +1023,12 @@ app.post('/api/cassa/paga-ordine', requireRole(['cassa', 'admin']), (req, res) =
     return res.status(400).json({ error: 'ID ordine mancante' });
   }
 
-  // Prima verifica che l'ordine esista e non sia già pagato
   conn.query(
     'SELECT id, pagato, nome_prodotto, prezzo FROM ordini WHERE id = ?',
     [ordineId],
     (err, result) => {
       if (err) {
-        console.error('Errore verifica ordine:', err);
+        writeLog('Errore verifica ordine: ' + err.message);
         return res.status(500).json({ error: 'Errore verifica ordine' });
       }
 
@@ -1101,13 +1042,12 @@ app.post('/api/cassa/paga-ordine', requireRole(['cassa', 'admin']), (req, res) =
         return res.status(400).json({ error: 'Ordine già pagato' });
       }
 
-      // Aggiorna l'ordine come pagato
       conn.query(
         'UPDATE ordini SET pagato = 1 WHERE id = ?',
         [ordineId],
         (err, updateResult) => {
           if (err) {
-            console.error('Errore nel pagamento ordine:', err);
+            writeLog('Errore nel pagamento ordine: ' + err.message);
             return res.status(500).json({ error: 'Errore aggiornamento pagamento' });
           }
 
@@ -1115,7 +1055,7 @@ app.post('/api/cassa/paga-ordine', requireRole(['cassa', 'admin']), (req, res) =
             return res.status(404).json({ error: 'Ordine non trovato per l\'aggiornamento' });
           }
 
-          console.log(`💰 Ordine #${ordineId} pagato da ${req.session.user.username}: ${ordine.nome_prodotto} - €${ordine.prezzo}`);
+          writeLog(`💰 Ordine #${ordineId} pagato da ${req.session.user.username}: ${ordine.nome_prodotto} - €${ordine.prezzo}`);
 
           res.json({
             success: true,
@@ -1130,7 +1070,6 @@ app.post('/api/cassa/paga-ordine', requireRole(['cassa', 'admin']), (req, res) =
   );
 });
 
-// POST /api/cassa/annulla-pagamento - Annulla il pagamento di un ordine
 app.post('/api/cassa/annulla-pagamento', requireRole(['cassa', 'admin']), (req, res) => {
   const { ordineId } = req.body;
 
@@ -1138,13 +1077,12 @@ app.post('/api/cassa/annulla-pagamento', requireRole(['cassa', 'admin']), (req, 
     return res.status(400).json({ error: 'ID ordine mancante' });
   }
 
-  // Prima verifica che l'ordine esista e sia pagato
   conn.query(
     'SELECT id, pagato, nome_prodotto, prezzo FROM ordini WHERE id = ?',
     [ordineId],
     (err, result) => {
       if (err) {
-        console.error('Errore verifica ordine:', err);
+        writeLog('Errore verifica ordine: ' + err.message);
         return res.status(500).json({ error: 'Errore verifica ordine' });
       }
 
@@ -1158,13 +1096,12 @@ app.post('/api/cassa/annulla-pagamento', requireRole(['cassa', 'admin']), (req, 
         return res.status(400).json({ error: 'Ordine non è stato pagato' });
       }
 
-      // Annulla il pagamento
       conn.query(
         'UPDATE ordini SET pagato = 0 WHERE id = ?',
         [ordineId],
         (err, updateResult) => {
           if (err) {
-            console.error('Errore nell\'annullamento del pagamento:', err);
+            writeLog('Errore nell\'annullamento del pagamento: ' + err.message);
             return res.status(500).json({ error: 'Errore nell\'annullamento pagamento' });
           }
 
@@ -1172,7 +1109,7 @@ app.post('/api/cassa/annulla-pagamento', requireRole(['cassa', 'admin']), (req, 
             return res.status(404).json({ error: 'Ordine non trovato per l\'aggiornamento' });
           }
 
-          console.log(`🔄 Pagamento annullato da ${req.session.user.username} per ordine #${ordineId}: ${ordine.nome_prodotto}`);
+          writeLog(`🔄 Pagamento annullato da ${req.session.user.username} per ordine #${ordineId}: ${ordine.nome_prodotto}`);
 
           res.json({
             success: true,
@@ -1187,7 +1124,6 @@ app.post('/api/cassa/annulla-pagamento', requireRole(['cassa', 'admin']), (req, 
   );
 });
 
-// POST /api/cassa/paga-tavolo - Completa il pagamento di tutto il tavolo
 app.post('/api/cassa/paga-tavolo', requireRole(['cassa', 'admin']), (req, res) => {
   const { tavolo } = req.body;
 
@@ -1195,14 +1131,12 @@ app.post('/api/cassa/paga-tavolo', requireRole(['cassa', 'admin']), (req, res) =
     return res.status(400).json({ error: "Numero tavolo mancante" });
   }
 
-  // Inizia una transazione per assicurare consistenza
   conn.beginTransaction((err) => {
     if (err) {
-      console.error("Errore inizio transazione:", err);
+      writeLog("Errore inizio transazione: " + err.message);
       return res.status(500).json({ error: "Errore server" });
     }
 
-    // Prima verifica che tutti gli ordini del tavolo siano pagati
     const queryVerifica = `
       SELECT COUNT(*) as ordini_non_pagati
       FROM ordini o
@@ -1213,7 +1147,7 @@ app.post('/api/cassa/paga-tavolo', requireRole(['cassa', 'admin']), (req, res) =
     conn.query(queryVerifica, [tavolo], (err, verificaResult) => {
       if (err) {
         return conn.rollback(() => {
-          console.error("Errore verifica ordini tavolo:", err);
+          writeLog("Errore verifica ordini tavolo: " + err.message);
           res.status(500).json({ error: "Errore verifica ordini tavolo" });
         });
       }
@@ -1226,7 +1160,6 @@ app.post('/api/cassa/paga-tavolo', requireRole(['cassa', 'admin']), (req, res) =
         });
       }
 
-      // Tutti gli ordini sono pagati, chiudi le comande del tavolo
       const queryComande = `
         UPDATE comanda 
         SET pagato = 1 
@@ -1236,21 +1169,20 @@ app.post('/api/cassa/paga-tavolo', requireRole(['cassa', 'admin']), (req, res) =
       conn.query(queryComande, [tavolo], (err, resultComande) => {
         if (err) {
           return conn.rollback(() => {
-            console.error("Errore chiusura comande tavolo:", err);
+            writeLog("Errore chiusura comande tavolo: " + err.message);
             res.status(500).json({ error: "Errore chiusura comande tavolo" });
           });
         }
 
-        // Commit della transazione
         conn.commit((err) => {
           if (err) {
             return conn.rollback(() => {
-              console.error("Errore commit transazione:", err);
+              writeLog("Errore commit transazione: " + err.message);
               res.status(500).json({ error: "Errore finalizzazione pagamento" });
             });
           }
 
-          console.log(`🎉 Tavolo ${tavolo} completato e chiuso da ${req.session.user.username}`);
+          writeLog(`🎉 Tavolo ${tavolo} completato e chiuso da ${req.session.user.username}`);
 
           res.status(200).json({
             success: true,
@@ -1262,15 +1194,15 @@ app.post('/api/cassa/paga-tavolo', requireRole(['cassa', 'admin']), (req, res) =
     });
   });
 });
+
 //-----------------------------------------------------------------ERROR----------------------------------------------------------------
 app.use((req, res) => {
-  console.log(`🚫 404 - Pagina non trovata: ${req.method} ${req.url}`);
+  writeLog(`🚫 404 - Pagina non trovata: ${req.method} ${req.url}`);
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
-// ⚠️ OPZIONALE: Gestione errori generici (deve essere l'ultimo middleware)
 app.use((err, req, res, next) => {
-  console.error('Errore server:', err);
+  writeLog('Errore server: ' + err.message);
   res.status(500).json({
     error: 'Errore interno del server',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Qualcosa è andato storto'
@@ -1279,7 +1211,7 @@ app.use((err, req, res, next) => {
 
 //-----------------------------------------------------------------LISTEN----------------------------------------------------------------
 app.listen(3000, () => {
-  console.log('🚀 Server avviato su http://localhost:3000');
-  console.log('📦 Sistema di sessioni attivo');
-  console.log('🔐 Autenticazione obbligatoria per tutte le aree protette');
+  writeLog('🚀 Server avviato su http://localhost:3000');
+  writeLog('📦 Sistema di sessioni attivo');
+  writeLog('🔐 Autenticazione obbligatoria per tutte le aree protette');
 });
