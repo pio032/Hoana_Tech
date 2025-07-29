@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Situazione Tavoli</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        /* Reset e ottimizzazioni mobile */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-size: 14px;
+            -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            padding: 0 0.75rem;
+            max-width: 100%;
+        }
+
+        /* Header mobile con bottoni più grandi */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--pico-background-color);
+            border-bottom: 1px solid var(--pico-border-color);
+            z-index: 1000;
+            padding: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .home-btn, .logout-btn {
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 44px; /* iOS touch target minimum */
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .home-btn {
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+        }
+
+        .home-btn:hover {
+            background: var(--pico-primary-hover);
+            transform: scale(1.02);
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .logout-btn:hover {
+            background: #c92135;
+            transform: scale(1.02);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Main content con padding per header fisso */
+        main {
+            padding-top: 80px;
+            padding-bottom: 80px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 1rem 0 1.5rem 0;
+            font-size: 1.4rem;
+            line-height: 1.3;
+        }
+
+        /* Sezioni tavolo ottimizzate per mobile */
+        .tavolo-section {
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .tavolo-section article {
+            padding: 1rem;
+            margin: 0;
+        }
+
+        .tavolo-section h2 {
+            margin-bottom: 0.75rem;
+            font-size: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--pico-primary);
+        }
+
+        .tavolo-section h4 {
+            margin: 1rem 0 0.5rem 0;
+            font-size: 1rem;
+            color: var(--pico-primary);
+        }
+
+        /* Items prodotto ottimizzati per mobile */
+        .prodotto-item {
+            display: flex;
+            flex-direction: column;
+            padding: 0.75rem;
+            border: 1px solid var(--pico-border-color);
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            background: var(--pico-background-color);
+            transition: all 0.3s ease;
+        }
+
+        .prodotto-info {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .prodotto-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .prodotto-img-placeholder {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 8px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 1.5rem;
+            border: 1px solid var(--pico-muted-border-color);
+        }
+
+        .prodotto-dettagli {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .prodotto-nome {
+            font-weight: 600;
+            margin: 0 0 0.25rem 0;
+            font-size: 0.95rem;
+            line-height: 1.3;
+            word-wrap: break-word;
+        }
+
+        .prodotto-note {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--pico-muted-color);
+            line-height: 1.3;
+        }
+
+        /* Footer prodotto mobile */
+        .prodotto-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--pico-border-color);
+        }
+
+        .prodotto-prezzo {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--pico-primary);
+        }
+
+        .stato-pagamento {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            min-height: 32px;
+            white-space: nowrap;
+        }
+
+        .stato-pagamento.pagato {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .stato-pagamento.non-pagato {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .prodotto-pagato {
+            background: #f0fdf4 !important;
+            border-color: #22c55e !important;
+            opacity: 0.95;
+        }
+
+        .prodotto-pagato .prodotto-nome::after {
+            content: " ✓";
+            color: #22c55e;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* Stati badge più compatti */
+        .stato-badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin: 0.2rem 0.3rem 0.2rem 0;
+            white-space: nowrap;
+        }
+
+        .stato-badge.in_corso {
+            background: #fef08a;
+            color: #92400e;
+        }
+
+        .stato-badge.pronta {
+            background: #bbf7d0;
+            color: #166534;
+        }
+
+        /* Totale tavolo mobile */
+        .totale-tavolo {
+            background: var(--pico-primary);
+            color: var(--pico-primary-inverse);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 1rem;
+            line-height: 1.4;
+        }
+
+        .totale-tavolo > div {
+            margin: 0.3rem 0;
+        }
+
+        /* Info completamento */
+        .info-completamento {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .tavolo-completo {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .tavolo-incompleto {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Footer mobile fisso */
+        .mobile-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--pico-background-color);
+            border-top: 1px solid var(--pico-border-color);
+            padding: 0.75rem;
+            text-align: center;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+
+        .refresh-info {
+            background: var(--pico-muted-color);
+            color: white;
+            padding: 0.5rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+
+        /* Responsive breakpoints */
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+            
+            .prodotto-img, .prodotto-img-placeholder {
+                width: 50px;
+                height: 50px;
+            }
+            
+            h1 {
+                font-size: 1.2rem;
+            }
+            
+            .home-btn, .logout-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Ottimizzazioni per Safari iOS */
+        @supports (-webkit-touch-callout: none) {
+            .mobile-header {
+                padding-top: max(0.75rem, env(safe-area-inset-top));
+            }
+            
+            .mobile-footer {
+                padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* Touch feedback */
+        .prodotto-item:active {
+            transform: scale(0.98);
+            transition: transform 0.1s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header mobile fisso -->
+    <div class="mobile-header">
+        <a href="/" class="home-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                </path>
+            </svg>
+            Home
+        </a>
+
+        <button onclick="logout()" class="logout-btn">
+            🚪 Logout
+        </button>
+    </div>
+
+    <main class="container">
+        <h1>🍷 Situazione Tavoli 🍽️</h1>
+        <div id="cameriereContainer"></div>
+    </main>
+
+    <!-- Footer mobile fisso -->
+    <div class="mobile-footer">
+        <div class="refresh-info">
+            🔄 Aggiornamento automatico ogni 5s
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('cameriereContainer');
+
+        async function logout() {
+            if (!confirm("Vuoi davvero fare il logout?")) return;
+
+            try {
+                const res = await fetch('/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (res.ok) {
+                    alert('Logout effettuato con successo!');
+                    window.location.href = '/';
+                } else {
+                    alert('Errore durante il logout');
+                }
+            } catch (err) {
+                console.error("Errore durante il logout:", err);
+                alert('Errore durante il logout');
+            }
+        }
+
+        async function loadOrdini() {
+            try {
+                // Manteniamo l'endpoint originale
+                const res = await fetch('/api/cassa');
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                
+                const data = await res.json();
+                
+                // Controlla se data è un array
+                if (!Array.isArray(data)) {
+                    console.error('I dati ricevuti non sono un array:', data);
+                    throw new Error('Formato dati non valido');
+                }
+                
+                container.innerHTML = '';
+
+                const tavoli = {};
+
+                // Raggruppa tutti gli ordini per tavolo
+                data.forEach(ordine => {
+                    if (!tavoli[ordine.tavolo]) {
+                        tavoli[ordine.tavolo] = {
+                            comande: {},
+                            totale: 0,
+                            totale_pagato: 0
+                        };
+                    }
+
+                    if (!tavoli[ordine.tavolo].comande[ordine.comanda_id]) {
+                        tavoli[ordine.tavolo].comande[ordine.comanda_id] = {
+                            stato: ordine.stato,
+                            stato_drink: ordine.stato_drink,
+                            ordini: []
+                        };
+                    }
+
+                    tavoli[ordine.tavolo].comande[ordine.comanda_id].ordini.push(ordine);
+                    const prezzo = parseFloat(ordine.prezzo);
+                    tavoli[ordine.tavolo].totale += prezzo;
+
+                    // Calcola totale pagato
+                    const isPagato = ordine.pagato === true || ordine.pagato === 1;
+                    if (isPagato) {
+                        tavoli[ordine.tavolo].totale_pagato += prezzo;
+                    }
+                });
+
+                Object.keys(tavoli).sort((a, b) => parseInt(a) - parseInt(b)).forEach(numeroTavolo => {
+                    const tavoloData = tavoli[numeroTavolo];
+                    const article = document.createElement('article');
+                    article.className = 'tavolo-section';
+
+                    let comandeHtml = '';
+
+                    Object.entries(tavoloData.comande).forEach(([comandaId, comanda]) => {
+                        let statiBadges = '';
+                        if (comanda.stato && comanda.stato !== 'n') {
+                            statiBadges += `<span class="stato-badge ${comanda.stato}">Cucina: ${comanda.stato === 'pronta' ? 'Pronta' : comanda.stato.replace('_', ' ')}</span>`;
+                        }
+                        if (comanda.stato_drink && comanda.stato_drink !== 'n') {
+                            statiBadges += `<span class="stato-badge ${comanda.stato_drink}">Bar: ${comanda.stato_drink === 'pronta' ? 'Pronta' : comanda.stato_drink.replace('_', ' ')}</span>`;
+                        }
+
+                        const ordiniHtml = comanda.ordini.map(ordine => {
+                            const isPagato = ordine.pagato === true || ordine.pagato === 1;
+                            
+                            // Gestione immagine prodotto con fallback
+                            const hasValidImage = ordine.path_foto && 
+                                                 ordine.path_foto !== 'undefined' && 
+                                                 ordine.path_foto !== 'null' && 
+                                                 ordine.path_foto.trim() !== '';
+                            
+                            const imageHtml = hasValidImage ? 
+                                `<img src="${ordine.path_foto}" alt="${ordine.nome_prodotto}" class="prodotto-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                 <div class="prodotto-img-placeholder" style="display: none;">🍽️</div>` :
+                                `<div class="prodotto-img-placeholder">🍽️</div>`;
+                            
+                            return `
+                            <div class="prodotto-item ${isPagato ? 'prodotto-pagato' : ''}">
+                                <div class="prodotto-info">
+                                    ${imageHtml}
+                                    <div class="prodotto-dettagli">
+                                        <p class="prodotto-nome">${ordine.nome_prodotto}</p>
+                                        ${ordine.note ? `<p class="prodotto-note">Note: ${ordine.note}</p>` : ''}
+                                    </div>
+                                </div>
+                                <div class="prodotto-footer">
+                                    <div class="prodotto-prezzo">€${parseFloat(ordine.prezzo).toFixed(2)}</div>
+                                    <div class="stato-pagamento ${isPagato ? 'pagato' : 'non-pagato'}">
+                                        ${isPagato ? '✅ Pagato' : '⏳ Da pagare'}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        }).join('');
+
+                        comandeHtml += `<h4>Comanda #${comandaId}</h4><div style="margin-bottom: 0.5rem;">${statiBadges}</div>${ordiniHtml}`;
+                    });
+
+                    // Verifica se tutti gli ordini del tavolo sono pagati
+                    const tuttiPagati = tavoloData.totale_pagato === tavoloData.totale;
+                    const percentualePagata = tavoloData.totale > 0 ? (tavoloData.totale_pagato / tavoloData.totale * 100).toFixed(0) : 0;
+
+                    article.innerHTML = `
+                        <h2>🍽️ Tavolo ${numeroTavolo}</h2>
+                        ${comandeHtml}
+                        <div class="totale-tavolo">
+                            <div>Totale: €${tavoloData.totale.toFixed(2)}</div>
+                            <div>Pagato: €${tavoloData.totale_pagato.toFixed(2)} (${percentualePagata}%)</div>
+                            <div>Rimanente: €${(tavoloData.totale - tavoloData.totale_pagato).toFixed(2)}</div>
+                        </div>
+                        <div class="info-completamento ${tuttiPagati ? 'tavolo-completo' : 'tavolo-incompleto'}">
+                            ${tuttiPagati ? '✅ Tavolo completamente pagato' : '⏳ Pagamenti in corso'}
+                        </div>
+                    `;
+
+                    container.appendChild(article);
+                });
+
+                if (Object.keys(tavoli).length === 0) {
+                    container.innerHTML = '<article><p style="text-align: center; color: var(--pico-muted-color); padding: 2rem;">📱 Nessuna comanda presente</p></article>';
+                }
+
+            } catch (err) {
+                console.error('Errore nel caricamento degli ordini:', err);
+                let errorMessage = 'Errore nel caricamento dei dati';
+                
+                if (err.message.includes('403')) {
+                    errorMessage = 'Accesso negato - Contatta l\'amministratore';
+                } else if (err.message.includes('404')) {
+                    errorMessage = 'Endpoint non trovato - Verifica la configurazione';
+                } else if (err.message.includes('Formato dati non valido')) {
+                    errorMessage = 'Formato dati non valido ricevuto dal server';
+                }
+                
+                container.innerHTML = `
+                    <article>
+                        <p style="color: var(--pico-del-color); text-align: center;">
+                            ⚠️ ${errorMessage}
+                        </p>
+                        <p style="text-align: center; font-size: 0.9rem; color: var(--pico-muted-color);">
+                            Tentativo di riconnessione automatica in corso...
+                        </p>
+                    </article>
+                `;
+            }
+        }
+
+        // Carica gli ordini al primo avvio
+        loadOrdini();
+        
+        // Aggiorna automaticamente ogni 5 secondi
+        setInterval(loadOrdini, 5000);
+
+        // Prevenire comportamenti indesiderati su mobile
+        document.addEventListener('touchstart', function() {}, true);
+        
+        // Gestione orientamento schermo
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() {
+                window.scrollTo(0, 0);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

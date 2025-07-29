@@ -846,8 +846,12 @@ app.post("/api/cameriere/done", requireRole(['cameriere', 'admin']), (req, res) 
   });
 });
 
+app.get("/viewTable", (req, res)=>{
+  res.sendFile(path.join(__dirname, 'secure/cam/table.html'));
+})
+
 //------------------------------------------------------------------CUCINA-------------------------------------------------------------
-app.get('/api/cucina', requireRole(['cucina', 'admin']), (req, res) => {
+app.get('/api/cucina', requireRole(['cucina', 'admin', 'cameriere']), (req, res) => {
   const query = `
     SELECT 
       c.id AS comanda_id,
@@ -985,7 +989,7 @@ app.post('/api/bancone/complete', requireRole(['bancone', 'admin']), (req, res) 
 //---------------------------------------------------------------CASSA--------------------------------------------------------------------
 
 // GET /api/cassa - Restituisce TUTTI gli ordini (pagati e non pagati) per mantenere la persistenza
-app.get('/api/cassa', requireRole(['cassa', 'admin']), (req, res) => {
+app.get('/api/cassa', requireRole(['cassa', 'admin',  'cameriere']), (req, res) => {
   const queryCassa = `
     SELECT 
       o.id,
