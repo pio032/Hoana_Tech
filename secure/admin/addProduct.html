@@ -2,114 +2,15 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <title>Aggiungi Prodotto</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
   <style>
-    /* Reset e base mobile-first */
-    * {
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-
-    body {
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    }
-
-    .container {
-      padding: 0.75rem;
-      max-width: 100%;
-      margin: 0;
-    }
-
-    /* Header con pulsante home */
-    .mobile-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: var(--pico-card-background-color);
-      border-bottom: 1px solid var(--pico-border-color);
-      z-index: 1000;
-      padding: env(safe-area-inset-top) 1rem 0.75rem 1rem;
-      backdrop-filter: blur(10px);
-    }
-
-    .home-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      padding: 0.4rem 0.8rem;
-      background: var(--pico-primary);
-      color: var(--pico-primary-inverse);
-      border: none;
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 600;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      transition: all 0.2s ease;
-    }
-
-    .home-btn:hover,
-    .home-btn:active {
-      background: var(--pico-primary-hover);
-      transform: scale(0.98);
-    }
-
-    .home-btn svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    /* Main content con padding per header fisso */
-    main.container {
-      padding-top: calc(60px + env(safe-area-inset-top));
-      padding-bottom: 2rem;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 1.5rem;
-      text-align: center;
-      color: var(--pico-primary);
-      font-weight: 700;
-    }
-
-    /* Form styling ottimizzato per mobile */
-    form {
-      max-width: 100%;
-    }
-
-    label {
-      font-weight: 600;
-      font-size: 0.9rem;
-      margin-bottom: 0.4rem;
-      display: block;
-      color: var(--pico-primary);
-    }
-
-    input, select, textarea {
-      font-size: 16px; /* Previene zoom su iOS */
-      border-radius: 8px;
-      border: 2px solid var(--pico-border-color);
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      transition: all 0.2s ease;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--pico-primary);
-      box-shadow: 0 0 0 3px rgba(var(--pico-primary-rgb), 0.1);
-      outline: none;
-    }
-
-    /* Sezione foto completamente riprogettata per mobile */
     .photo-section {
       margin: 1.5rem 0;
-      padding: 1rem;
+      padding: 1.5rem;
       border: 2px dashed var(--pico-border-color);
-      border-radius: 12px;
+      border-radius: 8px;
       background: var(--pico-card-background-color);
       text-align: center;
       transition: all 0.3s ease;
@@ -122,36 +23,39 @@
 
     .photo-buttons {
       display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
+      gap: 1rem;
+      justify-content: center;
       margin-bottom: 1rem;
+      flex-wrap: wrap;
     }
 
     .photo-btn {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 0.5rem;
-      padding: 1rem;
+      padding: 0.75rem 1.5rem;
       border: 2px solid var(--pico-primary);
-      border-radius: 12px;
+      border-radius: 8px;
       background: var(--pico-primary-background);
       color: var(--pico-primary);
       cursor: pointer;
-      font-weight: 600;
-      font-size: 1rem;
+      font-weight: 500;
       transition: all 0.2s ease;
       text-decoration: none;
-      width: 100%;
-      min-height: 50px;
+      font-size: 1rem;
+      min-width: 140px;
+      justify-content: center;
+      position: relative;
+      z-index: 10;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .photo-btn:hover,
     .photo-btn:active {
       background: var(--pico-primary);
       color: var(--pico-primary-inverse);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
     }
 
     .photo-btn.primary {
@@ -171,8 +75,8 @@
     }
 
     .photo-btn svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       flex-shrink: 0;
     }
 
@@ -180,13 +84,10 @@
       display: none;
     }
 
-    /* Preview ottimizzato per mobile */
     .preview-container {
       position: relative;
       margin-top: 1rem;
       display: none;
-      border-radius: 12px;
-      overflow: hidden;
     }
 
     .preview-container.show {
@@ -194,52 +95,49 @@
     }
 
     #preview {
-      width: 100%;
-      max-height: 50vh;
-      border-radius: 12px;
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
       object-fit: contain;
       border: 1px solid var(--pico-border-color);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      background: #f8f9fa;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     .remove-photo {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: -10px;
+      right: -10px;
       background: #dc3545;
       color: white;
       border: none;
       border-radius: 50%;
-      width: 36px;
-      height: 36px;
+      width: 30px;
+      height: 30px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      -webkit-tap-highlight-color: transparent;
     }
 
     .remove-photo:hover,
     .remove-photo:active {
       background: #c82333;
-      transform: scale(1.1);
     }
 
-    /* Video e camera ottimizzati per mobile */
     #video {
+      max-width: 100%;
       width: 100%;
-      max-height: 60vh;
-      border-radius: 12px;
+      height: auto;
+      border-radius: 8px;
       margin-top: 1rem;
       border: 1px solid var(--pico-border-color);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       display: none;
       background: #000;
-      object-fit: cover;
     }
 
     #canvas {
@@ -248,20 +146,20 @@
 
     .camera-controls {
       display: none;
-      flex-direction: column;
-      gap: 0.75rem;
+      gap: 1rem;
+      justify-content: center;
       margin-top: 1rem;
+      flex-wrap: wrap;
     }
 
     .camera-controls.show {
       display: flex;
     }
 
-    /* File info ottimizzato */
     .file-info {
       margin-top: 1rem;
       padding: 0.75rem;
-      border-radius: 8px;
+      border-radius: 6px;
       background: var(--pico-card-background-color);
       border: 1px solid var(--pico-border-color);
       display: none;
@@ -275,44 +173,64 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: var(--pico-color);
-      word-break: break-word;
     }
 
     .file-info svg {
       width: 16px;
       height: 16px;
       color: var(--pico-primary);
-      flex-shrink: 0;
     }
 
     .drag-text {
-      display: none; /* Nascosto su mobile */
-    }
-
-    /* Status camera */
-    .camera-status {
-      padding: 0.75rem;
-      border-radius: 8px;
-      margin: 0.5rem 0;
+      color: var(--pico-muted-color);
       font-size: 0.9rem;
-      text-align: center;
+      margin-top: 0.5rem;
     }
 
-    .camera-status.loading {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
+    .home-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 999;
+      padding: 0.5rem 0.75rem;
+      background: var(--pico-primary);
+      color: var(--pico-primary-inverse);
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    /* Messaggi */
+    .home-btn:hover,
+    .home-btn:active {
+      background: var(--pico-primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .home-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    main.container {
+      padding-top: 1rem;
+    }
+
     .message {
       padding: 1rem;
-      border-radius: 8px;
+      border-radius: 6px;
       margin-bottom: 1rem;
       font-weight: 500;
-      font-size: 0.9rem;
     }
 
     .message.error {
@@ -333,160 +251,114 @@
       border: 1px solid #bee5eb;
     }
 
-    /* Submit button ottimizzato */
-    button[type="submit"] {
-      width: 100%;
-      padding: 1rem;
-      font-size: 1.1rem;
-      font-weight: 600;
-      border-radius: 12px;
-      margin-top: 1rem;
-      min-height: 50px;
-      background: linear-gradient(45deg, var(--pico-primary), var(--pico-secondary));
-      border: none;
-      color: white;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      transition: all 0.2s ease;
+    .camera-status {
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      text-align: center;
     }
 
-    button[type="submit"]:hover,
-    button[type="submit"]:active {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    .camera-status.loading {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
     }
 
-    /* Landscape orientation adjustments */
-    @media screen and (orientation: landscape) and (max-height: 500px) {
-      .mobile-header {
-        padding: 0.5rem 1rem;
+    @media (max-width: 768px) {
+      .photo-buttons {
+        flex-direction: column;
+        align-items: center;
       }
       
-      main.container {
-        padding-top: 50px;
+      .photo-btn {
+        width: 100%;
+        max-width: 200px;
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
       }
-      
-      h1 {
-        font-size: 1.3rem;
-        margin-bottom: 1rem;
+
+      .home-btn {
+        top: 15px;
+        left: 15px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
       }
-      
+
+      .home-btn svg {
+        width: 14px;
+        height: 14px;
+      }
+
       #video {
-        max-height: 40vh;
+        max-height: 60vh;
+      }
+
+      .drag-text {
+        display: none; /* Nascondi drag&drop su mobile */
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem 0.5rem;
       }
       
       .photo-section {
-        margin: 1rem 0;
-        padding: 0.75rem;
-      }
-    }
-
-    /* iPhone SE e schermi molto piccoli */
-    @media (max-width: 375px) {
-      .container {
-        padding: 0.5rem;
-      }
-      
-      h1 {
-        font-size: 1.3rem;
-      }
-      
-      .photo-btn {
-        font-size: 0.95rem;
-        padding: 0.9rem;
-      }
-      
-      .photo-btn svg {
-        width: 18px;
-        height: 18px;
-      }
-      
-      input, select, textarea {
-        padding: 0.6rem;
-      }
-    }
-
-    /* iPhone 12/13/14 Pro Max */
-    @media (min-width: 428px) {
-      .container {
         padding: 1rem;
+        margin: 1rem 0;
       }
-      
-      .photo-buttons {
-        flex-direction: row;
-        gap: 1rem;
-      }
-      
-      .photo-btn {
-        flex: 1;
-      }
-    }
 
-    /* Dark mode ottimizzazioni */
-    @media (prefers-color-scheme: dark) {
-      .mobile-header {
-        background: rgba(17, 17, 17, 0.95);
-        backdrop-filter: blur(20px);
+      .camera-controls {
+        flex-direction: column;
+        align-items: center;
       }
-      
-      #preview {
-        background: #1a1a1a;
-      }
-    }
 
-    /* Accessibilità */
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        transition: none !important;
-        animation: none !important;
+      .camera-controls .photo-btn {
+        width: 100%;
+        max-width: 180px;
       }
-    }
-
-    /* Focus visible per navigazione da tastiera */
-    .photo-btn:focus-visible,
-    button:focus-visible {
-      outline: 3px solid var(--pico-primary);
-      outline-offset: 2px;
     }
   </style>
 </head>
 <body>
-  <div class="mobile-header">
-    <a href="/admin" class="home-btn">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-      </svg>
-      Home
-    </a>
-  </div>
+  <a href="/admin" class="home-btn">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+    </svg>
+    Home
+  </a>
 
   <main class="container">
-    <h1>📱 Aggiungi Nuovo Prodotto</h1>
+    <h1>Aggiungi Nuovo Prodotto</h1>
 
     <form id="productForm" action="/addProduct" method="POST" enctype="multipart/form-data">
-      <label for="nome">📝 Nome prodotto</label>
-      <input type="text" id="nome" name="nome" required placeholder="Es. Caffè Espresso" />
+      <label for="nome">Nome prodotto</label>
+      <input type="text" id="nome" name="nome" required />
 
-      <label for="descrizione">📄 Descrizione</label>
-      <textarea id="descrizione" name="descrizione" rows="3" required placeholder="Descrivi il prodotto..."></textarea>
+      <label for="descrizione">Descrizione</label>
+      <textarea id="descrizione" name="descrizione" rows="4" required></textarea>
 
-      <label for="prezzo">💰 Prezzo (€)</label>
-      <input type="number" id="prezzo" name="prezzo" step="0.01" min="0" required placeholder="0.00" />
+      <label for="prezzo">Prezzo (€)</label>
+      <input type="number" id="prezzo" name="prezzo" step="0.01" min="0" required />
      
-      <label for="tipo">🏷️ Tipo di prodotto</label>
+      <!-- Tipo prodotto -->
+      <label for="tipo">Tipo di prodotto</label>
       <select id="tipo" name="tipo" required>
         <option value="">-- Seleziona tipo --</option>
-        <option value="food">🍕 Cibo</option>
-        <option value="drink">🥤 Bevanda</option>
+        <option value="food">Cibo</option>
+        <option value="drink">Bevanda</option>
       </select>
+    
 
-      <label>📸 Foto prodotto</label>
+      <label>Foto prodotto</label>
       <div class="photo-section" id="photoSection">
         <div class="photo-buttons">
           <button type="button" class="photo-btn" id="fileBtn">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
-            <p color="white">📁 Scegli dalla Galleria</p>
+            Scegli File
           </button>
           
           <button type="button" class="photo-btn" id="cameraBtn">
@@ -494,9 +366,11 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
-            <p color="white">📷 Scatta Foto</p>
+            Scatta Foto
           </button>
         </div>
+        
+        <p class="drag-text">Oppure trascina qui un'immagine</p>
         
         <input type="file" id="fileInput" name="foto" accept="image/*" capture="environment" />
         
@@ -512,7 +386,7 @@
 
       <div class="preview-container" id="previewContainer">
         <img id="preview" alt="Anteprima immagine" />
-        <button type="button" class="remove-photo" id="removePhoto" aria-label="Rimuovi foto">×</button>
+        <button type="button" class="remove-photo" id="removePhoto">×</button>
       </div>
 
       <video id="video" autoplay playsinline muted></video>
@@ -523,18 +397,18 @@
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
           </svg>
-          📸 Cattura Foto
+          Cattura
         </button>
         
         <button type="button" class="photo-btn" id="cancelCameraBtn">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
-          ❌ Annulla
+          Annulla
         </button>
       </div>
 
-      <button type="submit">✅ Aggiungi Prodotto</button>
+      <button type="submit">Aggiungi Prodotto</button>
     </form>
   </main>
 
@@ -558,14 +432,15 @@
     let cameraActive = false;
     let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // Detecta capacità del dispositivo con controlli migliorati per mobile
+    // Detecta capacità del dispositivo
     function checkCameraSupport() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         return false;
       }
       
-      // Controlli specifici per iOS
+      // Per iOS Safari, controllo più specifico
       if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        // iOS 14.3+ supporta getUserMedia in Safari
         const version = navigator.userAgent.match(/OS (\d+)_(\d+)/);
         if (version) {
           const major = parseInt(version[1]);
@@ -577,16 +452,10 @@
       return true;
     }
 
-    // File selection ottimizzato per mobile
+    // File selection
     fileBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
-      // Haptic feedback se disponibile
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-      
       fileInput.click();
     });
 
@@ -597,13 +466,7 @@
         const file = fileInput.files[0];
         
         if (!file.type.startsWith('image/')) {
-          showMessage('❌ Per favore seleziona un file immagine valido.', 'error');
-          return;
-        }
-        
-        // Controllo dimensione file (max 10MB)
-        if (file.size > 10 * 1024 * 1024) {
-          showMessage('❌ Il file è troppo grande. Massimo 10MB.', 'error');
+          showMessage('Per favore seleziona un file immagine valido.', 'error');
           return;
         }
         
@@ -620,13 +483,6 @@
       preview.src = url;
       previewContainer.classList.add('show');
       
-      // Scroll to preview su mobile
-      if (isMobile) {
-        setTimeout(() => {
-          previewContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
-      }
-      
       preview.onload = () => {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       };
@@ -640,12 +496,8 @@
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    // Remove photo con haptic feedback
+    // Remove photo
     removePhoto.addEventListener('click', () => {
-      if (navigator.vibrate) {
-        navigator.vibrate(100);
-      }
-      
       fileInput.value = '';
       preview.src = '';
       previewContainer.classList.remove('show');
@@ -653,40 +505,40 @@
       fileName.textContent = '';
     });
 
-    // Camera functionality completamente ottimizzata per mobile
+    // Camera functionality ottimizzata per mobile
     cameraBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
       
       if (cameraActive) return;
       
-      // Haptic feedback
-      if (navigator.vibrate) {
-        navigator.vibrate([50, 50, 50]);
-      }
-      
+      // Controllo supporto fotocamera
       if (!checkCameraSupport()) {
+        // Fallback: usa l'input file con capture
         if (isMobile) {
-          showMessage('📱 Usa il pulsante "Scegli dalla Galleria" per accedere alle foto.', 'info');
+          showMessage('Usa il pulsante "Scegli File" per accedere alla fotocamera.', 'info');
           fileInput.setAttribute('capture', 'environment');
           fileInput.click();
           return;
         } else {
-          showMessage('❌ La fotocamera non è supportata su questo browser.', 'error');
+          showMessage('La fotocamera non è supportata su questo browser.', 'error');
           return;
         }
       }
       
-      showCameraStatus('📷 Avvio fotocamera...', 'loading');
+      showCameraStatus('Avvio fotocamera...', 'loading');
       
       try {
-        // Configurazioni ottimizzate per mobile
+        // Configurazioni diverse per mobile e desktop
         const constraints = {
-          video: {
+          video: isMobile ? {
             facingMode: { ideal: 'environment' },
             width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 },
-            aspectRatio: { ideal: 16/9 }
+            height: { ideal: 720, max: 1080 }
+          } : {
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
           },
           audio: false
         };
@@ -695,11 +547,14 @@
           stream = await navigator.mediaDevices.getUserMedia(constraints);
         } catch (err) {
           console.log('Tentativo con camera anteriore:', err);
+          // Fallback: camera anteriore
           const fallbackConstraints = {
-            video: {
+            video: isMobile ? {
               facingMode: 'user',
               width: { ideal: 640 },
               height: { ideal: 480 }
+            } : {
+              facingMode: 'user'
             },
             audio: false
           };
@@ -709,6 +564,9 @@
         if (stream && stream.getVideoTracks().length > 0) {
           video.srcObject = stream;
           
+          // Attendiamo che il video sia pronto
+          const playPromise = video.play();
+          
           await new Promise((resolve, reject) => {
             video.onloadedmetadata = () => {
               video.oncanplay = () => {
@@ -717,26 +575,21 @@
                 cameraControls.classList.add('show');
                 cameraActive = true;
                 
+                // Nascondi preview e file info durante l'uso della camera
                 previewContainer.classList.remove('show');
                 fileInfo.classList.remove('show');
                 fileInput.value = '';
-                
-                // Scroll to video su mobile
-                if (isMobile) {
-                  setTimeout(() => {
-                    video.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }, 300);
-                }
                 
                 resolve();
               };
             };
             
             video.onerror = reject;
+            
+            // Timeout di sicurezza
             setTimeout(() => reject(new Error('Timeout')), 10000);
           });
           
-          const playPromise = video.play();
           if (playPromise) {
             await playPromise;
           }
@@ -749,22 +602,25 @@
         console.error('Camera error:', err);
         hideCameraStatus();
         
-        let errorMsg = '❌ Impossibile accedere alla fotocamera. ';
+        let errorMsg = 'Impossibile accedere alla fotocamera. ';
         
         if (err.name === 'NotAllowedError') {
-          errorMsg += 'Permesso negato. Verifica le impostazioni del browser.';
+          errorMsg += 'Permesso negato. Verifica le impostazioni del browser e consenti l\'accesso alla fotocamera.';
         } else if (err.name === 'NotFoundError') {
-          errorMsg += 'Nessuna fotocamera trovata.';
+          errorMsg += 'Nessuna fotocamera trovata sul dispositivo.';
         } else if (err.name === 'NotReadableError') {
-          errorMsg += 'Fotocamera già in uso.';
+          errorMsg += 'Fotocamera già in uso da un\'altra applicazione.';
+        } else if (err.name === 'OverconstrainedError') {
+          errorMsg += 'Configurazione fotocamera non supportata.';
         } else {
           errorMsg += isMobile ? 
-            'Prova ad usare "Scegli dalla Galleria".' : 
+            'Prova ad usare il pulsante "Scegli File" invece.' : 
             'Errore sconosciuto.';
         }
         
         showMessage(errorMsg, 'error');
         
+        // Fallback per mobile: usa input file con capture
         if (isMobile) {
           setTimeout(() => {
             fileInput.setAttribute('capture', 'environment');
@@ -774,19 +630,13 @@
       }
     });
 
-    // Cattura foto con feedback migliorato
     captureBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       
       if (!cameraActive || !video.videoWidth || !video.videoHeight) {
-        showMessage('⏳ Fotocamera non pronta. Attendi un momento.', 'error');
+        showMessage('Fotocamera non pronta. Attendi un momento e riprova.', 'error');
         return;
-      }
-      
-      // Haptic feedback per cattura
-      if (navigator.vibrate) {
-        navigator.vibrate(200);
       }
       
       try {
@@ -794,11 +644,12 @@
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
+        // Disegna il frame corrente
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         canvas.toBlob(blob => {
           if (!blob) {
-            showMessage('❌ Errore nella cattura dell\'immagine.', 'error');
+            showMessage('Errore nella cattura dell\'immagine.', 'error');
             return;
           }
           
@@ -810,12 +661,12 @@
 
           displayFile(file);
           stopCamera();
-          showMessage('✅ Foto catturata con successo!', 'success');
+          showMessage('Foto catturata con successo!', 'success');
         }, 'image/jpeg', 0.85);
         
       } catch (err) {
         console.error('Errore nella cattura:', err);
-        showMessage('❌ Errore nella cattura dell\'immagine.', 'error');
+        showMessage('Errore nella cattura dell\'immagine.', 'error');
       }
     });
 
@@ -855,39 +706,57 @@
       }
     }
 
-    // Form validation ottimizzata per mobile
+    // Drag and drop (solo desktop)
+    if (!isMobile) {
+      photoSection.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        photoSection.classList.add('dragover');
+      });
+
+      photoSection.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        if (!photoSection.contains(e.relatedTarget)) {
+          photoSection.classList.remove('dragover');
+        }
+      });
+
+      photoSection.addEventListener('drop', (e) => {
+        e.preventDefault();
+        photoSection.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type.startsWith('image/')) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(files[0]);
+          fileInput.files = dataTransfer.files;
+          
+          displayFile(files[0]);
+          stopCamera();
+        } else {
+          showMessage('Per favore trascina un file immagine valido.', 'error');
+        }
+      });
+    }
+
+    // Form validation
     document.getElementById('productForm').addEventListener('submit', (e) => {
       if (!fileInput.files || fileInput.files.length === 0) {
         e.preventDefault();
-        showMessage('📸 Per favore seleziona o scatta una foto del prodotto.', 'error');
-        
-        // Scroll al form
-        photoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showMessage('Per favore seleziona o scatta una foto del prodotto.', 'error');
         return false;
       }
       
       const file = fileInput.files[0];
       if (!file.type.startsWith('image/')) {
         e.preventDefault();
-        showMessage('❌ Il file selezionato non è un\'immagine valida.', 'error');
+        showMessage('Il file selezionato non è un\'immagine valida.', 'error');
         return false;
       }
       
       if (file.size > 10 * 1024 * 1024) {
         e.preventDefault();
-        showMessage('❌ Il file è troppo grande. Massimo 10MB.', 'error');
+        showMessage('Il file è troppo grande. Massimo 10MB.', 'error');
         return false;
-      }
-
-      // Feedback visivo durante l'invio
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      const originalText = submitBtn.innerHTML;
-      submitBtn.innerHTML = '⏳ Invio in corso...';
-      submitBtn.disabled = true;
-      
-      // Haptic feedback per submit
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100]);
       }
     });
 
@@ -902,13 +771,6 @@
       const form = document.getElementById('productForm');
       form.insertBefore(message, form.firstChild);
       
-      // Scroll al messaggio su mobile
-      if (isMobile) {
-        setTimeout(() => {
-          message.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
-      }
-      
       setTimeout(() => {
         if (message.parentNode) {
           message.remove();
@@ -916,13 +778,14 @@
       }, 5000);
     }
 
-    // Cleanup ottimizzato per mobile
-    function cleanup() {
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
       stopCamera();
-    }
+    });
 
-    window.addEventListener('beforeunload', cleanup);
-    window.addEventListener('pagehide', cleanup);
+    window.addEventListener('pagehide', () => {
+      stopCamera();
+    });
 
     // Gestione visibilità pagina per mobile
     document.addEventListener('visibilitychange', () => {
@@ -931,50 +794,19 @@
       }
     });
 
-    // Gestione orientamento schermo
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => {
-        if (cameraActive && video.srcObject) {
-          // Ridimensiona video dopo cambio orientamento
-          video.style.height = 'auto';
-        }
-      }, 500);
-    });
-
-    // Prevent zoom on double tap per iOS
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function (event) {
-      const now = (new Date()).getTime();
-      if (now - lastTouchEnd <= 300) {
-        event.preventDefault();
-      }
-      lastTouchEnd = now;
-    }, false);
-
-    // Test iniziale capacità fotocamera con UI adattiva
+    // Test iniziale capacità fotocamera
     document.addEventListener('DOMContentLoaded', () => {
       if (!checkCameraSupport() && isMobile) {
+        // Modifica il testo del pulsante per mobile senza supporto getUserMedia
         cameraBtn.innerHTML = `
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
           </svg>
-          📱 Usa Fotocamera
+          Usa Fotocamera
         `;
       }
-      
-      // Auto-focus sul primo campo per desktop
-      if (!isMobile) {
-        document.getElementById('nome').focus();
-      }
     });
-
-    // Service Worker per PWA (opzionale)
-    if ('serviceWorker' in navigator && isMobile) {
-      window.addEventListener('load', () => {
-        // Qui si potrebbe registrare un service worker per funzionalità offline
-      });
-    }
   </script>
 </body>
 </html>
