@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ricerca Prodotti - Disponibilità</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    .home-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 999;
+      padding: 0.5rem 0.75rem;
+      background: var(--pico-primary);
+      color: var(--pico-primary-inverse);
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    }
+
+    .home-btn:hover {
+      background: var(--pico-primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .home-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .search-container {
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .search-input {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-input input {
+      padding-right: 3rem;
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--pico-muted-color);
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 3px;
+      display: none;
+      transition: all 0.2s ease;
+    }
+
+    .clear-btn:hover {
+      color: var(--pico-color);
+      background: var(--pico-border-color);
+    }
+
+    .clear-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .search-btn {
+      background: var(--pico-primary);
+      color: var(--pico-primary-inverse);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .search-btn:hover {
+      background: var(--pico-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .search-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .search-info {
+      font-size: 0.9rem;
+      color: var(--pico-muted-color);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .product-card {
+      background: var(--pico-card-background-color);
+      border: 1px solid var(--pico-border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--pico-border-color);
+      margin-bottom: 1rem;
+    }
+
+    .product-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--pico-color);
+    }
+
+    .product-description {
+      color: var(--pico-muted-color);
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .product-price {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--pico-primary);
+      margin-bottom: 1rem;
+    }
+
+    .product-type {
+      display: inline-block;
+      background: var(--pico-secondary);
+      color: var(--pico-secondary-inverse);
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    .availability-section {
+      border-top: 1px solid var(--pico-border-color);
+      padding-top: 1rem;
+      margin-top: 1rem;
+    }
+
+    .availability-label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .availability-options {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .availability-option {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .availability-option input[type="radio"] {
+      margin: 0;
+    }
+
+    .status-presente {
+      color: #28a745;
+      font-weight: 500;
+    }
+
+    .status-esaurito {
+      color: #dc3545;
+      font-weight: 500;
+    }
+
+    .update-btn {
+      width: 100%;
+      background: var(--pico-primary);
+      color: var(--pico-primary-inverse);
+      border: none;
+      padding: 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .update-btn:hover {
+      background: var(--pico-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .update-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .update-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .loading svg {
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--pico-muted-color);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .success-message, .error-message {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    main.container {
+      padding-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .search-container {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .products-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .availability-options {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .home-btn {
+        top: 15px;
+        left: 15px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Pulsante Home sticky -->
+  <a href="/admin" class="home-btn">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+    </svg>
+    Home
+  </a>
+
+  <main class="container">
+    <h1 align="center">Gestione Disponibilità Prodotti</h1>
+
+    <!-- Messaggi di successo/errore -->
+    <div id="successMessage" class="success-message"></div>
+    <div id="errorMessage" class="error-message"></div>
+
+    <!-- Barra di ricerca -->
+    <div class="search-container">
+      <div class="search-input">
+        <label for="searchInput">Cerca prodotto</label>
+        <input type="text" id="searchInput" placeholder="Inserisci nome del prodotto..." />
+        <button id="clearBtn" class="clear-btn" title="Cancella ricerca">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <button id="searchBtn" class="search-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        Cerca
+      </button>
+    </div>
+
+    <!-- Info ricerca -->
+    <div id="searchInfo" class="search-info" style="display: none;"></div>
+
+    <!-- Loading State -->
+    <div id="loading" class="loading" style="display: none;">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Ricerca in corso...
+    </div>
+
+    <!-- Griglia Prodotti -->
+    <div id="productsGrid" class="products-grid"></div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+      <h3>Nessun prodotto trovato</h3>
+      <p>Prova a modificare la tua ricerca o cerca tutti i prodotti lasciando vuoto il campo.</p>
+    </div>
+  </main>
+
+  <script>
+    let allProducts = [];
+    let filteredProducts = [];
+    let searchTimeout = null;
+
+    // Elementi DOM
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const searchInfo = document.getElementById('searchInfo');
+    const loading = document.getElementById('loading');
+    const productsGrid = document.getElementById('productsGrid');
+    const emptyState = document.getElementById('emptyState');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // Carica tutti i prodotti all'avvio
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAllProducts();
+    });
+
+    // Event listeners per ricerca in tempo reale
+    searchInput.addEventListener('input', (e) => {
+      const value = e.target.value.trim();
+      
+      // Mostra/nascondi il pulsante clear
+      clearBtn.style.display = value ? 'block' : 'none';
+      
+      // Debounce per evitare troppe chiamate
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        performSearch();
+      }, 150); // Attesa di 150ms dopo che l'utente smette di digitare
+    });
+
+    // Event listeners aggiuntivi
+    searchBtn.addEventListener('click', performSearch);
+    clearBtn.addEventListener('click', clearSearch);
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        clearTimeout(searchTimeout);
+        performSearch();
+      }
+    });
+
+    // Funzione per pulire la ricerca
+    function clearSearch() {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      searchInfo.style.display = 'none';
+      filteredProducts = allProducts;
+      
+      if (allProducts.length === 0) {
+        showEmptyState();
+      } else {
+        displayProducts(filteredProducts);
+      }
+    }
+
+    // Funzione per caricare tutti i prodotti
+    async function loadAllProducts() {
+      try {
+        showLoading(true);
+        hideMessages();
+
+        const response = await fetch('/api/products');
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || 'Errore nel caricamento dei prodotti');
+        }
+
+        allProducts = data.products || [];
+        console.log("product", allProducts)
+        filteredProducts = allProducts;
+        
+        if (allProducts.length === 0) {
+          showEmptyState();
+        } else {
+          displayProducts(filteredProducts);
+          updateSearchInfo();
+        }
+
+      } catch (error) {
+        console.error('Errore nel caricamento dei prodotti:', error);
+        showError('Errore nel caricamento dei prodotti: ' + error.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Funzione per eseguire la ricerca
+    function performSearch() {
+      const searchTerm = searchInput.value.trim().toLowerCase();
+      
+      if (searchTerm === '') {
+        // Se la ricerca è vuota, mostra tutti i prodotti
+        filteredProducts = allProducts;
+        searchInfo.style.display = 'none';
+      } else {
+        // Filtra i prodotti in base al termine di ricerca
+        filteredProducts = allProducts.filter(product => 
+          product.nome.toLowerCase().includes(searchTerm) ||
+          product.descrizione.toLowerCase().includes(searchTerm) ||
+          product.tipo.toLowerCase().includes(searchTerm)
+        );
+        updateSearchInfo(searchTerm);
+      }
+
+      if (filteredProducts.length === 0) {
+        showEmptyState();
+      } else {
+        displayProducts(filteredProducts);
+      }
+    }
+
+    // Funzione per aggiornare le info di ricerca
+    function updateSearchInfo(searchTerm = null) {
+      if (searchTerm) {
+        const totalProducts = allProducts.length;
+        const foundProducts = filteredProducts.length;
+        searchInfo.textContent = `Trovati ${foundProducts} prodotti su ${totalProducts} per "${searchTerm}"`;
+        searchInfo.style.display = 'block';
+      } else {
+        const totalProducts = allProducts.length;
+        if (totalProducts > 0) {
+          searchInfo.textContent = `Visualizzati tutti i ${totalProducts} prodotti`;
+          searchInfo.style.display = 'block';
+        }
+      }
+    }
+
+    // Funzione per visualizzare i prodotti
+    function displayProducts(productList) {
+      productsGrid.innerHTML = '';
+      emptyState.style.display = 'none';
+
+      productList.forEach(product => {
+        const productCard = createProductCard(product);
+        productsGrid.appendChild(productCard);
+      });
+
+      productsGrid.style.display = 'grid';
+    }
+
+    // Funzione per creare una card prodotto
+    function createProductCard(product) {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      
+      // Determina lo stato attuale della disponibilità
+      
+      const isAvailable = product.disponibile !== 0; // Default a true se non specificato
+      
+      card.innerHTML = `
+        <img src="/${product.foto}" alt="${escapeHtml(product.nome)}" class="product-image" 
+             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2NjYyIgdmlld0JveD0iMCAwIDI0IDI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Im0yMS43IDE4LjMtMS40LTEuNGMuOC0uOS4xLTIuOC0uMS0uMWwtLjItLjJjLS4yLS4yLS41LS4zLS44LS4zSDE5VjZhMSAxIDAgMCAwLTEtMUg2YTEgMSAwIDAgMC0xIDF2MTBIMmExIDEgMCAwIDAtMSAxdjEuNWwxLjMgMS4zYy4yLjIuNS4zLjguM0gxOWMuMyAwIC42LjEuOC0uM3oiLz48L3N2Zz4='">
+        
+        <h3 class="product-name">${escapeHtml(product.nome)}</h3>
+        
+        <p class="product-description">${escapeHtml(product.descrizione)}</p>
+        
+        <div class="product-price">€${parseFloat(product.prezzo).toFixed(2)}</div>
+        
+        <div class="product-type">${escapeHtml(product.tipo)}</div>
+        
+        <div class="availability-section">
+          <label class="availability-label">Disponibilità:</label>
+          
+          <div class="availability-options">
+            <div class="availability-option">
+              <input type="radio" id="presente_${product.id}" name="availability_${product.id}" value="true" ${isAvailable ? 'checked' : ''}>
+              <label for="presente_${product.id}" class="status-presente">Presente</label>
+            </div>
+            <div class="availability-option">
+              <input type="radio" id="esaurito_${product.id}" name="availability_${product.id}" value="false" ${!isAvailable ? 'checked' : ''}>
+              <label for="esaurito_${product.id}" class="status-esaurito">Esaurito</label>
+            </div>
+          </div>
+          
+          <button class="update-btn" onclick="updateAvailability(${product.id})">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Aggiorna Disponibilità
+          </button>
+        </div>
+      `;
+      
+      return card;
+    }
+
+    // Funzione per aggiornare la disponibilità
+    async function updateAvailability(productId) {
+      const radioButton = document.querySelector(`input[name="availability_${productId}"]:checked`);
+      
+      if (!radioButton) {
+        showError('Seleziona una disponibilità per il prodotto');
+        return;
+      }
+
+      const isAvailable = radioButton.value === 'true';
+      const updateBtn = event.target.closest('.update-btn');
+      
+      try {
+        // Disabilita il pulsante durante l'aggiornamento
+        updateBtn.disabled = true;
+        updateBtn.innerHTML = `
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Aggiornamento...
+        `;
+
+        // Chiamata API per aggiornare la disponibilità
+        const response = await fetch(`/api/products/${productId}/availability`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            disponibile: isAvailable
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Errore HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Errore durante l\'aggiornamento');
+        }
+
+        // Aggiorna il prodotto nella lista locale
+        const productIndex = allProducts.findIndex(p => p.id === productId);
+        if (productIndex !== -1) {
+          allProducts[productIndex].disponibile = isAvailable;
+        }
+
+        showSuccess(`Disponibilità aggiornata: ${isAvailable ? 'Presente' : 'Esaurito'}`);
+
+      } catch (error) {
+        console.error('Errore aggiornamento disponibilità:', error);
+        showError('Errore durante l\'aggiornamento: ' + error.message);
+      } finally {
+        // Riabilita il pulsante
+        updateBtn.disabled = false;
+        updateBtn.innerHTML = `
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Aggiorna Disponibilità
+        `;
+      }
+    }
+
+    // Funzioni di utilità
+    function showLoading(show) {
+      loading.style.display = show ? 'block' : 'none';
+      if (show) {
+        productsGrid.style.display = 'none';
+        emptyState.style.display = 'none';
+      }
+    }
+
+    function showEmptyState() {
+      emptyState.style.display = 'block';
+      productsGrid.style.display = 'none';
+      searchInfo.style.display = 'none';
+    }
+
+    function showSuccess(message) {
+      hideMessages();
+      successMessage.textContent = message;
+      successMessage.style.display = 'block';
+      setTimeout(hideMessages, 5000);
+    }
+
+    function showError(message) {
+      hideMessages();
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+      setTimeout(hideMessages, 8000);
+    }
+
+    function hideMessages() {
+      successMessage.style.display = 'none';
+      errorMessage.style.display = 'none';
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.toString().replace(/[&<>"']/g, m => map[m]);
+    }
+  </script>
+</body>
+</html>

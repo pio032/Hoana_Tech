@@ -88,11 +88,11 @@ function requireRole(roles) {
     if (!req.session || !req.session.user) {
       return res.status(401).json({ error: 'Accesso non autorizzato' });
     }
-    
+
     if (!roles.includes(req.session.user.tipo)) {
       return res.status(403).json({ error: 'Permessi insufficienti' });
     }
-    
+
     return next();
   };
 }
@@ -131,7 +131,7 @@ app.post('/login', (req, res) => {
 
     if (results.length > 0) {
       const user = results[0];
-      
+
       // Crea la sessione
       req.session.user = {
         id: user.id,
@@ -140,7 +140,7 @@ app.post('/login', (req, res) => {
       };
 
       console.log(`✅ Login effettuato: ${user.username} (${user.tipo})`);
-      
+
       // Reindirizza alla dashboard appropriata
       res.redirect(getDashboardPath(user.tipo));
     } else {
@@ -457,7 +457,7 @@ app.get("/admin/prod", requireRole(['admin']), (req, res) => {
 
 // Ottieni tutti i prodotti
 app.get('/api/products', requireAuth, (req, res) => {
-  const query = 'SELECT id, nome, descrizione, prezzo, fotoPath as foto, tipo FROM prodotti';
+  const query = 'SELECT id, nome, descrizione, prezzo, fotoPath as foto, tipo, disponibile FROM prodotti';
 
   conn.query(query, (err, results) => {
     if (err) {
@@ -619,6 +619,56 @@ app.get('/api/statistiche', requireRole(['admin']), (req, res) => {
   );
 });
 
+app.get("/admin/disp", (req, res) => {
+  res.sendFile(path.join(__dirname, 'secure/admin/disp.html'));
+})
+
+app.put('/api/products/:id/availability', (req, res) => {
+  const productId = req.params.id;
+  const { disponibile } = req.body; 
+
+  console.log("cio che vedo in availability", disponibile, productId);
+
+  // Validazione input
+  if (typeof disponibile !== 'boolean') {
+    return res.status(400).json({
+      success: false,
+      message: 'Il campo disponibile deve essere un boolean'
+    });
+  }
+
+  conn.query(
+    `UPDATE prodotti 
+     SET disponibile = ? 
+     WHERE id = ?`,
+    [disponibile, productId],
+    (err, results) => {
+      if (err) {
+        console.log("errore query:", err);
+        return res.status(500).json({
+          success: false,
+          message: 'Errore database: ' + err.message
+        });
+      }
+
+      // Controlla se almeno una riga è stata modificata
+      if (results.affectedRows > 0) {
+        console.log("Aggiornamento riuscito, righe modificate:", results.affectedRows);
+        res.json({
+          success: true,
+          message: 'Disponibilità aggiornata con successo'
+        });
+      } else {
+        console.log("Nessuna riga modificata, probabilmente ID non trovato");
+        res.status(404).json({
+          success: false,
+          message: 'Prodotto non trovato'
+        });
+      }
+    }
+  );
+});
+
 //----------------------------------------------------------------CAMERIERE--------------------------------------------------------------
 
 app.get("/doComanda", requireRole(['cameriere', 'admin']), (req, res) => {
@@ -628,7 +678,7 @@ app.get("/doComanda", requireRole(['cameriere', 'admin']), (req, res) => {
 app.post("/api/orders", requireRole(['cameriere', 'admin']), (req, res) => {
   const { tavolo, items } = req.body;
   console.log("Ordine ricevuto da:", req.session.user.username, "- Dati:", req.body);
-  
+
   // Validazione input
   if (!tavolo || !items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Dati mancanti o invalidi" });
@@ -846,7 +896,7 @@ app.post("/api/cameriere/done", requireRole(['cameriere', 'admin']), (req, res) 
   });
 });
 
-app.get("/viewTable", (req, res)=>{
+app.get("/viewTable", (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/cam/table.html'));
 })
 
@@ -979,9 +1029,9 @@ app.post('/api/bancone/complete', requireRole(['bancone', 'admin']), (req, res) 
       console.error('Errore aggiornando stato_drink:', err);
       return res.status(500).json({ error: 'Errore aggiornamento stato_drink' });
     }
-    
+
     console.log(`🍹 Comanda bancone #${comandaId} completata da ${req.session.user.username}`);
-    
+
     res.sendStatus(200);
   });
 });
@@ -989,7 +1039,7 @@ app.post('/api/bancone/complete', requireRole(['bancone', 'admin']), (req, res) 
 //---------------------------------------------------------------CASSA--------------------------------------------------------------------
 
 // GET /api/cassa - Restituisce TUTTI gli ordini (pagati e non pagati) per mantenere la persistenza
-app.get('/api/cassa', requireRole(['cassa', 'admin',  'cameriere']), (req, res) => {
+app.get('/api/cassa', requireRole(['cassa', 'admin', 'cameriere']), (req, res) => {
   const queryCassa = `
     SELECT 
       o.id,
@@ -1070,8 +1120,8 @@ app.post('/api/cassa/paga-ordine', requireRole(['cassa', 'admin']), (req, res) =
 
           console.log(`💰 Ordine #${ordineId} pagato da ${req.session.user.username}: ${ordine.nome_prodotto} - €${ordine.prezzo}`);
 
-          res.json({ 
-            success: true, 
+          res.json({
+            success: true,
             id: ordineId,
             message: 'Pagamento registrato con successo',
             prodotto: ordine.nome_prodotto,
@@ -1127,8 +1177,8 @@ app.post('/api/cassa/annulla-pagamento', requireRole(['cassa', 'admin']), (req, 
 
           console.log(`🔄 Pagamento annullato da ${req.session.user.username} per ordine #${ordineId}: ${ordine.nome_prodotto}`);
 
-          res.json({ 
-            success: true, 
+          res.json({
+            success: true,
             id: ordineId,
             message: 'Pagamento annullato con successo',
             prodotto: ordine.nome_prodotto,
@@ -1173,8 +1223,8 @@ app.post('/api/cassa/paga-tavolo', requireRole(['cassa', 'admin']), (req, res) =
 
       if (verificaResult[0].ordini_non_pagati > 0) {
         return conn.rollback(() => {
-          res.status(400).json({ 
-            error: `Ci sono ancora ${verificaResult[0].ordini_non_pagati} ordini non pagati nel tavolo ${tavolo}` 
+          res.status(400).json({
+            error: `Ci sono ancora ${verificaResult[0].ordini_non_pagati} ordini non pagati nel tavolo ${tavolo}`
           });
         });
       }
@@ -1224,7 +1274,7 @@ app.use((req, res) => {
 // ⚠️ OPZIONALE: Gestione errori generici (deve essere l'ultimo middleware)
 app.use((err, req, res, next) => {
   console.error('Errore server:', err);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Errore interno del server',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Qualcosa è andato storto'
   });
