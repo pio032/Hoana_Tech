@@ -455,7 +455,7 @@ app.get("/admin/prod", requireRole(['admin']), (req, res) => {
   res.sendFile(path.join(__dirname, 'secure/admin/product.html'));
 });
 
-// Ottieni tutti i prodotti
+
 app.get('/api/products', requireAuth, (req, res) => {
   const query = 'SELECT id, nome, descrizione, prezzo, fotoPath as foto, tipo, disponibile FROM prodotti';
 
@@ -677,7 +677,7 @@ app.get("/doComanda", requireRole(['cameriere', 'admin']), (req, res) => {
 
 app.post("/api/orders", requireRole(['cameriere', 'admin']), (req, res) => {
   const { tavolo, items } = req.body;
-  console.log("Ordine ricevuto da:", req.session.user.username, "- Dati:", req.body);
+
 
   // Validazione input
   if (!tavolo || !items || !Array.isArray(items) || items.length === 0) {
@@ -708,30 +708,27 @@ app.post("/api/orders", requireRole(['cameriere', 'admin']), (req, res) => {
       });
     }
 
-    // Crea una mappa nome -> tipo
+ 
     const tipoMap = {};
     risultati.forEach(r => {
       tipoMap[r.nome] = r.tipo;
     });
 
-    // Determina se ci sono food/drink
+  
     const hasFood = items.some(item => tipoMap[item.name] === 'food');
     const hasDrink = items.some(item => tipoMap[item.name] === 'drink');
 
-    // Logica corretta con 'n' aggiunto all'ENUM:
-    // - Se ci sono food: stato='in_corso', altrimenti stato='n' 
-    // - Se ci sono drink: stato_drink='in_corso', altrimenti stato_drink='n'
     const stato = hasFood ? 'in_corso' : 'n';
     const stato_drink = hasDrink ? 'in_corso' : 'n';
 
-    // Inizia la transazione
+ 
     conn.beginTransaction(err => {
       if (err) {
         console.error("Errore avvio transazione:", err);
         return res.status(500).json({ error: "Errore transazione" });
       }
 
-      // Inserisci comanda con query più esplicita
+     
       const insertComandaQuery = "INSERT INTO comanda (tavolo, stato, stato_drink) VALUES (?, ?, ?)";
       const insertComandaValues = [tavolo, stato, stato_drink];
 

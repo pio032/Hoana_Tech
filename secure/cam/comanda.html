@@ -131,10 +131,37 @@
             align-items: center;
             gap: 0.75rem;
             transition: background 0.2s ease;
+            position: relative;
         }
 
-        .product-item:hover {
+        .product-item.available:hover {
             background-color: var(--pico-muted-background-color);
+        }
+
+        /* Stili per prodotti non disponibili */
+        .product-item.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: rgba(220, 38, 127, 0.05);
+        }
+
+        .product-item.unavailable:hover {
+            background-color: rgba(220, 38, 127, 0.05);
+        }
+
+        .product-item.unavailable::after {
+            content: "Non disponibile";
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            background: #dc2626;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            text-transform: uppercase;
         }
 
         .product-item:last-child {
@@ -149,9 +176,14 @@
             flex-shrink: 0;
         }
 
+        .product-item.unavailable .product-img {
+            filter: grayscale(100%);
+        }
+
         .product-info {
             flex: 1;
             min-width: 0;
+            padding-right: 80px; /* Spazio per il badge "Non disponibile" */
         }
 
         .product-name {
@@ -159,6 +191,10 @@
             font-size: 0.85rem;
             margin: 0 0 0.2rem 0;
             color: var(--pico-color);
+        }
+
+        .product-item.unavailable .product-name {
+            text-decoration: line-through;
         }
 
         .product-price {
@@ -354,6 +390,16 @@
             .total-amount {
                 font-size: 1.1rem;
             }
+
+            .product-info {
+                padding-right: 70px;
+            }
+
+            .product-item.unavailable::after {
+                font-size: 0.6rem;
+                padding: 0.15rem 0.4rem;
+                right: 8px;
+            }
         }
 
         /* Scrollbar styling */
@@ -436,9 +482,11 @@
                             price: parseFloat(product.prezzo),
                             description: product.descrizione,
                             foto: product.foto,
-                            tipo: product.tipo // AGGIUNTO CAMPO TIPO
+                            tipo: product.tipo,
+                            disponibilita: product.disponibile // Campo corretto dal backend
                         }));
                         console.log('Prodotti caricati dall\'API:', products);
+                        console.log('Esempio disponibilità primo prodotto:', products[0]?.disponibilita, typeof products[0]?.disponibilita);
                         return;
                     }
                 }
@@ -467,15 +515,23 @@
                 return;
             }
 
-            container.innerHTML = results.map(product => `
-                <div class="product-item" onclick="addToOrder(${product.id})">
-                    <img src="${product.foto}" alt="${product.name}" class="product-img">
-                    <div class="product-info">
-                        <div class="product-name">${product.name}</div>
-                        <div class="product-price">€${product.price.toFixed(2)}</div>
+            container.innerHTML = results.map(product => {
+                const isAvailable = product.disponibilita == 1; // Uso == per confrontare anche stringhe "1"
+                const availabilityClass = isAvailable ? 'available' : 'unavailable';
+                const clickHandler = isAvailable ? `onclick="addToOrder(${product.id})"` : '';
+                
+                console.log(`Prodotto ${product.name}: disponibilita=${product.disponibilita}, tipo=${typeof product.disponibilita}, isAvailable=${isAvailable}`);
+                
+                return `
+                    <div class="product-item ${availabilityClass}" ${clickHandler}>
+                        <img src="${product.foto}" alt="${product.name}" class="product-img">
+                        <div class="product-info">
+                            <div class="product-name">${product.name}</div>
+                            <div class="product-price">€${product.price.toFixed(2)}</div>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             container.style.display = 'block';
         }
@@ -483,6 +539,13 @@
         // Aggiungi prodotto alla comanda
         function addToOrder(productId) {
             const product = products.find(p => p.id === productId);
+            
+            // Controlla se il prodotto è disponibile (1 = disponibile, 0 = non disponibile)
+            if (product.disponibilita != 1) { // Uso != per confrontare anche stringhe "1"
+                alert('Questo prodotto non è attualmente disponibile');
+                return;
+            }
+            
             const existingItem = currentOrder.find(item => item.id === productId);
 
             if (existingItem) {
@@ -495,7 +558,8 @@
                     quantity: 1,
                     foto: product.foto,
                     description: product.description,
-                    tipo: product.tipo // AGGIUNTO CAMPO TIPO
+                    tipo: product.tipo,
+                    disponibilita: product.disponibilita
                 });
             }
 
