@@ -1,29 +1,112 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="it">
 <head>
-  <title>Login Page</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-  <link rel="stylesheet" href="mobile.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="mobile.css">
 </head>
-
 <body>
-  <article class="card-centered">
-  <h2 align="center">Benvenuto in HoTech</h2>
-  <form align="center" action="/login" method="POST">
-    <input type="text" name="username" placeholder="Username" required>
-    <br><br>
-    <input type="password" name="password" placeholder="Password" required>
-    <br><br>
-    <input type="submit" value="Login">
-  </form>
-  </article>
+    <article class="card-centered">
+        <h2 align="center">Benvenuto in HoTech</h2>
+        <form align="center" action="/login" method="POST">
+            <input type="text" name="username" placeholder="Username" required>
+            <br><br>
+            <input type="password" name="password" placeholder="Password" required>
+            <br><br>
+            <input type="submit" value="Login">
+        </form>
+    </article>
 
-<style>
-  .card-centered {
-    max-width: 400px;
-    margin: 2rem auto;
-  }
-</style>
+    <style>
+        .card-centered {
+            max-width: 400px;
+            margin: 2rem auto;
+        }
+
+        /* Ottimizzazioni per mobile */
+        @media screen and (max-width: 768px) {
+            html, body {
+                height: 100vh;
+                overflow: hidden; /* Blocca lo scroll */
+                padding: 0;
+                margin: 0;
+            }
+            
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 1rem;
+                box-sizing: border-box;
+            }
+            
+            .card-centered {
+                max-width: 100%;
+                margin: 0;
+                padding: 1.5rem;
+                width: 100%;
+                max-width: 350px;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            input[type="text"], 
+            input[type="password"] {
+                width: 100%;
+                font-size: 16px; /* Previene zoom su iOS */
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            }
+            
+            input[type="submit"] {
+                width: 100%;
+                padding: 0.75rem;
+                font-size: 1rem;
+                margin-top: 0.5rem;
+            }
+            
+            br {
+                display: none; /* Rimuove i br su mobile */
+            }
+        }
+
+        /* Ottimizzazioni per schermi molto piccoli */
+        @media screen and (max-width: 480px) {
+            html, body {
+                height: 100vh;
+                overflow: hidden;
+            }
+            
+            .card-centered {
+                margin: 0;
+                padding: 1rem;
+                max-width: 300px;
+            }
+            
+            h2 {
+                font-size: 1.3rem;
+                margin-bottom: 1rem;
+            }
+            
+            input[type="text"], 
+            input[type="password"],
+            input[type="submit"] {
+                font-size: 16px;
+                padding: 0.875rem;
+            }
+        }
+
+        /* Miglioramenti per touch */
+        @media (hover: none) and (pointer: coarse) {
+            input[type="submit"] {
+                min-height: 44px; /* Dimensione minima per touch */
+            }
+        }
+    </style>
 </body>
-
 </html>

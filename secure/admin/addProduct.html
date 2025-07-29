@@ -319,6 +319,177 @@
         max-width: 180px;
       }
     }
+   
+@media (max-width: 375px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .photo-section {
+    margin: 1rem 0;
+    padding: 1rem 0.75rem;
+  }
+  
+  .photo-btn {
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+    min-width: 120px;
+  }
+  
+  .photo-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  input, textarea, select {
+    font-size: 16px; /* Previene zoom su iOS */
+  }
+  
+  .file-info {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Migliore gestione dell'orientamento su mobile */
+@media (max-height: 600px) and (orientation: landscape) {
+  #video {
+    max-height: 50vh;
+  }
+  
+  .camera-controls {
+    margin-top: 0.5rem;
+  }
+  
+  .photo-section {
+    margin: 0.75rem 0;
+    padding: 1rem;
+  }
+}
+
+/* Touch-friendly miglioramenti */
+@media (max-width: 768px) {
+  /* Area di tocco più grande per i pulsanti */
+  .photo-btn {
+    min-height: 48px; /* Standard Apple/Google per tocco */
+    touch-action: manipulation;
+  }
+  
+  .remove-photo {
+    width: 40px;
+    height: 40px;
+    top: -15px;
+    right: -15px;
+    font-size: 20px;
+  }
+  
+  /* Migliore spaziatura per i campi form */
+  label {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  
+  input, textarea, select {
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 16px; /* Previene zoom automatico */
+  }
+  
+  button[type="submit"] {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    min-height: 48px;
+  }
+  
+  /* Migliore gestione dell'anteprima immagine */
+  #preview {
+    max-height: 250px;
+    width: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  
+  /* Status camera più visibile */
+  .camera-status {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+  
+  /* Migliore feedback visivo per drag area (se supportato) */
+  .photo-section:active {
+    background: var(--pico-primary-background);
+    transform: scale(0.98);
+  }
+}
+
+/* Gestione specifica per iPhone con notch */
+@media (max-width: 430px) and (min-height: 800px) {
+  .home-btn {
+    top: max(20px, env(safe-area-inset-top, 20px));
+    left: max(15px, env(safe-area-inset-left, 15px));
+  }
+  
+  main.container {
+    padding-top: max(1rem, env(safe-area-inset-top, 1rem));
+    padding-left: max(1rem, env(safe-area-inset-left, 1rem));
+    padding-right: max(1rem, env(safe-area-inset-right, 1rem));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+  }
+}
+
+/* Migliore gestione del video su schermi piccoli */
+@media (max-width: 480px) {
+  #video {
+    border-radius: 6px;
+    max-height: 55vh;
+    object-fit: cover;
+  }
+  
+  .camera-controls .photo-btn {
+    padding: 0.875rem 1.25rem;
+    font-size: 1rem;
+  }
+  
+  /* Messaggi di errore/successo più compatti */
+  .message {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Ottimizzazioni per performance su mobile */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  
+  /* Smooth scrolling migliorato */
+  html {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Prevenire zoom accidentale */
+  input[type="number"] {
+    font-size: 16px;
+  }
+}
   </style>
 </head>
 <body>

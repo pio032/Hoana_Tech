@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -148,8 +149,13 @@
     }
 
     @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     /* Modal styles */
@@ -211,13 +217,25 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
     @keyframes slideIn {
-      from { transform: translateY(-50px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
     main.container {
@@ -258,13 +276,66 @@
         padding: 1.5rem;
       }
     }
+
+    /* CSS aggiuntivo per colonna disponibilità e ottimizzazioni mobile */
+
+    /* Stili per la colonna disponibilità */
+    .availability-cell {
+      text-align: center;
+      width: 100px;
+    }
+
+    .availability-indicator {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .availability-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .availability-available {
+      background-color: rgba(40, 167, 69, 0.1);
+      color: #28a745;
+      border: 1px solid rgba(40, 167, 69, 0.2);
+    }
+
+    .availability-available .availability-dot {
+      background-color: #28a745;
+      box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+    }
+
+    .availability-unavailable {
+      background-color: rgba(220, 53, 69, 0.1);
+      color: #dc3545;
+      border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+
+    .availability-unavailable .availability-dot {
+      background-color: #dc3545;
+      box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+    }
+
+
   </style>
 </head>
+
 <body>
   <!-- Pulsante Home sticky -->
   <a href="/admin" class="home-btn">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+      </path>
     </svg>
     Home
   </a>
@@ -275,13 +346,16 @@
     <!-- Loading State -->
     <div id="loading" class="loading">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+        </path>
       </svg>
       Caricamento prodotti...
     </div>
 
     <!-- Tabella Prodotti -->
     <div id="productsContainer" class="products-table" style="display: none;">
+      <!-- Sostituisci l'header della tabella esistente con questo -->
       <table>
         <thead>
           <tr>
@@ -290,6 +364,7 @@
             <th>Descrizione</th>
             <th>Prezzo</th>
             <th>Tipo</th>
+            <th>Disponibilità</th>
             <th>Azioni</th>
           </tr>
         </thead>
@@ -302,7 +377,8 @@
     <!-- Empty State -->
     <div id="emptyState" class="empty-state" style="display: none;">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
       </svg>
       <h3>Nessun prodotto trovato</h3>
       <p>Inizia aggiungendo il tuo primo prodotto!</p>
@@ -359,7 +435,7 @@
 
         products = data.products || [];
         console.log('Prodotti elaborati:', products); // DEBUG
-        
+
         if (products.length === 0) {
           showEmptyState();
         } else {
@@ -375,37 +451,129 @@
     }
 
     // Funzione per visualizzare i prodotti
+    // Funzione aggiornata per visualizzare i prodotti con supporto mobile
     function displayProducts(productList) {
       productsTableBody.innerHTML = '';
 
-      productList.forEach((product, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>
-            <img src="/${product.foto}" alt="${product.nome}" class="product-image" 
-                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNjY2MiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMmwtMy4wOSAyLjk4TDIgMTJsNi45MSA3LjAyTDEyIDIydjEybC0zLjA5LTIuOThMMiAxMmw2LjkxLTcuMDJMMTIgMnoiLz48L3N2Zz4='">
-          </td>
-          <td><strong>${escapeHtml(product.nome)}</strong></td>
-          <td class="description-cell" title="${escapeHtml(product.descrizione)}">
-            ${escapeHtml(product.descrizione)}
-          </td>
-          <td class="price-cell">€${parseFloat(product.prezzo).toFixed(2)}</td>
-          <td>${product.tipo}</td>
-          <td class="actions-cell">
-            <button class="delete-btn" onclick="showDeleteModal(${product.id}, '${escapeHtml(product.nome)}')">
+      // Verifica se siamo su mobile
+      const isMobile = window.innerWidth <= 430;
 
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-              Elimina
-            </button>
-          </td>
-        `;
-        productsTableBody.appendChild(row);
-      });
+      if (isMobile) {
+        // Layout mobile con card
+        productsContainer.innerHTML = '<div id="mobileProductsGrid" class="mobile-products-grid"></div>';
+        const mobileGrid = document.getElementById('mobileProductsGrid');
+
+        productList.forEach((product) => {
+          const availabilityStatus = product.disponibile === 1 || product.disponibile === true;
+
+          const card = document.createElement('div');
+          card.className = 'mobile-product-card';
+          card.innerHTML = `
+        <div class="mobile-card-header">
+          <img src="/${product.foto}" alt="${escapeHtml(product.nome)}" class="mobile-product-image" 
+               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIGZpbGw9IiNjY2MiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMmwtMy4wOSAyLjk4TDIgMTJsNi45MSA3LjAyTDEyIDIydjEybC0zLjA5LTIuOThMMiAxMmw2LjkxLTcuMDJMMTIgMnoiLz48L3N2Zz4='">
+          
+          <div class="mobile-card-info">
+            <h3 class="mobile-product-name">${escapeHtml(product.nome)}</h3>
+            <span class="mobile-product-type">${escapeHtml(product.tipo)}</span>
+          </div>
+        </div>
+
+        <div class="mobile-card-details">
+          <p class="mobile-product-description">${escapeHtml(product.descrizione)}</p>
+          <div class="mobile-product-price">€${parseFloat(product.prezzo).toFixed(2)}</div>
+          
+          <div class="mobile-availability">
+            <span class="mobile-availability-label">Disponibilità:</span>
+            <div class="availability-indicator ${availabilityStatus ? 'availability-available' : 'availability-unavailable'}">
+              <span class="availability-dot"></span>
+              ${availabilityStatus ? 'Disponibile' : 'Esaurito'}
+            </div>
+          </div>
+        </div>
+
+        <div class="mobile-card-actions">
+          <button class="mobile-delete-btn" onclick="showDeleteModal(${product.id}, '${escapeHtml(product.nome)}')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Elimina
+          </button>
+        </div>
+      `;
+          mobileGrid.appendChild(card);
+        });
+      } else {
+        // Layout desktop con tabella (ripristina la struttura originale se necessario)
+        if (!document.querySelector('#productsContainer table')) {
+          productsContainer.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Nome</th>
+              <th>Descrizione</th>
+              <th>Prezzo</th>
+              <th>Tipo</th>
+              <th>Disponibilità</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="productsTableBody">
+          </tbody>
+        </table>
+      `;
+          // Riassegna il riferimento al tbody
+          const newTbody = document.getElementById('productsTableBody');
+          if (newTbody) {
+            productsTableBody = newTbody;
+          }
+        }
+
+        // Layout desktop con tabella
+        productList.forEach((product) => {
+          const availabilityStatus = product.disponibile === 1 || product.disponibile === true;
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+        <td>
+          <img src="/${product.foto}" alt="${escapeHtml(product.nome)}" class="product-image" 
+               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNjY2MiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMmwtMy4wOSAyLjk4TDIgMTJsNi45MSA3LjAyTDEyIDIydjEybC0zLjA5LTIuOThMMiAxMmw2LjkxLTcuMDJMMTIgMnoiLz48L3N2Zz4='">
+        </td>
+        <td><strong>${escapeHtml(product.nome)}</strong></td>
+        <td class="description-cell" title="${escapeHtml(product.descrizione)}">
+          ${escapeHtml(product.descrizione)}
+        </td>
+        <td class="price-cell">€${parseFloat(product.prezzo).toFixed(2)}</td>
+        <td>${escapeHtml(product.tipo)}</td>
+        <td class="availability-cell">
+          <div class="availability-indicator ${availabilityStatus ? 'availability-available' : 'availability-unavailable'}">
+            <span class="availability-dot"></span>
+            ${availabilityStatus ? 'Disponibile' : 'Esaurito'}
+          </div>
+        </td>
+        <td class="actions-cell">
+          <button class="delete-btn" onclick="showDeleteModal(${product.id}, '${escapeHtml(product.nome)}')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Elimina
+          </button>
+        </td>
+      `;
+          productsTableBody.appendChild(row);
+        });
+      }
 
       productsContainer.style.display = 'block';
     }
+
+    // Aggiungi event listener per il resize della finestra
+    window.addEventListener('resize', () => {
+      if (products.length > 0) {
+        displayProducts(products);
+      }
+    });
 
     // Funzione per mostrare lo stato vuoto
     function showEmptyState() {
@@ -433,7 +601,7 @@
     // Funzione per eliminare un prodotto
     async function deleteProduct(productId) {
       console.log('deleteProduct chiamata con ID:', productId, 'tipo:', typeof productId); // DEBUG
-      
+
       if (!productId && productId !== 0) {
         console.log('Errore: productId mancante o non valido');
         return;
@@ -458,7 +626,7 @@
 
         const data = await response.json();
         console.log('Dati risposta DELETE:', data);
-        
+
         if (!data.success) {
           throw new Error(data.message || 'Errore durante l\'eliminazione');
         }
@@ -511,4 +679,5 @@
     });
   </script>
 </body>
+
 </html>
