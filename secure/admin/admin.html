@@ -92,81 +92,30 @@
       background-color: #c82333;
     }
 
-    /* Limita la larghezza su desktop */
+    /* Container base */
     .container {
       max-width: 1200px;
       margin: 0 auto;
+      padding: 0 1rem;
     }
 
-    /* Miglioramenti per desktop */
+    /* DESKTOP - Solo layout griglia 2x2 */
     @media (min-width: 1024px) {
-       .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1rem;
-      margin-top: 2rem;
+      .container {
+        max-width: 1200px;
+        padding: 0 2rem;
+      }
+
+      /* Prima griglia con tutte e 4 le card in 2x2 */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-top: 2rem;
+      }
     }
 
-    .admin-card {
-      border: 1px solid var(--pico-border-color);
-      border-radius: var(--pico-border-radius);
-      padding: 1.5rem;
-      background: var(--pico-card-background-color);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .admin-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-icon {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      display: block;
-    }
-
-    .card-title {
-      margin-bottom: 0.5rem;
-      color: var(--pico-primary-color);
-    }
-
-    .card-description {
-      margin-bottom: 1rem;
-      opacity: 0.8;
-    }
-
-    .header-section {
-      text-align: center;
-      margin-bottom: 2rem;
-      padding: 2rem 0;
-      border-bottom: 1px solid var(--pico-border-color);
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      text-align: center;
-      padding: 1rem;
-      background: var(--pico-primary-background);
-      border-radius: var(--pico-border-radius);
-    }
-
-    .stat-number {
-      font-size: 2rem;
-      font-weight: bold;
-      color: var(--pico-primary-color);
-    }
-    }
-
-
-
-    /* OTTIMIZZAZIONI SPECIFICHE PER iPHONE 15 PRO */
+    /* MOBILE - Mantengo tutto invariato */
     @media (max-width: 430px) {
       body {
         padding-top: env(safe-area-inset-top);
@@ -179,7 +128,6 @@
         max-width: 1200px;
         margin: 0 auto;
       }
-
 
       .top-bar {
         padding: 1rem;
@@ -225,7 +173,6 @@
       .admin-card {
         padding: 1rem;
       }
-
 
       .card-icon {
         font-size: 1.75rem;
@@ -389,7 +336,7 @@
     }
 
     /* Tablet */
-    @media (min-width: 431px) and (max-width: 768px) {
+    @media (min-width: 431px) and (max-width: 1023px) {
       .container {
         padding: 1rem;
       }
@@ -461,8 +408,7 @@
       <article class="admin-card">
         <span class="card-icon">📦</span>
         <h3 class="card-title">Gestione Prodotti</h3>
-        <p class="card-description">Aggiungi, modifica e rimuovi prodotti dal catalogo. Gestisci inventario e prezzi.
-        </p>
+        <p class="card-description">Aggiungi, modifica e rimuovi prodotti dal catalogo. Gestisci inventario e prezzi.</p>
         <div class="grid">
           <form action="/admin/prod" method="GET" style="margin: 0;">
             <input type="submit" value="Vedi Prodotti" />
@@ -472,14 +418,12 @@
           </form>
         </div>
       </article>
-    </div>
-    <div class="dashboard-grid">
+
       <!-- Statistiche Prodotti -->
       <article class="admin-card">
         <span class="card-icon">📊</span>
         <h3 class="card-title">Statistiche Prodotti</h3>
-        <p class="card-description">Visualizza, analizza e confronta le statistiche in tempo reale. Monitora trend e
-          performance.</p>
+        <p class="card-description">Visualizza, analizza e confronta le statistiche in tempo reale. Monitora trend e performance.</p>
         <div class="grid">
           <form action="/admin/stat" method="GET" style="margin: 0;">
             <input type="submit" value="Vedi Statistiche" />
@@ -491,7 +435,7 @@
       <article class="admin-card">
         <span class="card-icon">🟢🔴</span>
         <h3 class="card-title">Disponibile</h3>
-        <p class="card-description">Scrivi la disponibilità di ogni prodotto<br> </p>
+        <p class="card-description">Scrivi la disponibilità di ogni prodotto</p>
         <div class="grid">
           <form action="/admin/disp" method="GET" style="margin: 0;">
             <input type="submit" value="Scrivi la disponibilita" />
@@ -499,9 +443,6 @@
         </div>
       </article>
     </div>
-
-
-
   </main>
 
   <script>

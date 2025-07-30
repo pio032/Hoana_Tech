@@ -19,3 +19,9 @@
 [2025-07-29T20:23:09.973Z] 🚫 404 - Pagina non trovata: GET /apple-touch-icon-precomposed.png
 [2025-07-29T20:23:10.035Z] 🚫 404 - Pagina non trovata: GET /apple-touch-icon.png
 [2025-07-29T20:23:10.036Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
+[2025-07-30T12:31:01.434Z] 🚀 Server avviato su http://localhost:3000
+[2025-07-30T12:31:01.460Z] 📦 Sistema di sessioni attivo
+[2025-07-30T12:31:01.460Z] 🔐 Autenticazione obbligatoria per tutte le aree protette
+[2025-07-30T12:31:01.494Z] Connesso al database MySQL
+[2025-07-30T12:31:06.111Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
+[2025-07-30T12:35:07.400Z] 🚫 404 - Pagina non trovata: GET /.well-known/appspecific/com.chrome.devtools.json
