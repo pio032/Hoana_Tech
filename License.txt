@@ -1,0 +1,113 @@
+# Licenza Proprietaria - Sistema Gestione Ristorante
+
+## Copyright e Proprietà Intellettuale
+
+**Copyright © 2025 Pietro Ardizzone. Tutti i diritti riservati.**
+
+Il presente software "Sistema Gestione Ristorante" e tutta la documentazione associata (di seguito "il Software") sono di proprietà esclusiva di Pietro Ardizzone e sono protetti dalle leggi italiane ed internazionali sul diritto d'autore, dai trattati sulla proprietà intellettuale e dalle disposizioni del Codice della Proprietà Industriale (D.Lgs. 30/2005).
+
+## Dichiarazione di Proprietà
+
+Pietro Ardizzone dichiara di essere l'autore originale e il titolare esclusivo di tutti i diritti di proprietà intellettuale relativi al Software, inclusi ma non limitati a:
+- Codice sorgente e architettura software
+- Database schema e strutture dati
+- Interface utente e design
+- Documentazione tecnica e manualistica
+- Algoritmi e logiche di business implementate
+
+## Concessione di Licenza Limitata
+
+Il sottoscritto Pietro Ardizzone concede una licenza limitata, non esclusiva, non trasferibile e revocabile per l'utilizzo del Software secondo i seguenti termini:
+
+### Diritti Concessi
+
+Il licenziatario è autorizzato esclusivamente a:
+- Installare e utilizzare il Software per scopi commerciali legittimi
+- Effettuare copie di backup per soli scopi di sicurezza e continuità operativa
+- Configurare i parametri operativi nei limiti delle funzionalità previste
+
+### Restrizioni Assolute
+
+È espressamente e categoricamente vietato:
+- Riprodurre, copiare, distribuire o diffondere il Software in qualsiasi forma
+- Modificare, adattare, alterare o creare opere derivate del Software
+- Decompilare, disassemblare, effettuare reverse engineering o analisi del codice
+- Rimuovere, alterare o nascondere indicazioni di copyright e proprietà
+- Vendere, noleggiare, prestare, sublicenziare o trasferire il Software
+- Utilizzare il Software per sviluppare prodotti concorrenti o similari
+- Condividere credenziali di accesso o consentire utilizzo non autorizzato
+- Pubblicare, distribuire o rendere pubblico il codice sorgente
+- Utilizzare il Software oltre i termini espressamente concessi
+
+## Tutela Legale e Sanzioni
+
+### Violazioni e Conseguenze
+
+Qualsiasi violazione dei termini della presente licenza comporterà:
+- Risoluzione immediata e automatica della licenza
+- Obbligo di cessazione immediata dell'utilizzo del Software
+- Cancellazione di tutte le copie del Software in possesso del licenziatario
+- Responsabilità per danni diretti, indiretti e consequenziali
+- Rimborso di eventuali profitti derivanti dall'uso improprio
+
+### Azioni Legali
+
+Pietro Ardizzone si riserva il diritto di:
+- Intraprendere azioni legali civili e penali per violazione del copyright
+- Richiedere risarcimento danni per uso non autorizzato
+- Ottenere provvedimenti d'urgenza per cessazione immediate delle violazioni
+- Richiedere sequestro e distruzione di copie non autorizzate
+
+## Limitazioni di Responsabilità
+
+### Esclusione di Garanzie
+
+Il Software viene fornito "così com'è" senza garanzie di alcun tipo. Pietro Ardizzone esclude espressamente:
+- Garanzie di commerciabilità o idoneità per scopi specifici
+- Garanzie di funzionamento ininterrotto o privo di errori
+- Responsabilità per danni diretti, indiretti, incidentali o consequenziali
+- Responsabilità per perdite di dati, profitti o interruzioni di attività
+
+### Limitazione di Responsabilità
+
+In nessun caso Pietro Ardizzone sarà responsabile per danni eccedenti l'importo eventualmente pagato per la licenza del Software.
+
+## Clausole Generali
+
+### Durata
+
+La presente licenza ha durata a tempo indeterminato fino a risoluzione per violazione dei termini o revoca da parte del licenziante.
+
+### Legge Applicabile e Foro Competente
+
+La presente licenza è disciplinata dalla legge italiana. Per qualsiasi controversia è competente esclusivamente il Foro di Milano.
+
+### Separabilità delle Clausole
+
+L'eventuale nullità o inefficacia di singole clausole non comporta nullità dell'intero accordo di licenza.
+
+### Modifica dei Termini
+
+Pietro Ardizzone si riserva il diritto di modificare i termini della presente licenza con preavviso di 30 giorni.
+
+### Cessione
+
+I diritti e gli obblighi derivanti dalla presente licenza non possono essere ceduti o trasferiti senza autorizzazione scritta di Pietro Ardizzone.
+
+## Contatti
+
+Per questioni relative alla licenza, autorizzazioni speciali o chiarimenti legali:
+
+**Pietro Ardizzone**  
+Email: pietro.ardi@icloud.com
+
+## Riconoscimento e Accettazione
+
+L'installazione, il download o l'utilizzo del Software costituisce accettazione integrale dei termini della presente licenza.
+
+**QUESTA LICENZA COSTITUISCE L'INTERO ACCORDO TRA LE PARTI E SOSTITUISCE OGNI PRECEDENTE COMUNICAZIONE, ACCORDO O INTESA RELATIVA AL SOFTWARE.**
+
+---
+
+**Documento generato in data: 30 Gennaio 2025**  
+**Versione Licenza: 1.0**
