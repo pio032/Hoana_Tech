@@ -1,0 +1,11 @@
+[2025-07-30T12:42:22.903Z] 🚀 Server avviato su http://localhost:3000
+[2025-07-30T12:42:22.904Z] 📦 Sistema di sessioni attivo
+[2025-07-30T12:42:22.904Z] 🔐 Autenticazione obbligatoria per tutte le aree protette
+[2025-07-30T12:42:22.923Z] Connesso al database MySQL
+[2025-07-30T12:46:21.979Z] 🚫 404 - Pagina non trovata: GET /getLog
+[2025-07-30T12:46:22.401Z] 🚫 404 - Pagina non trovata: GET /getLog
+[2025-07-30T12:46:22.547Z] 🚫 404 - Pagina non trovata: GET /getLog
+[2025-07-30T12:46:26.280Z] 🚀 Server avviato su http://localhost:3000
+[2025-07-30T12:46:26.282Z] 📦 Sistema di sessioni attivo
+[2025-07-30T12:46:26.282Z] 🔐 Autenticazione obbligatoria per tutte le aree protette
+[2025-07-30T12:46:26.302Z] Connesso al database MySQL

@@ -632,6 +632,25 @@ app.put('/api/products/:id/availability', (req, res) => {
   );
 });
 
+app.get("/admin/log",requireRole(['admin']), (req, res)=>{
+   res.sendFile(path.join(__dirname, 'secure/admin/log.html'));
+})
+
+app.get("/getLog", requireRole(['admin']), (req, res)=>{
+   const logPath = 'log.txt';
+
+  fs.readFile(logPath, 'utf8', (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: 'Errore nella lettura dei log.' });
+    }
+
+    
+    const logLines = data.split('\n').filter(line => line.trim() !== '');
+
+    res.json({ logs: logLines });
+})
+})
+
 //----------------------------------------------------------------CAMERIERE--------------------------------------------------------------
 
 app.get("/doComanda", requireRole(['cameriere', 'admin']), (req, res) => {

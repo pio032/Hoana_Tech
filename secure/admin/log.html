@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Controlla i log</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+</head>
+
+<body>
+  <main class="container">
+    <header style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>Controlla i log</h1>
+      <a href="/admin" role="button" class="secondary">🏠 Home</a>
+    </header>
+
+    <section>
+      <button id="loadLogs">🔄 Aggiorna log</button>
+      <pre id="logOutput">⏳ Caricamento log iniziale...</pre>
+    </section>
+  </main>
+
+  <script>
+    const loadBtn = document.getElementById('loadLogs');
+    const output = document.getElementById('logOutput');
+
+    async function loadLogs() {
+      output.textContent = '⏳ Caricamento...';
+      try {
+        const response = await fetch('/getLog');
+        if (!response.ok) throw new Error('Errore nella richiesta.');
+
+        const data = await response.json();
+        if (Array.isArray(data.logs)) {
+          output.textContent = data.logs.join('\n');
+        } else {
+          output.textContent = '⚠️ Formato risposta non valido.';
+        }
+      } catch (err) {
+        output.textContent = `❌ Errore: ${err.message}`;
+      }
+    }
+
+    // Carica i log appena la pagina è pronta
+    document.addEventListener('DOMContentLoaded', loadLogs);
+
+    // Carica i log manualmente al click
+    loadBtn.addEventListener('click', loadLogs);
+  </script>
+</body>
+
+</html>
