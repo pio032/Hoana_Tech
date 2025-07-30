@@ -30,3 +30,100 @@
 [2025-07-30T13:28:19.751Z] 🚫 404 - Pagina non trovata: GET /apple-touch-icon.png
 [2025-07-30T13:28:19.751Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
 [2025-07-30T13:28:26.604Z] ✅ Login effettuato: admin (admin)
+[2025-07-30T15:16:07.294Z] 🚀 Server avviato su http://localhost:3000
+[2025-07-30T15:16:07.296Z] 📦 Sistema di sessioni attivo
+[2025-07-30T15:16:07.296Z] 🔐 Autenticazione obbligatoria per tutte le aree protette
+[2025-07-30T15:16:07.317Z] Connesso al database MySQL
+[2025-07-30T15:16:12.917Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
+[2025-07-30T15:31:51.314Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
+[2025-07-30T15:31:55.344Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
+[2025-07-30T15:32:32.628Z] 🚪 Logout effettuato: admin
+[2025-07-30T15:32:33.642Z] 🚫 404 - Pagina non trovata: GET /apple-touch-icon-precomposed.png
+[2025-07-30T15:32:33.744Z] 🚫 404 - Pagina non trovata: GET /apple-touch-icon.png
+[2025-07-30T15:32:33.746Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
+[2025-07-30T15:32:34.994Z] ✅ Login effettuato: admin (admin)
+[2025-07-30T15:32:39.276Z] ✅ Login effettuato: cam (cameriere)
+[2025-07-30T15:32:42.346Z] 🚫 404 - Pagina non trovata: GET /apple-touch-icon-precomposed.png
+[2025-07-30T15:32:42.449Z] 🚫 404 - Pagina non trovata: GET /apple-touch-icon.png
+[2025-07-30T15:32:42.449Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
+[2025-07-30T15:32:52.504Z] ✅ Login effettuato: cucina (cucina)
+[2025-07-30T15:32:58.395Z] 🚪 Logout effettuato: admin
+[2025-07-30T15:48:06.667Z] 🚪 Logout effettuato: cucina
+[2025-07-30T15:50:00.381Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
+[2025-07-30T15:50:55.346Z] 🚀 Server avviato su http://localhost:3000
+[2025-07-30T15:50:55.347Z] 📦 Sistema di sessioni attivo
+[2025-07-30T15:50:55.348Z] 🔐 Autenticazione obbligatoria per tutte le aree protette
+[2025-07-30T15:50:55.365Z] Connesso al database MySQL
+[2025-07-30T15:52:00.527Z] 🚪 Logout effettuato: cam
+[2025-07-30T15:52:28.372Z] ✅ Login effettuato: cam (cameriere)
+[2025-07-30T15:52:47.449Z] ✅ Login effettuato: admin (admin)
+[2025-07-30T15:54:44.376Z] 🚪 Logout effettuato: admin
+[2025-07-30T15:54:58.918Z] ✅ Login effettuato: cucina (cucina)
+[2025-07-30T15:55:12.317Z] ✅ Login effettuato: bancone (bancone)
+[2025-07-30T15:55:15.634Z] 🍳 Comanda cucina #55 completata da cucina
+[2025-07-30T15:55:19.191Z] 🍳 Comanda cucina #56 completata da cucina
+[2025-07-30T15:55:32.491Z] Errore server: Cannot destructure property 'comandaId' of 'req.body' as it is undefined.
+[2025-07-30T15:55:33.734Z] 🍳 Comanda cucina #57 completata da cucina
+[2025-07-30T15:55:38.338Z] 🍹 Comanda bancone #58 completata da bancone
+[2025-07-30T15:55:45.814Z] 🍳 Comanda cucina #58 completata da cucina
+[2025-07-30T15:59:04.526Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:04.991Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.316Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.421Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.421Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.422Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.422Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.527Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.545Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.557Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.557Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.558Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.559Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:06.621Z] ✅ Ordine inserito da cam per tavolo 4
+[2025-07-30T15:59:46.609Z] 🍹 Comanda bancone #59 completata da bancone
+[2025-07-30T16:00:48.720Z] 🍳 Comanda cucina #59 completata da cucina
+[2025-07-30T16:01:37.910Z] 🚪 Logout effettuato: cucina
+[2025-07-30T16:01:58.575Z] ✅ Login effettuato: cassa (cassa)
+[2025-07-30T16:02:10.434Z] 💰 Ordine #172 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:37.196Z] 💰 Ordine #171 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:38.815Z] 💰 Ordine #173 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:39.965Z] 💰 Ordine #174 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:42.793Z] 💰 Ordine #178 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:43.533Z] 💰 Ordine #179 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:44.227Z] 💰 Ordine #180 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:44.976Z] 💰 Ordine #181 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:45.663Z] 💰 Ordine #182 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:47.618Z] 💰 Ordine #183 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:48.222Z] 💰 Ordine #184 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:50.577Z] 💰 Ordine #185 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:51.500Z] 💰 Ordine #186 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:52.256Z] 💰 Ordine #187 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:52.847Z] 💰 Ordine #188 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:54.469Z] 💰 Ordine #189 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:55.104Z] 💰 Ordine #190 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:55.817Z] 💰 Ordine #191 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:56.427Z] 💰 Ordine #192 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:58.155Z] 💰 Ordine #198 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:02:58.768Z] 💰 Ordine #197 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:02:59.381Z] 💰 Ordine #196 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:03:00.039Z] 💰 Ordine #195 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:03:01.686Z] 💰 Ordine #194 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:03:02.354Z] 💰 Ordine #193 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:03:06.379Z] 💰 Ordine #175 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:03:07.516Z] 💰 Ordine #176 pagato da cassa: VALPOLICELLA - calice - vino - €5.00
+[2025-07-30T16:03:08.291Z] 💰 Ordine #177 pagato da cassa: NACHOS "FILANTI"CON JALAPENOS E SALSA PICCANTE - €5.00
+[2025-07-30T16:03:13.519Z] 🎉 Tavolo 4 completato e chiuso da cassa
+[2025-07-30T16:03:45.005Z] 🚪 Logout effettuato: cassa
+[2025-07-30T16:09:57.613Z] ✅ Login effettuato: admin (admin)
+[2025-07-30T16:33:45.074Z] 🚀 Server avviato su http://localhost:3000
+[2025-07-30T16:33:45.075Z] 📦 Sistema di sessioni attivo
+[2025-07-30T16:33:45.075Z] 🔐 Autenticazione obbligatoria per tutte le aree protette
+[2025-07-30T16:33:45.094Z] Connesso al database MySQL
+[2025-07-30T16:33:53.403Z] 🚫 404 - Pagina non trovata: GET /favicon.ico
+[2025-07-30T16:34:08.058Z] 🚪 Logout effettuato: admin
+[2025-07-30T16:34:11.997Z] ✅ Login effettuato: cam (cameriere)
+[2025-07-30T16:34:47.654Z] 🚪 Logout effettuato: cam
+[2025-07-30T16:43:42.694Z] 🚀 Server avviato su http://localhost:3000
+[2025-07-30T16:43:42.695Z] 📦 Sistema di sessioni attivo
+[2025-07-30T16:43:42.696Z] 🔐 Autenticazione obbligatoria per tutte le aree protette
+[2025-07-30T16:43:42.711Z] Connesso al database MySQL
