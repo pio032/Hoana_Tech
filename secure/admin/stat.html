@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Statistiche Vendite Bar</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        /* Reset e base mobile-first */
         * {
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
@@ -16,6 +17,7 @@
         body {
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
             font-size: 14px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         }
 
         .container {
@@ -24,84 +26,82 @@
             margin: 0;
         }
 
-        /* Header fisso mobile */
+        /* Header fisso */
         .mobile-header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            background: var(--pico-card-background-color);
+            background: rgba(255, 255, 255, 0.95);
             border-bottom: 1px solid var(--pico-border-color);
             z-index: 1000;
             padding: env(safe-area-inset-top) 1rem 0.75rem 1rem;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .home-btn {
             display: inline-flex;
             align-items: center;
             gap: 0.3rem;
-            padding: 0.4rem 0.8rem;
-            background: var(--pico-primary);
-            color: var(--pico-primary-inverse);
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             text-decoration: none;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
         }
 
-        .home-btn:hover,
-        .home-btn:active {
-            background: var(--pico-primary-hover);
-            transform: scale(0.98);
+        .home-btn:hover {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
         }
 
         .home-btn svg {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
         }
 
-        /* Main content con padding per header fisso */
+        /* Main content */
         main.container {
-            padding-top: calc(60px + env(safe-area-inset-top));
+            padding-top: calc(70px + env(safe-area-inset-top));
             padding-bottom: 2rem;
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 1.5rem;
-            color: var(--pico-primary);
-            font-size: 1.4rem;
-            font-weight: 700;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.8rem;
+            font-weight: 800;
         }
 
-        /* Stats grid ottimizzata per mobile */
+        /* Stats grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
         .stat-card {
-            background: linear-gradient(135deg, var(--pico-card-background-color), rgba(255,255,255,0.05));
-            padding: 1rem;
-            border-radius: 12px;
-            border: 1px solid var(--pico-border-color);
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
             text-align: center;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            min-height: 80px;
-        }
-
-        .stat-card:hover,
-        .stat-card:active {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
         .stat-card::before {
@@ -110,522 +110,445 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
-            background: linear-gradient(45deg, var(--pico-primary), var(--pico-secondary));
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         }
 
         .stat-number {
-            font-size: 1.4rem;
+            font-size: 2rem;
             font-weight: 800;
-            color: var(--pico-primary);
-            margin-bottom: 0.3rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
             line-height: 1;
         }
 
         .stat-label {
-            font-size: 0.75rem;
-            color: var(--pico-muted-color);
-            font-weight: 500;
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 600;
             margin: 0;
-            line-height: 1.2;
         }
 
-        /* Form filtri ottimizzato per mobile */
+        /* Form filtri */
         .filter-form {
-            background: linear-gradient(135deg, var(--pico-card-background-color), rgba(255,255,255,0.05));
-            padding: 1rem;
-            border-radius: 12px;
-            border: 1px solid var(--pico-border-color);
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
         .filter-form h3 {
             margin-bottom: 1rem;
-            color: var(--pico-primary);
-            font-weight: 600;
-            font-size: 1.1rem;
+            color: #1e40af;
+            font-weight: 700;
+            font-size: 1.2rem;
         }
 
-        .filter-form .grid {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
         }
 
         .filter-form input[type="date"] {
-            font-size: 16px; /* Previene zoom su iOS */
-            padding: 0.75rem;
-            border-radius: 8px;
-            border: 2px solid var(--pico-border-color);
+            font-size: 16px;
+            padding: 0.875rem;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
         }
 
         .filter-form input[type="date"]:focus {
-            border-color: var(--pico-primary);
+            border-color: #3b82f6;
             outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .filter-form button {
-            background: linear-gradient(45deg, var(--pico-primary), var(--pico-secondary));
+            background: linear-gradient(135deg, #10b981, #059669);
             border: none;
             font-weight: 600;
             font-size: 1rem;
-            padding: 0.875rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            min-height: 50px;
-        }
-
-        .filter-form button:hover,
-        .filter-form button:active {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        /* Chart containers ottimizzati per mobile */
-        .chart-container {
-            background: var(--pico-card-background-color);
-            padding: 1rem;
+            padding: 0.875rem 1.5rem;
             border-radius: 12px;
-            border: 1px solid var(--pico-border-color);
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .filter-form button:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Chart containers */
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
         .chart-container h3 {
-            margin-bottom: 1rem;
-            color: var(--pico-primary);
-            font-size: 1rem;
-            font-weight: 600;
-            border-bottom: 2px solid var(--pico-primary);
+            margin-bottom: 1.5rem;
+            color: #1e40af;
+            font-size: 1.1rem;
+            font-weight: 700;
             padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
         }
 
-        /* Grafici ottimizzati per mobile */
-        .bar-chart {
-            display: flex;
-            align-items: end;
-            height: 160px;
-            gap: 3px;
-            padding: 0.75rem 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.02), transparent);
-            border-radius: 8px;
-            overflow-x: auto;
-            min-width: 100%;
-        }
-
-        .bar {
-            background: linear-gradient(45deg, var(--pico-primary), var(--pico-secondary));
-            min-height: 8px;
-            min-width: 20px;
-            flex: 1;
-            display: flex;
-            align-items: end;
-            justify-content: center;
-            color: white;
-            font-size: 0.6rem;
-            font-weight: 600;
-            padding: 2px 1px;
-            border-radius: 3px 3px 0 0;
+        .chart-wrapper {
             position: relative;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            height: 300px;
+            width: 100%;
         }
 
-        .bar:hover,
-        .bar:active {
-            filter: brightness(1.1);
-            transform: scaleY(1.05);
-        }
-
-        .bar-value {
-            position: absolute;
-            top: -20px;
-            font-size: 0.6rem;
-            color: var(--pico-color);
-            font-weight: 600;
-            background: rgba(255,255,255,0.9);
-            padding: 1px 3px;
-            border-radius: 3px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            white-space: nowrap;
-        }
-
-        .bar-labels {
-            display: flex;
-            gap: 3px;
-            margin-top: 0.5rem;
-            overflow-x: auto;
-        }
-
-        .bar-label {
-            min-width: 20px;
-            flex: 1;
-            font-size: 0.6rem;
-            text-align: center;
-            font-weight: 500;
-            color: var(--pico-muted-color);
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-        }
-
-        /* Loading state */
+        /* Loading */
         .loading {
             text-align: center;
-            padding: 2rem;
-            font-size: 1rem;
-            color: var(--pico-primary);
+            padding: 3rem;
+            font-size: 1.1rem;
+            color: #3b82f6;
+            font-weight: 600;
         }
 
         .loading::after {
             content: "";
             display: inline-block;
-            width: 16px;
-            height: 16px;
-            margin-left: 8px;
-            border: 2px solid var(--pico-primary);
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 3px solid #3b82f6;
             border-radius: 50%;
             border-top-color: transparent;
             animation: spin 1s ease-in-out infinite;
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
-        /* Cards prodotti ottimizzate per mobile */
-        .prodotto-card {
-            padding: 1rem;
-            border: 1px solid var(--pico-border-color);
-            border-radius: 10px;
-            margin-bottom: 0.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            transition: all 0.3s ease;
-            background: var(--pico-card-background-color);
-        }
-
-        .prodotto-card:hover,
-        .prodotto-card:active {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-color: var(--pico-primary);
-        }
-
-        .prodotto-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .prodotto-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .prodotto-info strong {
-            display: block;
-            font-size: 0.9rem;
-            color: var(--pico-primary);
-            margin-bottom: 0.25rem;
-            word-wrap: break-word;
-        }
-
-        .prodotto-info small {
-            color: var(--pico-muted-color);
-            font-size: 0.75rem;
-            line-height: 1.3;
-        }
-
-        .prodotto-stats {
-            font-size: 0.8rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            justify-content: space-between;
-        }
-
-        .prodotto-stats > div {
-            flex: 1;
-            min-width: 80px;
-        }
-
-        /* Error message */
-        .error-message {
-            background: linear-gradient(135deg, var(--pico-del-background-color), rgba(255,0,0,0.1));
-            color: var(--pico-del-color);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid var(--pico-del-color);
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        /* Top product highlighting */
-        .top-product {
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #333;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-        }
-
-        /* Ranking badges ottimizzati per mobile */
-        .ranking-badge {
-            background: var(--pico-primary);
-            color: white;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.75rem;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            flex-shrink: 0;
-        }
-
-        .gold { 
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #333;
-        }
-        .silver { 
-            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
-            color: #333;
-        }
-        .bronze { 
-            background: linear-gradient(135deg, #cd7f32, #e4a853);
-            color: #fff;
-        }
-
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: var(--pico-muted-color);
-            font-size: 0.9rem;
-        }
-
-        .empty-state::before {
-            content: "📭";
-            display: block;
-            font-size: 2rem;
-            margin-bottom: 0.75rem;
-        }
-
-        /* Quick badges */
-        .quick-badge {
-            display: inline-block;
-            background: var(--pico-primary);
-            color: white;
-            padding: 0.15rem 0.4rem;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            margin-left: 0.3rem;
-        }
-
-        .positive { background: #10b981; }
-        .negative { background: #ef4444; }
-        .neutral { background: #6b7280; }
-
-        /* Excel button ottimizzato per mobile */
+        /* Excel button */
         .excel-btn {
-            background: linear-gradient(45deg, #217346, #2e8b57);
+            background: linear-gradient(135deg, #217346, #166534);
             color: white;
             border: none;
-            padding: 0.875rem 1rem;
-            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            box-shadow: 0 2px 8px rgba(33, 115, 70, 0.3);
-            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(33, 115, 70, 0.3);
+            margin-bottom: 2rem;
             width: 100%;
-            min-height: 50px;
         }
 
-        .excel-btn:hover,
-        .excel-btn:active {
-            background: linear-gradient(45deg, #1e5f3a, #258b4a);
+        .excel-btn:hover {
+            background: linear-gradient(135deg, #166534, #14532d);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(33, 115, 70, 0.4);
+            box-shadow: 0 6px 20px rgba(33, 115, 70, 0.4);
         }
 
         .excel-btn svg {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
         }
 
         .excel-btn:disabled {
-            background: #ccc;
+            background: #9ca3af;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
 
-        /* Ottimizzazioni per iPhone SE e schermi piccoli */
-        @media (max-width: 375px) {
+        /* Product cards */
+        .prodotto-card {
+            background: white;
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .prodotto-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+
+        .prodotto-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .ranking-badge {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            flex-shrink: 0;
+        }
+
+        .gold {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        }
+
+        .silver {
+            background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+            color: #374151;
+            box-shadow: 0 4px 15px rgba(209, 213, 219, 0.4);
+        }
+
+        .bronze {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.4);
+        }
+
+        .prodotto-info strong {
+            display: block;
+            font-size: 1rem;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+            font-weight: 700;
+        }
+
+        .prodotto-info small {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .prodotto-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-item .value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stat-item.highlight .value {
+            color: #10b981;
+            font-size: 1.1rem;
+        }
+
+        /* Error message */
+        .error-message {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            color: #dc2626;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #dc2626;
+            font-weight: 600;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .empty-state::before {
+            content: "📭";
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .filter-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-wrapper {
+                height: 250px;
+            }
+
+            .prodotto-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
             .container {
                 padding: 0.5rem;
             }
-            
-            .stats-grid {
-                gap: 0.5rem;
+
+            h1 {
+                font-size: 1.5rem;
             }
-            
-            .stat-card {
-                padding: 0.75rem;
-                min-height: 70px;
-            }
-            
+
             .stat-number {
-                font-size: 1.2rem;
+                font-size: 1.5rem;
             }
-            
-            .stat-label {
-                font-size: 0.7rem;
-            }
-            
-            h1 {
-                font-size: 1.2rem;
-            }
-            
-            .chart-container {
-                padding: 0.75rem;
-            }
-            
-            .bar-chart {
-                height: 140px;
+
+            .chart-wrapper {
+                height: 200px;
             }
         }
 
-        /* Ottimizzazioni per schermi medi (iPhone 12/13) */
-        @media (min-width: 390px) and (max-width: 430px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-            
-            .filter-form .grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 0.75rem;
-            }
-            
-            .filter-form button {
-                grid-column: span 2;
-            }
-        }
+        /* Print styles */
+        @media print {
 
-        /* Ottimizzazioni per tablet in portrait */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(3, 1fr);
+            .mobile-header,
+            .excel-btn,
+            .filter-form {
+                display: none !important;
             }
-            
-            .filter-form .grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr auto;
-                gap: 1rem;
-                align-items: end;
+
+            body {
+                background: white;
             }
-            
+
+            .chart-container,
+            .stat-card,
             .prodotto-card {
-                flex-direction: row;
-                align-items: center;
-            }
-            
-            .prodotto-stats {
-                text-align: right;
-                justify-content: flex-end;
+                box-shadow: none;
+                border: 1px solid #ddd;
             }
         }
 
-        /* Landscape orientation */
-        @media screen and (orientation: landscape) and (max-height: 500px) {
-            .mobile-header {
-                padding: 0.5rem 1rem;
-            }
-            
-            main.container {
-                padding-top: 50px;
-            }
-            
-            h1 {
-                font-size: 1.2rem;
-                margin-bottom: 1rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(5, 1fr);
-                gap: 0.5rem;
-            }
-            
-            .chart-container {
-                padding: 0.75rem;
-            }
-            
-            .bar-chart {
-                height: 120px;
-            }
-        }
-
-        /* Dark mode ottimizzazioni */
+        /* Dark mode */
         @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            }
+
             .mobile-header {
-                background: rgba(17, 17, 17, 0.95);
-                backdrop-filter: blur(20px);
+                background: rgba(15, 23, 42, 0.95);
             }
-            
-            .bar-value {
-                background: rgba(0,0,0,0.8);
-                color: white;
-            }
-        }
 
-        /* Accessibilità */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                transition: none !important;
-                animation: none !important;
+            .stat-card,
+            .filter-form,
+            .chart-container,
+            .prodotto-card {
+                background: #1e293b;
+                border-color: #334155;
             }
         }
 
-        /* Focus visible per navigazione da tastiera */
-        .excel-btn:focus-visible,
-        button:focus-visible,
-        input:focus-visible {
-            outline: 3px solid var(--pico-primary);
-            outline-offset: 2px;
+        /* Fix per testo prodotti - Aggiungi questo CSS al tuo file */
+
+        /* Prodotto info - testo bianco */
+        .prodotto-info strong {
+            display: block;
+            font-size: 1rem;
+            color: #ffffff !important;
+            /* Forza il bianco */
+            margin-bottom: 0.25rem;
+            font-weight: 700;
         }
 
-        /* Scrollbar styling per webkit */
-        .bar-chart::-webkit-scrollbar,
-        .bar-labels::-webkit-scrollbar {
-            height: 3px;
+        .prodotto-info small {
+            color: #e2e8f0 !important;
+            /* Grigio chiaro per il testo secondario */
+            font-size: 0.85rem;
         }
 
-        .bar-chart::-webkit-scrollbar-track,
-        .bar-labels::-webkit-scrollbar-track {
-            background: transparent;
+        /* Stats dei prodotti - testo bianco */
+        .stat-item .label {
+            font-size: 0.75rem;
+            color: #cbd5e1 !important;
+            /* Grigio chiaro per le etichette */
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
         }
 
-        .bar-chart::-webkit-scrollbar-thumb,
-        .bar-labels::-webkit-scrollbar-thumb {
-            background: var(--pico-primary);
-            border-radius: 2px;
+        .stat-item .value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff !important;
+            /* Bianco per i valori */
+        }
+
+        .stat-item.highlight .value {
+            color: #10b981 !important;
+            /* Verde per gli incassi */
+            font-size: 1.1rem;
+        }
+
+        /* Migliora anche il contrasto delle card */
+        .prodotto-card {
+            background: #1e293b !important;
+            /* Sfondo scuro per contrasto */
+            color: #ffffff;
+            padding: 1.5rem;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .prodotto-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: #3b82f6;
+            background: #334155 !important;
         }
     </style>
 </head>
+
 <body>
     <div class="mobile-header">
         <a href="/" class="home-btn">
@@ -639,13 +562,13 @@
     </div>
 
     <main class="container">
-        <h1>📊 Statistiche Vendite</h1>
-        
+        <h1>📊 Dashboard Statistiche</h1>
+
         <!-- Filtri Data -->
         <div class="filter-form">
-            <h3>📅 Seleziona Periodo</h3>
+            <h3>🗓️ Periodo di Analisi</h3>
             <form id="filtroForm">
-                <div class="grid">
+                <div class="filter-grid">
                     <div>
                         <label for="data_inizio">Data Inizio:</label>
                         <input type="date" id="data_inizio" name="data_inizio" required>
@@ -654,24 +577,22 @@
                         <label for="data_fine">Data Fine:</label>
                         <input type="date" id="data_fine" name="data_fine" required>
                     </div>
-                    <button type="submit">🔍 Aggiorna</button>
+                    <button type="submit">🔍 Analizza</button>
                 </div>
             </form>
         </div>
 
         <div id="loading" class="loading" style="display: none;">
-            📈 Caricamento...
+            📊 Elaborazione dati in corso...
         </div>
 
         <div id="errorContainer"></div>
 
         <!-- Pulsante Excel -->
         <button id="scaricaExcelBtn" class="excel-btn" onclick="scaricaExcel()" style="display: none;">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                <path d="M10.5,11L12.5,14L10.5,17H12.25L13.5,15L14.75,17H16.5L14.5,14L16.5,11H14.75L13.5,13L12.25,11H10.5Z" fill="#ffffff"/>
-            </svg>
-            📊 Scarica Excel
+            <img src="https://cdn-icons-png.flaticon.com/512/732/732220.png" alt="Excel" width="20" height="20"
+                loading="lazy" style="margin-right: 8px; background-color: white; border-radius: 3px; padding: 2px;">
+            Esporta Report Completo
         </button>
 
         <div id="content">
@@ -680,44 +601,46 @@
 
             <!-- Grafico Ordini -->
             <div class="chart-container">
-                <h3>📈 Ordini Giornalieri</h3>
-                <div class="bar-chart" id="ordiniChart"></div>
-                <div class="bar-labels" id="ordiniLabels"></div>
+                <h3>📈 Trend Ordini Giornalieri</h3>
+                <div class="chart-wrapper">
+                    <canvas id="ordiniChart"></canvas>
+                </div>
             </div>
 
             <!-- Grafico Incassi -->
             <div class="chart-container">
-                <h3>💰 Incassi Giornalieri</h3>
-                <div class="bar-chart" id="incassiChart"></div>
-                <div class="bar-labels" id="incassiLabels"></div>
+                <h3>💰 Trend Incassi Giornalieri</h3>
+                <div class="chart-wrapper">
+                    <canvas id="incassiChart"></canvas>
+                </div>
             </div>
 
             <!-- Top Earners -->
             <div class="chart-container">
-                <h3>💎 TOP 10 - Maggiori Incassi</h3>
+                <h3>💎 TOP 10 - Prodotti per Incassi</h3>
                 <div id="topEarnersContainer"></div>
             </div>
 
             <!-- Prodotti Più Venduti -->
             <div class="chart-container">
-                <h3>🏆 TOP 20 - Più Venduti</h3>
+                <h3>🏆 TOP 20 - Prodotti più Venduti</h3>
                 <div id="prodottiContainer"></div>
             </div>
         </div>
     </main>
 
     <script>
-        // Variabile globale per memorizzare i dati
+        // Variabili globali
         let datiStatistiche = null;
-        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        let ordiniChart = null;
+        let incassiChart = null;
 
-        // Formatta numero con separatori
+        // Utility functions
         function formatNumero(num) {
             if (num === null || num === undefined) return '0';
             return Number(num).toLocaleString('it-IT');
         }
 
-        // Formatta valuta
         function formatValuta(num) {
             if (num === null || num === undefined) return '€0,00';
             return Number(num).toLocaleString('it-IT', {
@@ -726,7 +649,6 @@
             });
         }
 
-        // Formatta data per mobile (più compatto)
         function formatData(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('it-IT', {
@@ -735,7 +657,6 @@
             });
         }
 
-        // Formatta data completa
         function formatDataCompleta(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('it-IT', {
@@ -753,180 +674,352 @@
                     <strong>❌ Errore:</strong> ${messaggio}
                 </div>
             `;
-            
-            // Scroll al messaggio di errore su mobile
-            if (isMobile) {
-                setTimeout(() => {
-                    errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 100);
-            }
+            errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        // FUNZIONE EXCEL EXPORT ottimizzata per mobile
+        // EXCEL EXPORT COMPLETO
         function scaricaExcel() {
             if (!datiStatistiche) {
                 alert('❌ Nessun dato disponibile per l\'esportazione');
                 return;
             }
 
-            // Haptic feedback se disponibile
-            if (navigator.vibrate) {
-                navigator.vibrate(100);
-            }
-
             try {
                 const workbook = XLSX.utils.book_new();
+                const dataInizio = formatDataCompleta(datiStatistiche.periodo.data_inizio);
+                const dataFine = formatDataCompleta(datiStatistiche.periodo.data_fine);
 
-                // Foglio 1: Riassunto Generale
-                const riassuntoData = [
-                    ['📊 REPORT STATISTICHE BAR'],
+                // FOGLIO 1: DASHBOARD RIASSUNTIVA
+                const dashboardData = [
+                    ['📊 REPORT STATISTICHE BAR - DASHBOARD'],
                     [''],
-                    ['Periodo:', `${formatDataCompleta(datiStatistiche.periodo.data_inizio)} - ${formatDataCompleta(datiStatistiche.periodo.data_fine)}`],
-                    ['Generato:', new Date().toLocaleString('it-IT')],
+                    ['Periodo Analisi:', `${dataInizio} - ${dataFine}`],
+                    ['Data Generazione:', new Date().toLocaleString('it-IT')],
                     [''],
-                    ['RIASSUNTO'],
+                    ['🎯 METRICHE PRINCIPALI'],
                     ['Totale Ordini', datiStatistiche.riassunto.totale_ordini],
                     ['Ordini Pagati', datiStatistiche.riassunto.ordini_pagati],
-                    ['Tasso Pagamento (%)', datiStatistiche.riassunto.tasso_pagamento + '%'],
-                    ['Totale Incassi', parseFloat(datiStatistiche.riassunto.totale_incassi)],
-                    ['Giorni Attivi', datiStatistiche.riassunto.giorni_attivi]
+                    ['Ordini Non Pagati', datiStatistiche.riassunto.totale_ordini - datiStatistiche.riassunto.ordini_pagati],
+                    ['Tasso di Conversione (%)', datiStatistiche.riassunto.tasso_pagamento + '%'],
+                    ['Totale Incassi (€)', parseFloat(datiStatistiche.riassunto.totale_incassi)],
+                    ['Giorni di Attività', datiStatistiche.riassunto.giorni_attivi],
+                    ['Media Ordini/Giorno', Math.round(datiStatistiche.riassunto.totale_ordini / datiStatistiche.riassunto.giorni_attivi)],
+                    ['Media Incassi/Giorno (€)', Math.round(datiStatistiche.riassunto.totale_incassi / datiStatistiche.riassunto.giorni_attivi * 100) / 100],
+                    [''],
+                    ['📊 ANALISI PERFORMANCE'],
+                    ['Status Tasso Conversione', datiStatistiche.riassunto.tasso_pagamento >= 80 ? '🟢 Ottimo' : datiStatistiche.riassunto.tasso_pagamento >= 60 ? '🟡 Buono' : '🔴 Da Migliorare'],
+                    ['Trend Generale', 'Da analizzare nei grafici'],
                 ];
-                const riassuntoSheet = XLSX.utils.aoa_to_sheet(riassuntoData);
-                riassuntoSheet['!cols'] = [{ width: 20 }, { width: 18 }];
-                XLSX.utils.book_append_sheet(workbook, riassuntoSheet, 'Riassunto');
 
-                // Foglio 2: Ordini Giornalieri
+                const dashboardSheet = XLSX.utils.aoa_to_sheet(dashboardData);
+                dashboardSheet['!cols'] = [{ width: 25 }, { width: 20 }];
+                XLSX.utils.book_append_sheet(workbook, dashboardSheet, '📊 Dashboard');
+
+                // FOGLIO 2: DETTAGLIO ORDINI GIORNALIERI
                 if (datiStatistiche.ordini_per_giorno && datiStatistiche.ordini_per_giorno.length > 0) {
                     const ordiniData = [
-                        ['📈 ORDINI GIORNALIERI'],
+                        ['📈 ANALISI ORDINI GIORNALIERI'],
                         [''],
-                        ['Data', 'Ordini']
+                        ['Data', 'Ordini', 'Variazione %', 'Giorno Settimana', 'Note']
                     ];
-                    
-                    datiStatistiche.ordini_per_giorno.forEach(giorno => {
+
+                    datiStatistiche.ordini_per_giorno.forEach((giorno, index) => {
+                        const data = new Date(giorno.data);
+                        const giornoSettimana = data.toLocaleDateString('it-IT', { weekday: 'long' });
+                        let variazione = '';
+
+                        if (index > 0) {
+                            const prev = datiStatistiche.ordini_per_giorno[index - 1].numero_ordini;
+                            const curr = giorno.numero_ordini;
+                            const perc = prev > 0 ? ((curr - prev) / prev * 100).toFixed(1) : 0;
+                            variazione = perc >= 0 ? `+${perc}%` : `${perc}%`;
+                        }
+
+                        const note = giorno.numero_ordini === 0 ? 'Chiuso' :
+                            giorno.numero_ordini > 50 ? 'Giornata Intensa' :
+                                giorno.numero_ordini < 10 ? 'Giornata Tranquilla' : 'Normale';
+
                         ordiniData.push([
                             formatDataCompleta(giorno.data),
-                            giorno.numero_ordini
+                            giorno.numero_ordini,
+                            variazione,
+                            giornoSettimana,
+                            note
                         ]);
                     });
+
+                    // Aggiungi statistiche riassuntive
+                    const ordini = datiStatistiche.ordini_per_giorno.map(g => g.numero_ordini);
+                    const maxOrdini = Math.max(...ordini);
+                    const minOrdini = Math.min(...ordini);
+                    const avgOrdini = ordini.reduce((a, b) => a + b, 0) / ordini.length;
+
+                    ordiniData.push(
+                        [''],
+                        ['📊 STATISTICHE RIASSUNTIVE'],
+                        ['Massimo Ordini/Giorno', maxOrdini],
+                        ['Minimo Ordini/Giorno', minOrdini],
+                        ['Media Ordini/Giorno', Math.round(avgOrdini * 100) / 100]
+                    );
 
                     const ordiniSheet = XLSX.utils.aoa_to_sheet(ordiniData);
-                    ordiniSheet['!cols'] = [{ width: 12 }, { width: 10 }];
-                    XLSX.utils.book_append_sheet(workbook, ordiniSheet, 'Ordini');
+                    ordiniSheet['!cols'] = [{ width: 15 }, { width: 10 }, { width: 12 }, { width: 15 }, { width: 20 }];
+                    XLSX.utils.book_append_sheet(workbook, ordiniSheet, '📈 Ordini');
                 }
 
-                // Foglio 3: Incassi Giornalieri
+                // FOGLIO 3: DETTAGLIO INCASSI GIORNALIERI
                 if (datiStatistiche.incassi_giornalieri && datiStatistiche.incassi_giornalieri.length > 0) {
                     const incassiData = [
-                        ['💰 INCASSI GIORNALIERI'],
+                        ['💰 ANALISI INCASSI GIORNALIERI'],
                         [''],
-                        ['Data', 'Incasso (€)']
+                        ['Data', 'Incasso (€)', 'Variazione %', 'Incasso/Ordine', 'Performance']
                     ];
-                    
-                    datiStatistiche.incassi_giornalieri.forEach(giorno => {
+
+                    datiStatistiche.incassi_giornalieri.forEach((giorno, index) => {
+                        let variazione = '';
+                        if (index > 0) {
+                            const prev = parseFloat(datiStatistiche.incassi_giornalieri[index - 1].incasso_giorno);
+                            const curr = parseFloat(giorno.incasso_giorno);
+                            const perc = prev > 0 ? ((curr - prev) / prev * 100).toFixed(1) : 0;
+                            variazione = perc >= 0 ? `+${perc}%` : `${perc}%`;
+                        }
+
+                        // Calcola incasso per ordine
+                        const ordiniGiorno = datiStatistiche.ordini_per_giorno.find(o => o.data === giorno.data);
+                        const incassoPerOrdine = ordiniGiorno && ordiniGiorno.numero_ordini > 0
+                            ? parseFloat(giorno.incasso_giorno) / ordiniGiorno.numero_ordini
+                            : 0;
+
+                        const performance = parseFloat(giorno.incasso_giorno) > 200 ? '🟢 Ottimo' :
+                            parseFloat(giorno.incasso_giorno) > 100 ? '🟡 Buono' :
+                                parseFloat(giorno.incasso_giorno) > 0 ? '🟠 Normale' : '🔴 Basso';
+
                         incassiData.push([
                             formatDataCompleta(giorno.data),
-                            parseFloat(giorno.incasso_giorno)
+                            parseFloat(giorno.incasso_giorno),
+                            variazione,
+                            Math.round(incassoPerOrdine * 100) / 100,
+                            performance
                         ]);
                     });
 
+                    // Statistiche riassuntive incassi
+                    const incassi = datiStatistiche.incassi_giornalieri.map(g => parseFloat(g.incasso_giorno));
+                    const maxIncasso = Math.max(...incassi);
+                    const minIncasso = Math.min(...incassi);
+                    const avgIncasso = incassi.reduce((a, b) => a + b, 0) / incassi.length;
+
+                    incassiData.push(
+                        [''],
+                        ['📊 STATISTICHE RIASSUNTIVE'],
+                        ['Migliore Giornata (€)', maxIncasso],
+                        ['Peggiore Giornata (€)', minIncasso],
+                        ['Media Incassi/Giorno (€)', Math.round(avgIncasso * 100) / 100],
+                        ['Totale Incassi Periodo (€)', incassi.reduce((a, b) => a + b, 0)]
+                    );
+
                     const incassiSheet = XLSX.utils.aoa_to_sheet(incassiData);
-                    incassiSheet['!cols'] = [{ width: 12 }, { width: 12 }];
-                    XLSX.utils.book_append_sheet(workbook, incassiSheet, 'Incassi');
+                    incassiSheet['!cols'] = [{ width: 15 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 12 }];
+                    XLSX.utils.book_append_sheet(workbook, incassiSheet, '💰 Incassi');
                 }
 
-                // Foglio 4: Top Earners
+                // FOGLIO 4: TOP EARNERS COMPLETO
                 if (datiStatistiche.top_earners && datiStatistiche.top_earners.length > 0) {
                     const topEarnersData = [
-                        ['💎 TOP INCASSI'],
+                        ['💎 ANALISI TOP EARNERS - PRODOTTI PER INCASSI'],
                         [''],
-                        ['#', 'Prodotto', 'Incasso (€)', 'Qta', 'Prezzo (€)']
+                        ['Posizione', 'Prodotto', 'Incasso Totale (€)', 'Quantità Venduta', 'Prezzo Medio (€)', 'Quota Incassi %', 'Performance']
                     ];
-                    
+
+                    const totaleIncassi = datiStatistiche.top_earners.reduce((sum, p) => sum + parseFloat(p.incasso_prodotto), 0);
+
                     datiStatistiche.top_earners.forEach((prodotto, index) => {
+                        const incasso = parseFloat(prodotto.incasso_prodotto);
+                        const quotaPercentuale = ((incasso / totaleIncassi) * 100).toFixed(2);
+
+                        const performance = index < 3 ? '🥇 Top Performer' :
+                            index < 10 ? '⭐ Alto Rendimento' :
+                                '📈 Buon Rendimento';
+
                         topEarnersData.push([
                             index + 1,
                             prodotto.nome_prodotto,
-                            parseFloat(prodotto.incasso_prodotto),
+                            incasso,
                             prodotto.quantita_pagata,
-                            parseFloat(prodotto.prezzo_medio)
+                            parseFloat(prodotto.prezzo_medio),
+                            quotaPercentuale + '%',
+                            performance
                         ]);
                     });
 
+                    // Analisi concentrazione incassi
+                    const top3Incassi = datiStatistiche.top_earners.slice(0, 3).reduce((sum, p) => sum + parseFloat(p.incasso_prodotto), 0);
+                    const concentrazioneTop3 = ((top3Incassi / totaleIncassi) * 100).toFixed(1);
+
+                    topEarnersData.push(
+                        [''],
+                        ['📊 ANALISI CONCENTRAZIONE'],
+                        ['Totale Prodotti Analizzati', datiStatistiche.top_earners.length],
+                        ['Incassi TOP 3 (%)', concentrazioneTop3 + '%'],
+                        ['Diversificazione', concentrazioneTop3 > 60 ? 'Bassa' : concentrazioneTop3 > 40 ? 'Media' : 'Alta']
+                    );
+
                     const topEarnersSheet = XLSX.utils.aoa_to_sheet(topEarnersData);
-                    topEarnersSheet['!cols'] = [{ width: 5 }, { width: 20 }, { width: 12 }, { width: 8 }, { width: 10 }];
-                    XLSX.utils.book_append_sheet(workbook, topEarnersSheet, 'Top Incassi');
+                    topEarnersSheet['!cols'] = [{ width: 10 }, { width: 25 }, { width: 15 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 18 }];
+                    XLSX.utils.book_append_sheet(workbook, topEarnersSheet, '💎 Top Earners');
                 }
 
-                // Foglio 5: Prodotti Venduti
+                // FOGLIO 5: PRODOTTI VENDUTI COMPLETO
                 if (datiStatistiche.prodotti_piu_venduti && datiStatistiche.prodotti_piu_venduti.length > 0) {
                     const prodottiData = [
-                        ['🏆 PRODOTTI VENDUTI'],
+                        ['🏆 ANALISI COMPLETA VENDITE PRODOTTI'],
                         [''],
-                        ['#', 'Prodotto', 'Ordinati', 'Pagati', '%', 'Prezzo (€)', 'Incasso (€)']
+                        ['Pos.', 'Prodotto', 'Ord.', 'Pagati', 'Non Pagati', 'Conv. %', 'Prezzo €', 'Incasso €', 'Popolarità', 'Efficienza']
                     ];
-                    
+
                     datiStatistiche.prodotti_piu_venduti.forEach((prodotto, index) => {
-                        const tasso = prodotto.quantita_ordinata > 0 
+                        const tassoConversione = prodotto.quantita_ordinata > 0
                             ? ((prodotto.quantita_pagata / prodotto.quantita_ordinata) * 100).toFixed(1)
                             : 0;
+
+                        const nonPagati = prodotto.quantita_ordinata - prodotto.quantita_pagata;
+
+                        const popolarita = prodotto.quantita_ordinata > 50 ? '🔥 Molto Richiesto' :
+                            prodotto.quantita_ordinata > 20 ? '👍 Richiesto' :
+                                prodotto.quantita_ordinata > 10 ? '📊 Normale' : '📉 Poco Richiesto';
+
+                        const efficienza = tassoConversione >= 90 ? '🎯 Ottima' :
+                            tassoConversione >= 70 ? '✅ Buona' :
+                                tassoConversione >= 50 ? '⚠️ Media' : '❌ Bassa';
 
                         prodottiData.push([
                             index + 1,
                             prodotto.nome_prodotto,
                             prodotto.quantita_ordinata,
                             prodotto.quantita_pagata,
-                            parseFloat(tasso),
+                            nonPagati,
+                            tassoConversione + '%',
                             parseFloat(prodotto.prezzo_medio),
-                            parseFloat(prodotto.incasso_prodotto)
+                            parseFloat(prodotto.incasso_prodotto),
+                            popolarita,
+                            efficienza
                         ]);
                     });
 
+                    // Analisi aggregata
+                    const totaleOrdinati = datiStatistiche.prodotti_piu_venduti.reduce((sum, p) => sum + p.quantita_ordinata, 0);
+                    const totalePagati = datiStatistiche.prodotti_piu_venduti.reduce((sum, p) => sum + p.quantita_pagata, 0);
+                    const tassoMedio = ((totalePagati / totaleOrdinati) * 100).toFixed(1);
+                    const prodottiOttimi = datiStatistiche.prodotti_piu_venduti.filter(p =>
+                        (p.quantita_pagata / p.quantita_ordinata) >= 0.8
+                    ).length;
+
+                    prodottiData.push(
+                        [''],
+                        ['📊 ANALISI AGGREGATA'],
+                        ['Totale Prodotti Attivi', datiStatistiche.prodotti_piu_venduti.length],
+                        ['Tasso Conversione Medio (%)', tassoMedio + '%'],
+                        ['Prodotti Alta Efficienza (>80%)', prodottiOttimi],
+                        ['Performance Portfolio', tassoMedio > 75 ? '🟢 Ottimo' : tassoMedio > 60 ? '🟡 Buono' : '🔴 Da Migliorare']
+                    );
+
                     const prodottiSheet = XLSX.utils.aoa_to_sheet(prodottiData);
                     prodottiSheet['!cols'] = [
-                        { width: 5 }, { width: 20 }, { width: 10 }, 
-                        { width: 10 }, { width: 8 }, { width: 10 }, { width: 12 }
+                        { width: 5 }, { width: 25 }, { width: 8 }, { width: 8 }, { width: 10 },
+                        { width: 8 }, { width: 10 }, { width: 12 }, { width: 18 }, { width: 12 }
                     ];
-                    XLSX.utils.book_append_sheet(workbook, prodottiSheet, 'Venduti');
+                    XLSX.utils.book_append_sheet(workbook, prodottiSheet, '🏆 Vendite');
                 }
 
-                // Nome file ottimizzato
-                const dataInizio = document.getElementById('data_inizio').value;
-                const dataFine = document.getElementById('data_fine').value;
-                const nomeFile = `Stats_${dataInizio}_${dataFine}.xlsx`;
+                // FOGLIO 6: ANALISI TENDENZE E RACCOMANDAZIONI
+                const analisiData = [
+                    ['🎯 ANALISI STRATEGICA E RACCOMANDAZIONI'],
+                    [''],
+                    ['📈 ANALISI PERFORMANCE'],
+                    ['Periodo Analizzato', `${dataInizio} - ${dataFine}`],
+                    ['Durata Analisi (giorni)', datiStatistiche.riassunto.giorni_attivi],
+                    [''],
+                    ['🎯 KPI PRINCIPALI'],
+                    ['Conversion Rate', datiStatistiche.riassunto.tasso_pagamento + '%'],
+                    ['Revenue per Day', Math.round(datiStatistiche.riassunto.totale_incassi / datiStatistiche.riassunto.giorni_attivi * 100) / 100 + '€'],
+                    ['Orders per Day', Math.round(datiStatistiche.riassunto.totale_ordini / datiStatistiche.riassunto.giorni_attivi)],
+                    [''],
+                    ['🏆 TOP PERFORMER'],
+                ];
 
-                // Scrivi e scarica
+                // Aggiungi top 3 prodotti
+                if (datiStatistiche.top_earners && datiStatistiche.top_earners.length >= 3) {
+                    analisiData.push(
+                        ['1° per Incassi', datiStatistiche.top_earners[0].nome_prodotto + ' (' + formatValuta(datiStatistiche.top_earners[0].incasso_prodotto) + ')'],
+                        ['2° per Incassi', datiStatistiche.top_earners[1].nome_prodotto + ' (' + formatValuta(datiStatistiche.top_earners[1].incasso_prodotto) + ')'],
+                        ['3° per Incassi', datiStatistiche.top_earners[2].nome_prodotto + ' (' + formatValuta(datiStatistiche.top_earners[2].incasso_prodotto) + ')']
+                    );
+                }
+
+                // Raccomandazioni strategiche
+                analisiData.push(
+                    [''],
+                    ['💡 RACCOMANDAZIONI STRATEGICHE'],
+                );
+
+                const tasso = datiStatistiche.riassunto.tasso_pagamento;
+                if (tasso < 60) {
+                    analisiData.push(['🔴 Conversione Bassa', 'Migliorare processo di pagamento e customer experience']);
+                } else if (tasso < 80) {
+                    analisiData.push(['🟡 Conversione Media', 'Ottimizzare prodotti meno performanti']);
+                } else {
+                    analisiData.push(['🟢 Conversione Ottima', 'Mantenere standard e espandere offerta top performers']);
+                }
+
+                // Analisi prodotti
+                if (datiStatistiche.prodotti_piu_venduti) {
+                    const prodottiBassa = datiStatistiche.prodotti_piu_venduti.filter(p =>
+                        (p.quantita_pagata / p.quantita_ordinata) < 0.5
+                    );
+
+                    if (prodottiBassa.length > 0) {
+                        analisiData.push(['⚠️ Prodotti Critici', `${prodottiBassa.length} prodotti con conversione <50%`]);
+                        analisiData.push(['Azione Consigliata', 'Rivedere pricing o rimuovere dal menu']);
+                    }
+                }
+
+                const analisiSheet = XLSX.utils.aoa_to_sheet(analisiData);
+                analisiSheet['!cols'] = [{ width: 25 }, { width: 40 }];
+                XLSX.utils.book_append_sheet(workbook, analisiSheet, '🎯 Analisi');
+
+                // Genera e scarica file
+                const nomeFile = `Report_Completo_${datiStatistiche.periodo.data_inizio}_${datiStatistiche.periodo.data_fine}.xlsx`;
                 XLSX.writeFile(workbook, nomeFile);
 
-                // Feedback visivo ottimizzato per mobile
+                // Feedback visivo
                 const btn = document.getElementById('scaricaExcelBtn');
                 const testoOriginale = btn.innerHTML;
                 btn.innerHTML = `
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    ✅ Scaricato!
+                    ✅ Report Generato!
                 `;
                 btn.disabled = true;
 
                 setTimeout(() => {
                     btn.innerHTML = testoOriginale;
                     btn.disabled = false;
-                }, 2000);
+                }, 3000);
 
             } catch (error) {
                 console.error('Errore Excel:', error);
-                alert('❌ Errore nella generazione del file Excel');
+                alert('❌ Errore nella generazione del file Excel: ' + error.message);
             }
         }
 
-        // Crea cards statistiche ottimizzate per mobile
+        // Crea cards statistiche
         function creaStatsCards(riassunto) {
             const container = document.getElementById('statsCards');
-            
-            const tassoColor = riassunto.tasso_pagamento >= 80 ? 'positive' : 
-                             riassunto.tasso_pagamento >= 60 ? 'neutral' : 'negative';
-            
+
+            const avgOrdiniGiorno = Math.round(riassunto.totale_ordini / riassunto.giorni_attivi);
+            const avgIncassiGiorno = Math.round(riassunto.totale_incassi / riassunto.giorni_attivi);
+
             container.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${formatNumero(riassunto.totale_ordini)}</div>
@@ -934,91 +1027,163 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${formatNumero(riassunto.ordini_pagati)}</div>
-                    <p class="stat-label">✅ Pagati</p>
+                    <p class="stat-label">✅ Ordini Pagati</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${riassunto.tasso_pagamento}%</div>
-                    <p class="stat-label">📊 Tasso <span class="quick-badge ${tassoColor}">${riassunto.tasso_pagamento >= 80 ? '👍' : riassunto.tasso_pagamento >= 60 ? '👌' : '👎'}</span></p>
+                    <p class="stat-label">📊 Conversione</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${formatValuta(riassunto.totale_incassi).replace('€', '€')}</div>
-                    <p class="stat-label">💰 Incassi</p>
+                    <p class="stat-label">💰 Incassi Totali</p>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${formatNumero(riassunto.giorni_attivi)}</div>
                     <p class="stat-label">📅 Giorni Attivi</p>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-number">${formatNumero(avgOrdiniGiorno)}</div>
+                    <p class="stat-label">📈 Media Ordini/Giorno</p>
+                </div>
             `;
         }
 
-        // Crea grafico ottimizzato per mobile
-        function creaGraficoBarre(containerId, labelsId, data, valueKey, labelKey, formatValue = false) {
-            const container = document.getElementById(containerId);
-            const labelsContainer = document.getElementById(labelsId);
-            
+        // Crea grafico con Chart.js
+        function creaGraficoChart(canvasId, data, label, borderColor, backgroundColor, formatValue = false) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+
+            // Distruggi grafico esistente
+            if (canvasId === 'ordiniChart' && ordiniChart) {
+                ordiniChart.destroy();
+            }
+            if (canvasId === 'incassiChart' && incassiChart) {
+                incassiChart.destroy();
+            }
+
             if (!data || data.length === 0) {
-                container.innerHTML = '<div class="empty-state">Nessun dato disponibile</div>';
-                labelsContainer.innerHTML = '';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#64748b';
+                ctx.font = '16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Nessun dato disponibile', canvas.width / 2, canvas.height / 2);
                 return;
             }
 
-            const maxValue = Math.max(...data.map(item => item[valueKey] || 0));
-            
-            container.innerHTML = data.map(item => {
-                const value = item[valueKey] || 0;
-                const height = maxValue > 0 ? Math.max((value / maxValue) * 100, 5) : 5;
-                const displayValue = formatValue ? 
-                    formatValuta(value).replace('€', '€') : 
-                    formatNumero(value);
-                
-                return `
-                    <div class="bar" style="height: ${height}%" title="${formatDataCompleta(item[labelKey])}: ${displayValue}">
-                        <span class="bar-value">${displayValue}</span>
-                    </div>
-                `;
-            }).join('');
+            const labels = data.map(item => formatData(item.data));
+            const values = data.map(item => formatValue ? parseFloat(item[Object.keys(item)[1]]) : item[Object.keys(item)[1]]);
 
-            labelsContainer.innerHTML = data.map(item => 
-                `<div class="bar-label">${formatData(item[labelKey])}</div>`
-            ).join('');
+            const config = {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: values,
+                        borderColor: borderColor,
+                        backgroundColor: backgroundColor,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: borderColor,
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: borderColor,
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function (context) {
+                                    const value = context.parsed.y;
+                                    return formatValue ?
+                                        `${label}: ${formatValuta(value)}` :
+                                        `${label}: ${formatNumero(value)}`;
+                                }
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                callback: function (value) {
+                                    return formatValue ? formatValuta(value) : formatNumero(value);
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    }
+                }
+            };
+
+            const chart = new Chart(ctx, config);
+
+            if (canvasId === 'ordiniChart') {
+                ordiniChart = chart;
+            } else if (canvasId === 'incassiChart') {
+                incassiChart = chart;
+            }
         }
 
-        // Crea lista top earners ottimizzata per mobile
+        // Crea lista top earners
         function creaTopEarners(data) {
             const container = document.getElementById('topEarnersContainer');
-            
+
             if (!data || data.length === 0) {
-                container.innerHTML = '<div class="empty-state">Nessun prodotto nel periodo</div>';
+                container.innerHTML = '<div class="empty-state">Nessun prodotto nel periodo selezionato</div>';
                 return;
             }
 
             container.innerHTML = data.map((prodotto, index) => {
                 let badgeClass = '';
-                let badgeIcon = '';
-                
-                if (index === 0) { badgeClass = 'gold'; badgeIcon = '🥇'; }
-                else if (index === 1) { badgeClass = 'silver'; badgeIcon = '🥈'; }
-                else if (index === 2) { badgeClass = 'bronze'; badgeIcon = '🥉'; }
-                
-                const cardClass = index === 0 ? 'prodotto-card top-product' : 'prodotto-card';
-                
+                let badgeContent = index + 1;
+
+                if (index === 0) { badgeClass = 'gold'; badgeContent = '🥇'; }
+                else if (index === 1) { badgeClass = 'silver'; badgeContent = '🥈'; }
+                else if (index === 2) { badgeClass = 'bronze'; badgeContent = '🥉'; }
+
                 return `
-                    <div class="${cardClass}">
+                    <div class="prodotto-card">
                         <div class="prodotto-header">
                             <div class="ranking-badge ${badgeClass}">
-                                ${badgeIcon || (index + 1)}
+                                ${badgeContent}
                             </div>
                             <div class="prodotto-info">
                                 <strong>${prodotto.nome_prodotto}</strong>
-                                <small>
-                                    ${formatValuta(prodotto.prezzo_medio)} • 
-                                    ${formatNumero(prodotto.quantita_pagata)} vendite
-                                </small>
+                                <small>Prezzo medio: ${formatValuta(prodotto.prezzo_medio)}</small>
                             </div>
                         </div>
                         <div class="prodotto-stats">
-                            <div style="font-size: 1.1rem; font-weight: bold; color: #10b981;">
-                                💰 ${formatValuta(prodotto.incasso_prodotto)}
+                            <div class="stat-item">
+                                <div class="label">Vendite</div>
+                                <div class="value">${formatNumero(prodotto.quantita_pagata)}</div>
+                            </div>
+                            <div class="stat-item highlight">
+                                <div class="label">Incasso</div>
+                                <div class="value">${formatValuta(prodotto.incasso_prodotto)}</div>
                             </div>
                         </div>
                     </div>
@@ -1026,22 +1191,21 @@
             }).join('');
         }
 
-        // Crea lista prodotti ottimizzata per mobile
+        // Crea lista prodotti più venduti
         function creaProdottiPiuVenduti(data) {
             const container = document.getElementById('prodottiContainer');
-            
+
             if (!data || data.length === 0) {
-                container.innerHTML = '<div class="empty-state">Nessun prodotto venduto</div>';
+                container.innerHTML = '<div class="empty-state">Nessun prodotto venduto nel periodo</div>';
                 return;
             }
 
             container.innerHTML = data.map((prodotto, index) => {
-                const percentuale = prodotto.quantita_ordinata > 0 
+                const percentuale = prodotto.quantita_ordinata > 0
                     ? ((prodotto.quantita_pagata / prodotto.quantita_ordinata) * 100).toFixed(1)
                     : 0;
 
-                const badgeColor = percentuale >= 80 ? 'positive' : 
-                                 percentuale >= 60 ? 'neutral' : 'negative';
+                const nonPagati = prodotto.quantita_ordinata - prodotto.quantita_pagata;
 
                 return `
                     <div class="prodotto-card">
@@ -1053,15 +1217,26 @@
                                 <strong>${prodotto.nome_prodotto}</strong>
                                 <small>
                                     ${formatValuta(prodotto.prezzo_medio)} • 
-                                    <span class="quick-badge ${badgeColor}">${percentuale}%</span>
+                                    Conversione: ${percentuale}%
                                 </small>
                             </div>
                         </div>
                         <div class="prodotto-stats">
-                            <div><strong>Ord:</strong> ${formatNumero(prodotto.quantita_ordinata)}</div>
-                            <div><strong>Pag:</strong> ${formatNumero(prodotto.quantita_pagata)}</div>
-                            <div style="color: var(--pico-primary); font-weight: bold;">
-                                <strong>${formatValuta(prodotto.incasso_prodotto)}</strong>
+                            <div class="stat-item">
+                                <div class="label">Ordinati</div>
+                                <div class="value">${formatNumero(prodotto.quantita_ordinata)}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="label">Pagati</div>
+                                <div class="value">${formatNumero(prodotto.quantita_pagata)}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="label">Persi</div>
+                                <div class="value">${formatNumero(nonPagati)}</div>
+                            </div>
+                            <div class="stat-item highlight">
+                                <div class="label">Incasso</div>
+                                <div class="value">${formatValuta(prodotto.incasso_prodotto)}</div>
                             </div>
                         </div>
                     </div>
@@ -1069,48 +1244,49 @@
             }).join('');
         }
 
-        // Carica statistiche con gestione mobile
+        // Carica statistiche
         async function caricaStatistiche() {
             const dataInizio = document.getElementById('data_inizio').value;
             const dataFine = document.getElementById('data_fine').value;
-            
+
             if (!dataInizio || !dataFine) {
-                mostraErrore('Seleziona entrambe le date');
+                mostraErrore('Seleziona entrambe le date per procedere con l\'analisi');
                 return;
             }
 
             if (new Date(dataInizio) > new Date(dataFine)) {
-                mostraErrore('Data inizio deve essere precedente alla data fine');
+                mostraErrore('La data di inizio deve essere precedente alla data di fine');
                 return;
             }
-            
+
             const params = new URLSearchParams();
             params.append('data_inizio', dataInizio);
             params.append('data_fine', dataFine);
-            
+
             document.getElementById('loading').style.display = 'block';
             document.getElementById('content').style.display = 'none';
             document.getElementById('errorContainer').innerHTML = '';
             document.getElementById('scaricaExcelBtn').style.display = 'none';
-            
+
             try {
                 const response = await fetch(`/api/statistiche?${params}`);
                 const data = await response.json();
-                
+
                 if (!response.ok) {
-                    throw new Error(data.error || 'Errore nel caricamento');
+                    throw new Error(data.error || 'Errore nel caricamento dei dati');
                 }
-                
+
                 datiStatistiche = data;
-                
+
+                // Popola interfaccia
                 creaStatsCards(data.riassunto);
-                creaGraficoBarre('ordiniChart', 'ordiniLabels', data.ordini_per_giorno, 'numero_ordini', 'data');
-                creaGraficoBarre('incassiChart', 'incassiLabels', data.incassi_giornalieri, 'incasso_giorno', 'data', true);
+                creaGraficoChart('ordiniChart', data.ordini_per_giorno, 'Ordini', '#3b82f6', 'rgba(59, 130, 246, 0.1)');
+                creaGraficoChart('incassiChart', data.incassi_giornalieri, 'Incassi', '#10b981', 'rgba(16, 185, 129, 0.1)', true);
                 creaTopEarners(data.top_earners);
                 creaProdottiPiuVenduti(data.prodotti_piu_venduti);
-                
+
                 document.getElementById('scaricaExcelBtn').style.display = 'flex';
-                
+
             } catch (error) {
                 console.error('Errore:', error);
                 mostraErrore(error.message);
@@ -1121,58 +1297,33 @@
             }
         }
 
-        // Imposta date di default (ultimi 30 giorni)
+        // Imposta date di default
         function impostaDateDefault() {
             const oggi = new Date();
             const trentaGiorniFa = new Date(oggi.getTime() - 30 * 24 * 60 * 60 * 1000);
-            
+
             document.getElementById('data_fine').value = oggi.toISOString().split('T')[0];
             document.getElementById('data_inizio').value = trentaGiorniFa.toISOString().split('T')[0];
         }
 
-        // Event listeners ottimizzati per mobile
-        document.getElementById('filtroForm').addEventListener('submit', function(e) {
+        // Event listeners
+        document.getElementById('filtroForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            
-            // Haptic feedback
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
-            
             caricaStatistiche();
         });
-
-        // Prevent zoom on double tap per iOS
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
 
         // Inizializzazione
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             impostaDateDefault();
             caricaStatistiche();
-            
-            // Auto-focus preventivo per desktop
-            if (!isMobile) {
-                document.getElementById('data_inizio').focus();
-            }
         });
 
-        // Gestione orientamento
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                // Forza re-render dei grafici se necessario
-                if (datiStatistiche) {
-                    creaGraficoBarre('ordiniChart', 'ordiniLabels', datiStatistiche.ordini_per_giorno, 'numero_ordini', 'data');
-                    creaGraficoBarre('incassiChart', 'incassiLabels', datiStatistiche.incassi_giornalieri, 'incasso_giorno', 'data', true);
-                }
-            }, 500);
+        // Gestione ridimensionamento
+        window.addEventListener('resize', function () {
+            if (ordiniChart) ordiniChart.resize();
+            if (incassiChart) incassiChart.resize();
         });
     </script>
 </body>
+
 </html>
