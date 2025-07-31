@@ -1,4 +1,4 @@
-# 🍹 **HoTech** – Gestionale per Bar  
+# 🍹 **ByteBar** – Gestionale per Bar  
 
 *Software moderno per la gestione di ordini, inventario e clienti nei bar. Semplice, intuitivo e potente!*  
 
