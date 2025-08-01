@@ -115,6 +115,16 @@ function getDashboardPath(tipo) {
     default: return '/';
   }
 }
+function getTipo(tipo){
+  switch (tipo) {
+    case "admin": return {admin:"admin"};
+    case "cucina": return {cucina:"cucina"};
+    case "bancone": return {bancone:"bancone"};
+    case "cassa": return {cassa:"cassa"};
+    case "cameriere": return {cameriere:"cameriere"};
+    default: return '/';
+  }
+}
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
@@ -139,6 +149,7 @@ app.post('/login', (req, res) => {
       writeLog(`✅ Login effettuato: ${user.username} (${user.tipo})`);
 
       res.redirect(getDashboardPath(user.tipo));
+      res.send(getTipo(user.tipo))
     } else {
       res.status(401).json({ error: 'Credenziali non valide' });
     }
